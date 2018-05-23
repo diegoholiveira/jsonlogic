@@ -47,3 +47,19 @@ func TestSimpleComparisonWithString(t *testing.T) {
 		t.Fatal("A simple comparison is expected to be true")
 	}
 }
+
+func TestComposedComparisons(t *testing.T) {
+	var rules interface{}
+
+	json.Unmarshal([]byte(`{
+    "and": [
+        {"==": [1,1]},
+        {"==": [1,2]}
+    ]
+}`), &rules)
+
+	result, _ := Apply(rules, nil)
+	if result {
+		t.Fatal("The composed comparison is expected to be false")
+	}
+}
