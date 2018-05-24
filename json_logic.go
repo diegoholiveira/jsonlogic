@@ -6,40 +6,94 @@ import (
 	"reflect"
 )
 
+func is(obj interface{}, kind reflect.Kind) bool {
+	return reflect.TypeOf(obj).Kind() == kind
+}
+
 func isBool(obj interface{}) bool {
-	return reflect.TypeOf(obj).Kind() == reflect.Bool
+	return is(obj, reflect.Bool)
+}
+
+func isString(obj interface{}) bool {
+	return is(obj, reflect.String)
+}
+
+func isInt(obj interface{}) bool {
+	return is(obj, reflect.Int)
+}
+
+func isPrimitive(obj interface{}) bool {
+	return isBool(obj) ||
+		isString(obj) ||
+		isInt(obj)
 }
 
 func isMap(obj interface{}) bool {
-	return reflect.TypeOf(obj).Kind() == reflect.Map
+	return is(obj, reflect.Map)
 }
 
 func isArray(obj interface{}) bool {
-	return reflect.TypeOf(obj).Kind() == reflect.Array
+	return is(obj, reflect.Array)
 }
 
 func isSlice(obj interface{}) bool {
-	return reflect.TypeOf(obj).Kind() == reflect.Slice
+	return is(obj, reflect.Slice)
 }
 
-func operation(operator string, parsed []interface{}) bool {
-	if operator == "and" {
-		return parsed[0].(bool) && parsed[1].(bool)
-	}
-
-	return reflect.DeepEqual(parsed[0], parsed[1])
-}
-
-func apply(rules, data interface{}) bool {
-	for operator, values := range rules.(map[string]interface{}) {
-		parsed := parseValues(values, data)
-		return operation(operator, parsed.([]interface{}))
+func equals(a, b interface{}) bool {
+	switch v := a.(type) {
+	case float64:
+		w := b.(float64)
+		return v == w
+	case string:
+		w := b.(string)
+		return v == w
 	}
 
 	return false
 }
 
+func operation(operator string, values, data interface{}) interface{} {
+	if operator == "var" {
+		return getVar(values, data)
+	}
+
+	parsed := values.([]interface{})
+
+	if operator == "and" {
+		return interface{}(parsed[0].(bool) && parsed[1].(bool))
+	}
+
+	equals(parsed[0], parsed[1])
+
+	return interface{}(reflect.DeepEqual(parsed[0], parsed[1]))
+}
+
+func getVar(value, data interface{}) interface{} {
+	if data == nil {
+		return value
+	}
+
+	parsed := value.(string)
+
+	if !isMap(data) {
+		return nil
+	}
+
+	parsed_value := data.(map[string]interface{})[parsed]
+	switch v := parsed_value.(type) {
+	case int:
+		return interface{}(float64(v))
+	default:
+		return v
+	}
+}
+
 func parseValues(values, data interface{}) interface{} {
+	if isPrimitive(values) {
+		return values
+	}
+
 	parsed := make([]interface{}, 0)
 
 	for _, value := range values.([]interface{}) {
@@ -53,9 +107,17 @@ func parseValues(values, data interface{}) interface{} {
 	return parsed
 }
 
-func Apply(rules, data interface{}) (bool, error) {
+func apply(rules, data interface{}) interface{} {
+	for operator, values := range rules.(map[string]interface{}) {
+		return operation(operator, parseValues(values, data), data)
+	}
+
+	return false
+}
+
+func GenericApply(rules, data interface{}) (interface{}, error) {
 	if isBool(rules) {
-		return rules.(bool), nil
+		return rules, nil
 	}
 
 	if !isMap(rules) {
@@ -63,4 +125,14 @@ func Apply(rules, data interface{}) (bool, error) {
 	}
 
 	return apply(rules, data), nil
+}
+
+func BoolApply(rules, data interface{}) (bool, error) {
+	value, err := GenericApply(rules, data)
+	return value.(bool), err
+}
+
+func IntApply(rules, data interface{}) (float64, error) {
+	value, err := GenericApply(rules, data)
+	return value.(float64), err
 }
