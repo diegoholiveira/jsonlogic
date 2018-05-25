@@ -74,7 +74,13 @@ func getVar(value, data interface{}) interface{} {
 		return value
 	}
 
-	parsed := value.(string)
+	var parsed string
+
+	if isSlice(value) {
+		parsed = value.([]interface{})[0].(string)
+	} else {
+		parsed = value.(string)
+	}
 
 	if !isMap(data) {
 		return nil

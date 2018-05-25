@@ -76,6 +76,18 @@ func TestSimpleVar(t *testing.T) {
 	}
 }
 
+func TestSimpleVarWithoutSyntacticSugar(t *testing.T) {
+	var rules interface{}
+	json.Unmarshal([]byte("{\"var\":[\"a\"]}"), &rules)
+
+	data := map[string]interface{}{"a": 10}
+
+	result, _ := IntApply(rules, interface{}(data))
+	if result != 10 {
+		t.Fatal("The value expected must be equal the value of the context")
+	}
+}
+
 func TestSimpleVarComparison(t *testing.T) {
 	var rules interface{}
 	json.Unmarshal([]byte(`{
