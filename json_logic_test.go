@@ -162,3 +162,23 @@ func TestComposedVar(t *testing.T) {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
 }
+
+func TestIndexedVar(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"var": 1
+	}`), &rules)
+
+	json.Unmarshal([]byte(`[
+		"apple",
+		"banana",
+		"carrot"
+	]`), &data)
+
+	result, _ := StringApply(rules, interface{}(data))
+	if result != "banana" {
+		t.Fatal("The value expected must be equal the value of the context")
+	}
+}

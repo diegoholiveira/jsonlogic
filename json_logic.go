@@ -20,7 +20,7 @@ func isString(obj interface{}) bool {
 }
 
 func isInt(obj interface{}) bool {
-	return is(obj, reflect.Int)
+	return is(obj, reflect.Int) || is(obj, reflect.Float64)
 }
 
 func isPrimitive(obj interface{}) bool {
@@ -77,6 +77,9 @@ func getVar(value, data interface{}) interface{} {
 
 	if isSlice(value) {
 		parsed = value.([]interface{})[0].(string)
+	} else if isInt(value) {
+		index := int(value.(float64))
+		return data.([]interface{})[index]
 	} else {
 		parsed = value.(string)
 	}
