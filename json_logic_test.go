@@ -182,3 +182,27 @@ func TestIndexedVar(t *testing.T) {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
 }
+
+func TestComplexRule(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"and": [
+			{"<": [{"var": "temp"}, 110]},
+			{"==": [{"var": "pie.filling"}, "apple"]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"temp": 100,
+		"pie": {
+			"filling": "apple"
+		}
+	}`), &data)
+
+	result, _ := BoolApply(rules, interface{}(data))
+	if !result {
+		t.Fatal("The value expected must be equal the value of the context")
+	}
+}

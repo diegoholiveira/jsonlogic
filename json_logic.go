@@ -39,6 +39,19 @@ func isSlice(obj interface{}) bool {
 	return is(obj, reflect.Slice)
 }
 
+func less(a, b interface{}) bool {
+	switch v := a.(type) {
+	case float64:
+		w := b.(float64)
+		return w > v
+	case string:
+		w := b.(string)
+		return w > v
+	}
+
+	return false
+}
+
 func equals(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
@@ -63,9 +76,11 @@ func operation(operator string, values, data interface{}) interface{} {
 		return interface{}(parsed[0].(bool) && parsed[1].(bool))
 	}
 
-	equals(parsed[0], parsed[1])
+	if operator == "<" {
+		return less(parsed[0], parsed[1])
+	}
 
-	return interface{}(reflect.DeepEqual(parsed[0], parsed[1]))
+	return equals(parsed[0], parsed[1])
 }
 
 func getVar(value, data interface{}) interface{} {
