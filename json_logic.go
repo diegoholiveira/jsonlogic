@@ -1,14 +1,15 @@
-package json_logic
+package jsonlogic
 
 import (
 	"errors"
-	//"log"
+	"log"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
 func is(obj interface{}, kind reflect.Kind) bool {
-	return reflect.TypeOf(obj).Kind() == kind
+	return obj != nil && reflect.TypeOf(obj).Kind() == kind
 }
 
 func isBool(obj interface{}) bool {
@@ -42,24 +43,72 @@ func isSlice(obj interface{}) bool {
 func less(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		w := b.(float64)
+		var w float64
+
+		if isString(b) {
+			w, _ = strconv.ParseFloat(b.(string), 64)
+		} else {
+			w = b.(float64)
+		}
+
 		return w > v
 	case string:
-		w := b.(string)
+		var w string
+
+		if isInt(b) {
+			w = strconv.FormatFloat(b.(float64), 'f', -1, 64)
+		} else {
+			w = b.(string)
+		}
+
 		return w > v
 	}
 
 	return false
 }
 
+func hardEquals(a, b interface{}) bool {
+	ra := reflect.ValueOf(a).Kind()
+	rb := reflect.ValueOf(b).Kind()
+
+	if ra != rb {
+		return false
+	}
+
+	return equals(a, b)
+}
+
 func equals(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		w := b.(float64)
+		var w float64
+
+		if isString(b) {
+			w, _ = strconv.ParseFloat(b.(string), 64)
+		} else {
+			w = b.(float64)
+		}
+
 		return v == w
 	case string:
 		w := b.(string)
 		return v == w
+	}
+
+	return false
+}
+
+func between(operator string, values []interface{}, data interface{}) interface{} {
+	a := values[0]
+	b := values[1]
+	c := values[2]
+
+	if operator == "<" {
+		return less(a, b) && less(b, c)
+	}
+
+	if operator == "<=" {
+		return (less(a, b) || equals(a, b)) && (less(b, c) || equals(b, c))
 	}
 
 	return false
@@ -72,12 +121,44 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	parsed := values.([]interface{})
 
+	rp := reflect.ValueOf(parsed)
+	if rp.Len() == 3 {
+		return between(operator, parsed, data)
+	}
+
 	if operator == "and" {
 		return interface{}(parsed[0].(bool) && parsed[1].(bool))
+	}
+	if operator == "or" {
+		return interface{}(parsed[0].(bool) || parsed[1].(bool))
 	}
 
 	if operator == "<" {
 		return less(parsed[0], parsed[1])
+	}
+
+	if operator == ">" {
+		return less(parsed[1], parsed[0])
+	}
+
+	if operator == "<=" {
+		return less(parsed[0], parsed[1]) || equals(parsed[0], parsed[1])
+	}
+
+	if operator == ">=" {
+		return less(parsed[1], parsed[0]) || equals(parsed[0], parsed[1])
+	}
+
+	if operator == "===" {
+		return hardEquals(parsed[0], parsed[1])
+	}
+
+	if operator == "!=" {
+		return !equals(parsed[0], parsed[1])
+	}
+
+	if operator == "!==" {
+		return !hardEquals(parsed[0], parsed[1])
 	}
 
 	return equals(parsed[0], parsed[1])
@@ -158,33 +239,63 @@ func apply(rules, data interface{}) interface{} {
 	return false
 }
 
-func GenericApply(rules, data interface{}) (interface{}, error) {
-	if rules == nil {
-		return nil, errors.New("The rules passed is not a valid object")
+func convertToResult(result interface{}, _result interface{}) {
+	value := reflect.ValueOf(result).Elem()
+	target := reflect.TypeOf(result).Elem()
+
+	switch target.Kind() {
+	case reflect.Float64:
+		value.SetFloat(_result.(float64))
+	case reflect.String:
+		value.SetString(_result.(string))
+	case reflect.Bool:
+		value.SetBool(_result.(bool))
+	default:
+		if _result == nil {
+			return
+		}
+
+		log.Println("Using default conversion")
+
+		value.Set(reflect.ValueOf(_result))
+	}
+}
+
+func Apply(rules, data interface{}, result interface{}) error {
+	rv := reflect.ValueOf(result)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return errors.New("Result must be a pointer")
 	}
 
-	if isBool(rules) {
-		return rules, nil
+	if !rv.Elem().CanSet() {
+		return errors.New("Result must be addressable")
 	}
 
-	if !isMap(rules) {
-		return false, errors.New("The root element needs to be an object")
+	if isMap(rules) {
+		convertToResult(result, apply(rules, data))
+
+		return nil
 	}
 
-	return apply(rules, data), nil
+	convertToResult(result, rules)
+
+	return nil
 }
 
 func BoolApply(rules, data interface{}) (bool, error) {
-	value, err := GenericApply(rules, data)
-	return value.(bool), err
+	var value bool
+	err := Apply(rules, data, &value)
+	return value, err
 }
 
 func IntApply(rules, data interface{}) (float64, error) {
-	value, err := GenericApply(rules, data)
-	return value.(float64), err
+	var value float64
+	err := Apply(rules, data, &value)
+	return value, err
 }
 
 func StringApply(rules, data interface{}) (string, error) {
-	value, err := GenericApply(rules, data)
-	return value.(string), err
+	var value string
+	err := Apply(rules, data, &value)
+	return value, err
 }

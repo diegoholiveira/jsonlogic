@@ -1,7 +1,12 @@
-package json_logic
+package jsonlogic
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"reflect"
 	"testing"
 )
 
@@ -16,15 +21,6 @@ func TestNeverShouldNeverPass(t *testing.T) {
 	result, _ := BoolApply(false, nil)
 	if result {
 		t.Fatal("Always should never pass")
-	}
-}
-
-func TestRootElement(t *testing.T) {
-	rules := []int{1, 1}
-
-	_, err := BoolApply(rules, nil)
-	if err == nil {
-		t.Fatal("We must force the root element to be an object")
 	}
 }
 
@@ -204,5 +200,52 @@ func TestComplexRule(t *testing.T) {
 	result, _ := BoolApply(rules, interface{}(data))
 	if !result {
 		t.Fatal("The value expected must be equal the value of the context")
+	}
+}
+
+func TestRulesFromJsonLogic(t *testing.T) {
+	response, err := http.Get("http://jsonlogic.com/tests.json")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	buffer, _ := ioutil.ReadAll(response.Body)
+
+	response.Body.Close()
+
+	var scenarios []interface{}
+
+	err = json.Unmarshal(buffer, &scenarios)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, scenario := range scenarios {
+		if reflect.ValueOf(scenario).Kind() == reflect.String {
+			continue
+		}
+
+		var result interface{}
+
+		logic := scenario.([]interface{})[0]
+		data := scenario.([]interface{})[1]
+		expected := scenario.([]interface{})[2]
+
+		log.Println("Logic ", logic)
+		log.Println("Data ", data)
+		log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
+
+		err = Apply(logic, data, &result)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		log.Println("Result ", fmt.Sprintf("%v %T", result, result))
+
+		if !reflect.DeepEqual(expected, result) {
+			t.Fatal("The value expected is not what we expected")
+		}
 	}
 }
