@@ -171,6 +171,19 @@ func _or(values []interface{}) interface{} {
 	return r
 }
 
+func _in(value interface{}, values interface{}) bool {
+	if isString(values) {
+		return strings.Contains(values.(string), value.(string))
+	}
+
+	for _, v := range values.([]interface{}) {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
@@ -194,6 +207,18 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "or" {
 		return _or(parsed)
+	}
+
+	if operator == "?:" {
+		if parsed[0].(bool) {
+			return parsed[1]
+		}
+
+		return parsed[2]
+	}
+
+	if operator == "in" {
+		return _in(parsed[0], parsed[1])
 	}
 
 	if rp.Len() == 3 {
