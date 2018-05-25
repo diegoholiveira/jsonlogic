@@ -2,7 +2,7 @@ package jsonlogic
 
 import (
 	"errors"
-	"log"
+	//"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -346,8 +346,6 @@ func convertToResult(result interface{}, _result interface{}) {
 		if _result == nil {
 			return
 		}
-
-		log.Println("Using default conversion")
 
 		value.Set(reflect.ValueOf(_result))
 	}

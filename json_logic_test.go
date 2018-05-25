@@ -238,18 +238,17 @@ func validateScenario(t *testing.T, scenario interface{}) {
 	data := scenario.([]interface{})[1]
 	expected := scenario.([]interface{})[2]
 
-	log.Println("Logic ", logic)
-	log.Println("Data ", data)
-	log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
-
 	err := Apply(logic, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	log.Println("Result ", fmt.Sprintf("%v %T", result, result))
-
 	if !reflect.DeepEqual(expected, result) {
+		log.Println("Logic ", logic)
+		log.Println("Data ", data)
+		log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
+		log.Println("Result ", fmt.Sprintf("%v %T", result, result))
+
 		t.Fatal("The value expected is not what we expected")
 	}
 }
