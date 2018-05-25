@@ -30,7 +30,9 @@ func TestRootElement(t *testing.T) {
 
 func TestSimpleComparisonWithInteger(t *testing.T) {
 	var rules interface{}
-	json.Unmarshal([]byte("{\"==\":[1, 1]}"), &rules)
+	json.Unmarshal([]byte(`{
+		"==": [1, 1]
+	}`), &rules)
 
 	result, _ := BoolApply(rules, nil)
 	if !result {
@@ -40,7 +42,9 @@ func TestSimpleComparisonWithInteger(t *testing.T) {
 
 func TestSimpleComparisonWithString(t *testing.T) {
 	var rules interface{}
-	json.Unmarshal([]byte("{\"==\":[\"a\", \"a\"]}"), &rules)
+	json.Unmarshal([]byte(`{
+		"==": ["a", "a"]
+	}`), &rules)
 
 	result, _ := BoolApply(rules, nil)
 	if !result {
@@ -52,11 +56,11 @@ func TestComposedComparisons(t *testing.T) {
 	var rules interface{}
 
 	json.Unmarshal([]byte(`{
-    "and": [
-        {"==": [1,1]},
-        {"==": [1,2]}
-    ]
-}`), &rules)
+		"and": [
+			{"==": [1,1]},
+			{"==": [1,2]}
+		]
+	}`), &rules)
 
 	result, _ := BoolApply(rules, nil)
 	if result {
@@ -66,9 +70,15 @@ func TestComposedComparisons(t *testing.T) {
 
 func TestSimpleVar(t *testing.T) {
 	var rules interface{}
-	json.Unmarshal([]byte("{\"var\":\"a\"}"), &rules)
+	var data interface{}
 
-	data := map[string]interface{}{"a": 10}
+	json.Unmarshal([]byte(`{
+		"var": "a"
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"a": 10
+	}`), &data)
 
 	result, _ := IntApply(rules, interface{}(data))
 	if result != 10 {
@@ -78,9 +88,15 @@ func TestSimpleVar(t *testing.T) {
 
 func TestSimpleVarWithoutSyntacticSugar(t *testing.T) {
 	var rules interface{}
-	json.Unmarshal([]byte("{\"var\":[\"a\"]}"), &rules)
+	var data interface{}
 
-	data := map[string]interface{}{"a": 10}
+	json.Unmarshal([]byte(`{
+		"var": ["a"]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"a": 10
+	}`), &data)
 
 	result, _ := IntApply(rules, interface{}(data))
 	if result != 10 {
@@ -90,9 +106,15 @@ func TestSimpleVarWithoutSyntacticSugar(t *testing.T) {
 
 func TestVariableWithDefaultValue(t *testing.T) {
 	var rules interface{}
-	json.Unmarshal([]byte("{\"var\":[\"z\", 20]}"), &rules)
+	var data interface{}
 
-	data := map[string]interface{}{"a": 10}
+	json.Unmarshal([]byte(`{
+		"var": ["z", 20]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"a": 10
+	}`), &data)
 
 	result, _ := IntApply(rules, interface{}(data))
 	if result != 20 {
@@ -102,6 +124,8 @@ func TestVariableWithDefaultValue(t *testing.T) {
 
 func TestSimpleVarComparison(t *testing.T) {
 	var rules interface{}
+	var data interface{}
+
 	json.Unmarshal([]byte(`{
 		"==": [
 			{"var": "a"},
@@ -109,7 +133,9 @@ func TestSimpleVarComparison(t *testing.T) {
 		]
 	}`), &rules)
 
-	data := map[string]interface{}{"a": 10}
+	json.Unmarshal([]byte(`{
+		"a": 10
+	}`), &data)
 
 	result, _ := BoolApply(rules, interface{}(data))
 	if !result {
@@ -119,11 +145,17 @@ func TestSimpleVarComparison(t *testing.T) {
 
 func TestComposedVar(t *testing.T) {
 	var rules interface{}
+	var data interface{}
+
 	json.Unmarshal([]byte(`{
 		"var": "champ.name"
 	}`), &rules)
 
-	data := map[string]interface{}{"champ": interface{}(map[string]interface{}{"name": "Diego"})}
+	json.Unmarshal([]byte(`{
+		"champ": {
+			"name": "Diego"
+		}
+	}`), &data)
 
 	result, _ := StringApply(rules, interface{}(data))
 	if result != "Diego" {
