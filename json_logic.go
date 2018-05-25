@@ -4,6 +4,7 @@ import (
 	"errors"
 	//"log"
 	"reflect"
+	"strings"
 )
 
 func is(obj interface{}, kind reflect.Kind) bool {
@@ -23,9 +24,7 @@ func isInt(obj interface{}) bool {
 }
 
 func isPrimitive(obj interface{}) bool {
-	return isBool(obj) ||
-		isString(obj) ||
-		isInt(obj)
+	return isBool(obj) || isString(obj) || isInt(obj)
 }
 
 func isMap(obj interface{}) bool {
@@ -82,13 +81,25 @@ func getVar(value, data interface{}) interface{} {
 		parsed = value.(string)
 	}
 
+	parts := strings.Split(parsed, ".")
+
+	_data := data
+
+	for _, part := range parts {
+		_data = getVarFromData(part, _data, value)
+	}
+
+	return _data
+}
+
+func getVarFromData(value string, data, originalValue interface{}) interface{} {
 	if !isMap(data) {
 		return nil
 	}
 
-	parsedValue := data.(map[string]interface{})[parsed]
-	if parsedValue == nil && isSlice(value) {
-		parsedValue = value.([]interface{})[1]
+	parsedValue := data.(map[string]interface{})[value]
+	if parsedValue == nil && isSlice(originalValue) {
+		parsedValue = originalValue.([]interface{})[1]
 	}
 
 	if parsedValue == nil {
@@ -130,6 +141,10 @@ func apply(rules, data interface{}) interface{} {
 }
 
 func GenericApply(rules, data interface{}) (interface{}, error) {
+	if rules == nil {
+		return nil, errors.New("The rules passed is not a valid object")
+	}
+
 	if isBool(rules) {
 		return rules, nil
 	}
@@ -149,4 +164,9 @@ func BoolApply(rules, data interface{}) (bool, error) {
 func IntApply(rules, data interface{}) (float64, error) {
 	value, err := GenericApply(rules, data)
 	return value.(float64), err
+}
+
+func StringApply(rules, data interface{}) (string, error) {
+	value, err := GenericApply(rules, data)
+	return value.(string), err
 }

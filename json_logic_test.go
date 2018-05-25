@@ -116,3 +116,17 @@ func TestSimpleVarComparison(t *testing.T) {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
 }
+
+func TestComposedVar(t *testing.T) {
+	var rules interface{}
+	json.Unmarshal([]byte(`{
+		"var": "champ.name"
+	}`), &rules)
+
+	data := map[string]interface{}{"champ": interface{}(map[string]interface{}{"name": "Diego"})}
+
+	result, _ := StringApply(rules, interface{}(data))
+	if result != "Diego" {
+		t.Fatal("The value expected must be equal the value of the context")
+	}
+}
