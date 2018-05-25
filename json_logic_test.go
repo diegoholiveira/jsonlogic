@@ -227,25 +227,29 @@ func TestRulesFromJsonLogic(t *testing.T) {
 			continue
 		}
 
-		var result interface{}
+		validateScenario(t, scenario)
+	}
+}
 
-		logic := scenario.([]interface{})[0]
-		data := scenario.([]interface{})[1]
-		expected := scenario.([]interface{})[2]
+func validateScenario(t *testing.T, scenario interface{}) {
+	var result interface{}
 
-		log.Println("Logic ", logic)
-		log.Println("Data ", data)
-		log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
+	logic := scenario.([]interface{})[0]
+	data := scenario.([]interface{})[1]
+	expected := scenario.([]interface{})[2]
 
-		err = Apply(logic, data, &result)
-		if err != nil {
-			t.Fatal(err)
-		}
+	log.Println("Logic ", logic)
+	log.Println("Data ", data)
+	log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
 
-		log.Println("Result ", fmt.Sprintf("%v %T", result, result))
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		if !reflect.DeepEqual(expected, result) {
-			t.Fatal("The value expected is not what we expected")
-		}
+	log.Println("Result ", fmt.Sprintf("%v %T", result, result))
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("The value expected is not what we expected")
 	}
 }

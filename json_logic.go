@@ -114,23 +114,90 @@ func between(operator string, values []interface{}, data interface{}) interface{
 	return false
 }
 
+func unary(operator string, value interface{}) interface{} {
+	var b bool
+	if isBool(value) {
+		b = value.(bool)
+	}
+	if isInt(value) {
+		b = value.(float64) > 0
+	}
+
+	if operator == "!" {
+		return !b
+	}
+
+	return b
+}
+
+func _and(values []interface{}) interface{} {
+	r := interface{}(true)
+	v := interface{}(float64(0))
+
+	for _, value := range values {
+		if isBool(value) {
+			r = interface{}(r.(bool) && value.(bool))
+
+			continue
+		}
+
+		if value.(float64) > v.(float64) {
+			v = interface{}(value)
+		}
+	}
+
+	if r.(bool) && v.(float64) > 0 {
+		return v
+	}
+
+	return r
+}
+
+func _or(values []interface{}) interface{} {
+	r := false
+	for _, value := range values {
+		if isBool(value) {
+			r = r || value.(bool)
+			continue
+		}
+
+		if isInt(value) && value.(float64) > 0 {
+			return value
+		}
+
+		r = false
+	}
+
+	return r
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
 	}
 
+	if isPrimitive(values) {
+		return unary(operator, values)
+	}
+
+	rp := reflect.ValueOf(values)
+
 	parsed := values.([]interface{})
 
-	rp := reflect.ValueOf(parsed)
-	if rp.Len() == 3 {
-		return between(operator, parsed, data)
+	if rp.Len() == 1 {
+		return unary(operator, parsed[0].(bool))
 	}
 
 	if operator == "and" {
-		return interface{}(parsed[0].(bool) && parsed[1].(bool))
+		return _and(parsed)
 	}
+
 	if operator == "or" {
-		return interface{}(parsed[0].(bool) || parsed[1].(bool))
+		return _or(parsed)
+	}
+
+	if rp.Len() == 3 {
+		return between(operator, parsed, data)
 	}
 
 	if operator == "<" {
