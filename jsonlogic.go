@@ -154,21 +154,17 @@ func _and(values []interface{}) interface{} {
 }
 
 func _or(values []interface{}) interface{} {
-	r := false
 	for _, value := range values {
-		if isBool(value) {
-			r = r || value.(bool)
-			continue
+		if isBool(value) && value.(bool) {
+			return true
 		}
 
 		if isInt(value) && value.(float64) > 0 {
 			return value
 		}
-
-		r = false
 	}
 
-	return r
+	return false
 }
 
 func _in(value interface{}, values interface{}) bool {
