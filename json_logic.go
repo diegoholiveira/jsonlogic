@@ -86,8 +86,16 @@ func getVar(value, data interface{}) interface{} {
 		return nil
 	}
 
-	parsed_value := data.(map[string]interface{})[parsed]
-	switch v := parsed_value.(type) {
+	parsedValue := data.(map[string]interface{})[parsed]
+	if parsedValue == nil && isSlice(value) {
+		parsedValue = value.([]interface{})[1]
+	}
+
+	if parsedValue == nil {
+		return nil
+	}
+
+	switch v := parsedValue.(type) {
 	case int:
 		return interface{}(float64(v))
 	default:
