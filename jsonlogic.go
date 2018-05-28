@@ -3,6 +3,7 @@ package jsonlogic
 import (
 	"errors"
 	//"log"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -40,27 +41,31 @@ func isSlice(obj interface{}) bool {
 	return is(obj, reflect.Slice)
 }
 
+func toFloat(value interface{}) float64 {
+	if isString(value) {
+		w, _ := strconv.ParseFloat(value.(string), 64)
+
+		return w
+	}
+
+	return value.(float64)
+}
+
+func toString(value interface{}) string {
+	if isNumber(value) {
+		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
+	}
+
+	return value.(string)
+}
+
 func less(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		var w float64
-
-		if isString(b) {
-			w, _ = strconv.ParseFloat(b.(string), 64)
-		} else {
-			w = b.(float64)
-		}
-
+		w := toFloat(b)
 		return w > v
 	case string:
-		var w string
-
-		if isNumber(b) {
-			w = strconv.FormatFloat(b.(float64), 'f', -1, 64)
-		} else {
-			w = b.(string)
-		}
-
+		w := toString(b)
 		return w > v
 	}
 
@@ -81,17 +86,10 @@ func hardEquals(a, b interface{}) bool {
 func equals(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		var w float64
-
-		if isString(b) {
-			w, _ = strconv.ParseFloat(b.(string), 64)
-		} else {
-			w = b.(float64)
-		}
-
+		w := toFloat(b)
 		return v == w
 	case string:
-		w := b.(string)
+		w := toString(b)
 		return v == w
 	}
 
@@ -182,6 +180,13 @@ func _in(value interface{}, values interface{}) bool {
 	return false
 }
 
+func mod(a interface{}, b interface{}) interface{} {
+	_a := toFloat(a)
+	_b := toFloat(b)
+
+	return interface{}(math.Mod(_a, _b))
+}
+
 func concat(values interface{}) interface{} {
 	if isString(values) {
 		return values
@@ -201,6 +206,52 @@ func concat(values interface{}) interface{} {
 	return interface{}(strings.TrimSpace(s.String()))
 }
 
+func max(values interface{}) interface{} {
+	bigger := math.SmallestNonzeroFloat64
+
+	for _, n := range values.([]interface{}) {
+		_n := toFloat(n)
+		if _n > bigger {
+			bigger = _n
+		}
+	}
+
+	return interface{}(bigger)
+}
+
+func min(values interface{}) interface{} {
+	smallest := math.MaxFloat64
+
+	for _, n := range values.([]interface{}) {
+		_n := toFloat(n)
+		if smallest > _n {
+			smallest = _n
+		}
+	}
+
+	return interface{}(smallest)
+}
+
+func sum(values interface{}) interface{} {
+	sum := float64(0)
+
+	for _, n := range values.([]interface{}) {
+		sum += toFloat(n)
+	}
+
+	return interface{}(sum)
+}
+
+func minus(values interface{}) interface{} {
+	sum := float64(0)
+
+	for _, n := range values.([]interface{}) {
+		sum -= toFloat(n)
+	}
+
+	return interface{}(sum)
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
@@ -212,6 +263,22 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if isPrimitive(values) {
 		return unary(operator, values)
+	}
+
+	if operator == "max" {
+		return max(values)
+	}
+
+	if operator == "min" {
+		return min(values)
+	}
+
+	if operator == "+" {
+		return sum(values)
+	}
+
+	if operator == "-" {
+		return minus(values)
 	}
 
 	rp := reflect.ValueOf(values)
@@ -240,6 +307,10 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "in" {
 		return _in(parsed[0], parsed[1])
+	}
+
+	if operator == "%" {
+		return mod(parsed[0], parsed[1])
 	}
 
 	if rp.Len() == 3 {
