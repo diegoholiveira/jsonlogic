@@ -11,14 +11,24 @@ import (
 )
 
 func TestAlwaysShouldAlwaysPass(t *testing.T) {
-	result, _ := BoolApply(true, nil)
+	var result bool
+	err := Apply(true, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if !result {
 		t.Fatal("Always should always pass")
 	}
 }
 
 func TestNeverShouldNeverPass(t *testing.T) {
-	result, _ := BoolApply(false, nil)
+	var result bool
+	err := Apply(false, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result {
 		t.Fatal("Always should never pass")
 	}
@@ -30,7 +40,12 @@ func TestSimpleComparisonWithInteger(t *testing.T) {
 		"==": [1, 1]
 	}`), &rules)
 
-	result, _ := BoolApply(rules, nil)
+	var result bool
+	err := Apply(rules, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if !result {
 		t.Fatal("A simple comparison is expected to be true")
 	}
@@ -42,7 +57,12 @@ func TestSimpleComparisonWithString(t *testing.T) {
 		"==": ["a", "a"]
 	}`), &rules)
 
-	result, _ := BoolApply(rules, nil)
+	var result bool
+	err := Apply(rules, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if !result {
 		t.Fatal("A simple comparison is expected to be true")
 	}
@@ -58,7 +78,12 @@ func TestComposedComparisons(t *testing.T) {
 		]
 	}`), &rules)
 
-	result, _ := BoolApply(rules, nil)
+	var result bool
+	err := Apply(rules, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result {
 		t.Fatal("The composed comparison is expected to be false")
 	}
@@ -76,7 +101,12 @@ func TestSimpleVar(t *testing.T) {
 		"a": 10
 	}`), &data)
 
-	result, _ := IntApply(rules, interface{}(data))
+	var result float64
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result != 10 {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -94,7 +124,12 @@ func TestSimpleVarWithoutSyntacticSugar(t *testing.T) {
 		"a": 10
 	}`), &data)
 
-	result, _ := IntApply(rules, interface{}(data))
+	var result float64
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result != 10 {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -112,7 +147,12 @@ func TestVariableWithDefaultValue(t *testing.T) {
 		"a": 10
 	}`), &data)
 
-	result, _ := IntApply(rules, interface{}(data))
+	var result float64
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result != 20 {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -133,7 +173,12 @@ func TestSimpleVarComparison(t *testing.T) {
 		"a": 10
 	}`), &data)
 
-	result, _ := BoolApply(rules, interface{}(data))
+	var result bool
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if !result {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -153,7 +198,12 @@ func TestComposedVar(t *testing.T) {
 		}
 	}`), &data)
 
-	result, _ := StringApply(rules, interface{}(data))
+	var result string
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result != "Diego" {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -173,7 +223,12 @@ func TestIndexedVar(t *testing.T) {
 		"carrot"
 	]`), &data)
 
-	result, _ := StringApply(rules, interface{}(data))
+	var result string
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if result != "banana" {
 		t.Fatal("The value expected must be equal the value of the context")
 	}
@@ -197,7 +252,12 @@ func TestComplexRule(t *testing.T) {
 		}
 	}`), &data)
 
-	result, _ := BoolApply(rules, interface{}(data))
+	var result bool
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if !result {
 		t.Fatal("The value expected must be equal the value of the context")
 	}

@@ -369,21 +369,3 @@ func Apply(rules, data interface{}, result interface{}) error {
 
 	return nil
 }
-
-func BoolApply(rules, data interface{}) (bool, error) {
-	var value bool
-	err := Apply(rules, data, &value)
-	return value, err
-}
-
-func IntApply(rules, data interface{}) (float64, error) {
-	var value float64
-	err := Apply(rules, data, &value)
-	return value, err
-}
-
-func StringApply(rules, data interface{}) (string, error) {
-	var value string
-	err := Apply(rules, data, &value)
-	return value, err
-}
