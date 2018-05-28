@@ -304,10 +304,10 @@ func validateScenario(t *testing.T, scenario interface{}) {
 	}
 
 	if !reflect.DeepEqual(expected, result) {
-		log.Println("Logic ", logic)
-		log.Println("Data ", data)
-		log.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
-		log.Println("Result ", fmt.Sprintf("%v %T", result, result))
+		fmt.Println("Logic ", logic)
+		fmt.Println("Data ", data)
+		fmt.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
+		fmt.Println("Result ", fmt.Sprintf("%v %T", result, result))
 
 		t.Fatal("The value expected is not what we expected")
 	}
