@@ -182,9 +182,32 @@ func _in(value interface{}, values interface{}) bool {
 	return false
 }
 
+func concat(values interface{}) interface{} {
+	if isString(values) {
+		return values
+	}
+
+	var s strings.Builder
+	for _, text := range values.([]interface{}) {
+		if isNumber(text) {
+			s.WriteString(strconv.FormatFloat(text.(float64), 'f', -1, 64))
+		}
+
+		if isString(text) {
+			s.WriteString(text.(string))
+		}
+	}
+
+	return interface{}(strings.TrimSpace(s.String()))
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
+	}
+
+	if operator == "cat" {
+		return concat(values)
 	}
 
 	if isPrimitive(values) {
@@ -349,6 +372,8 @@ func convertToResult(result interface{}, _result interface{}) {
 	}
 }
 
+// Apply executes the rules passed with the data as context
+// and generates an result of any kind (boolean, map, string and others)
 func Apply(rules, data interface{}, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
