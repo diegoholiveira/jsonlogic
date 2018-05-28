@@ -333,6 +333,24 @@ func substr(values interface{}) interface{} {
 	return string(runes[from:to])
 }
 
+func merge(values interface{}) interface{} {
+	result := make([]interface{}, 0)
+
+	if isPrimitive(values) {
+		return append(result, values)
+	}
+
+	if isSlice(values) {
+		for _, value := range values.([]interface{}) {
+			_values := merge(value).([]interface{})
+
+			result = append(result, _values...)
+		}
+	}
+
+	return result
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
@@ -344,6 +362,10 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "substr" {
 		return substr(values)
+	}
+
+	if operator == "merge" {
+		return merge(values)
 	}
 
 	if isPrimitive(values) {
