@@ -113,6 +113,14 @@ func between(operator string, values []interface{}, data interface{}) interface{
 }
 
 func unary(operator string, value interface{}) interface{} {
+	if operator == "+" || operator == "*" {
+		return toFloat(value)
+	}
+
+	if operator == "-" {
+		return -1 * toFloat(value)
+	}
+
 	var b bool
 
 	if isBool(value) {
@@ -177,6 +185,7 @@ func _in(value interface{}, values interface{}) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -184,7 +193,7 @@ func mod(a interface{}, b interface{}) interface{} {
 	_a := toFloat(a)
 	_b := toFloat(b)
 
-	return interface{}(math.Mod(_a, _b))
+	return math.Mod(_a, _b)
 }
 
 func concat(values interface{}) interface{} {
@@ -203,7 +212,7 @@ func concat(values interface{}) interface{} {
 		}
 	}
 
-	return interface{}(strings.TrimSpace(s.String()))
+	return strings.TrimSpace(s.String())
 }
 
 func max(values interface{}) interface{} {
@@ -216,7 +225,7 @@ func max(values interface{}) interface{} {
 		}
 	}
 
-	return interface{}(bigger)
+	return bigger
 }
 
 func min(values interface{}) interface{} {
@@ -229,7 +238,7 @@ func min(values interface{}) interface{} {
 		}
 	}
 
-	return interface{}(smallest)
+	return smallest
 }
 
 func sum(values interface{}) interface{} {
@@ -239,17 +248,49 @@ func sum(values interface{}) interface{} {
 		sum += toFloat(n)
 	}
 
-	return interface{}(sum)
+	return sum
 }
 
 func minus(values interface{}) interface{} {
-	sum := float64(0)
+	var sum float64
 
 	for _, n := range values.([]interface{}) {
+		if sum == 0 {
+			sum = toFloat(n)
+
+			continue
+		}
+
 		sum -= toFloat(n)
 	}
 
-	return interface{}(sum)
+	return sum
+}
+
+func mult(values interface{}) interface{} {
+	sum := float64(1)
+
+	for _, n := range values.([]interface{}) {
+		sum *= toFloat(n)
+	}
+
+	return sum
+}
+
+func div(values interface{}) interface{} {
+	var sum float64
+
+	for _, n := range values.([]interface{}) {
+		if sum == 0 {
+			sum = toFloat(n)
+
+			continue
+		}
+
+		sum /= toFloat(n)
+	}
+
+	return sum
 }
 
 func operation(operator string, values, data interface{}) interface{} {
@@ -273,6 +314,13 @@ func operation(operator string, values, data interface{}) interface{} {
 		return min(values)
 	}
 
+	rp := reflect.ValueOf(values)
+	parsed := values.([]interface{})
+
+	if rp.Len() == 1 {
+		return unary(operator, parsed[0])
+	}
+
 	if operator == "+" {
 		return sum(values)
 	}
@@ -281,12 +329,12 @@ func operation(operator string, values, data interface{}) interface{} {
 		return minus(values)
 	}
 
-	rp := reflect.ValueOf(values)
+	if operator == "*" {
+		return mult(values)
+	}
 
-	parsed := values.([]interface{})
-
-	if rp.Len() == 1 {
-		return unary(operator, parsed[0].(bool))
+	if operator == "/" {
+		return div(values)
 	}
 
 	if operator == "and" {
