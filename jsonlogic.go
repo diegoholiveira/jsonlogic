@@ -20,12 +20,12 @@ func isString(obj interface{}) bool {
 	return is(obj, reflect.String)
 }
 
-func isInt(obj interface{}) bool {
+func isNumber(obj interface{}) bool {
 	return is(obj, reflect.Int) || is(obj, reflect.Float64)
 }
 
 func isPrimitive(obj interface{}) bool {
-	return isBool(obj) || isString(obj) || isInt(obj)
+	return isBool(obj) || isString(obj) || isNumber(obj)
 }
 
 func isMap(obj interface{}) bool {
@@ -55,7 +55,7 @@ func less(a, b interface{}) bool {
 	case string:
 		var w string
 
-		if isInt(b) {
+		if isNumber(b) {
 			w = strconv.FormatFloat(b.(float64), 'f', -1, 64)
 		} else {
 			w = b.(string)
@@ -116,10 +116,12 @@ func between(operator string, values []interface{}, data interface{}) interface{
 
 func unary(operator string, value interface{}) interface{} {
 	var b bool
+
 	if isBool(value) {
 		b = value.(bool)
 	}
-	if isInt(value) {
+
+	if isNumber(value) {
 		b = value.(float64) > 0
 	}
 
@@ -159,7 +161,7 @@ func _or(values []interface{}) interface{} {
 			return true
 		}
 
-		if isInt(value) && value.(float64) > 0 {
+		if isNumber(value) && value.(float64) > 0 {
 			return value
 		}
 	}
@@ -261,7 +263,7 @@ func getVar(value, data interface{}) interface{} {
 
 	if isSlice(value) {
 		parsed = value.([]interface{})[0].(string)
-	} else if isInt(value) {
+	} else if isNumber(value) {
 		index := int(value.(float64))
 		return data.([]interface{})[index]
 	} else {
