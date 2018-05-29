@@ -338,7 +338,7 @@ func merge(values interface{}) interface{} {
 	return result
 }
 
-func conditional(values interface{}) interface{} {
+func conditional(values, data interface{}) interface{} {
 	if isPrimitive(values) {
 		return values
 	}
@@ -354,7 +354,12 @@ func conditional(values interface{}) interface{} {
 	parsed := values.([]interface{})
 
 	for i := 0; i < length-1; i = i + 2 {
-		if isTrue(parsed[i]) {
+		v := parsed[i]
+		if isMap(v) {
+			v = getVar(parsed[i], data)
+		}
+
+		if isTrue(v) {
 			return parsed[i+1]
 		}
 	}
@@ -443,12 +448,41 @@ func missing(values, data interface{}) interface{} {
 		}
 	}
 
-	return interface{}(missing)
+	return missing
+}
+
+func missingSome(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+	number := int(toFloat(parsed[0]))
+	vars := parsed[1]
+
+	missing := make([]interface{}, 0)
+	found := make([]interface{}, 0)
+
+	for _, _var := range vars.([]interface{}) {
+		_value := getVar(_var, data)
+
+		if _value == nil {
+			missing = append(missing, _var)
+		} else {
+			found = append(found, _var)
+		}
+	}
+
+	if number > len(found) {
+		return missing
+	}
+
+	return make([]interface{}, 0)
 }
 
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "missing" {
 		return missing(values, data)
+	}
+
+	if operator == "missing_some" {
+		return missingSome(values, data)
 	}
 
 	if operator == "var" {
@@ -468,7 +502,7 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	if operator == "if" {
-		return conditional(values)
+		return conditional(values, data)
 	}
 
 	if isPrimitive(values) {
@@ -568,6 +602,10 @@ func operation(operator string, values, data interface{}) interface{} {
 func parseValues(values, data interface{}) interface{} {
 	if values == nil || isPrimitive(values) {
 		return values
+	}
+
+	if isMap(values) {
+		return apply(values, data)
 	}
 
 	parsed := make([]interface{}, 0)
