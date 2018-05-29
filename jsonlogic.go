@@ -2,7 +2,7 @@ package jsonlogic
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	//"log"
 	"math"
 	"reflect"
@@ -428,13 +428,27 @@ func getVar(value, data interface{}) interface{} {
 	return _value
 }
 
-func missing(values interface{}) interface{} {
-	return nil
+func missing(values, data interface{}) interface{} {
+	if isString(values) {
+		values = []interface{}{values}
+	}
+
+	missing := make([]interface{}, 0)
+
+	for _, _var := range values.([]interface{}) {
+		_value := getVar(_var, data)
+
+		if _value == nil {
+			missing = append(missing, _var)
+		}
+	}
+
+	return interface{}(missing)
 }
 
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "missing" {
-		return missing(values)
+		return missing(values, data)
 	}
 
 	if operator == "var" {
