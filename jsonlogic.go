@@ -2,63 +2,13 @@ package jsonlogic
 
 import (
 	"errors"
-	//"fmt"
+	"fmt"
 	//"log"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 )
-
-func is(obj interface{}, kind reflect.Kind) bool {
-	return obj != nil && reflect.TypeOf(obj).Kind() == kind
-}
-
-func isBool(obj interface{}) bool {
-	return is(obj, reflect.Bool)
-}
-
-func isString(obj interface{}) bool {
-	return is(obj, reflect.String)
-}
-
-func isNumber(obj interface{}) bool {
-	return is(obj, reflect.Int) || is(obj, reflect.Float64)
-}
-
-func isPrimitive(obj interface{}) bool {
-	return isBool(obj) || isString(obj) || isNumber(obj)
-}
-
-func isMap(obj interface{}) bool {
-	return is(obj, reflect.Map)
-}
-
-func isArray(obj interface{}) bool {
-	return is(obj, reflect.Array)
-}
-
-func isSlice(obj interface{}) bool {
-	return is(obj, reflect.Slice)
-}
-
-func toFloat(value interface{}) float64 {
-	if isString(value) {
-		w, _ := strconv.ParseFloat(value.(string), 64)
-
-		return w
-	}
-
-	return value.(float64)
-}
-
-func toString(value interface{}) string {
-	if isNumber(value) {
-		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
-	}
-
-	return value.(string)
-}
 
 func less(a, b interface{}) bool {
 	switch v := a.(type) {
@@ -394,63 +344,99 @@ func conditional(values interface{}) interface{} {
 	}
 
 	rp := reflect.ValueOf(values)
-	if rp.Len() == 0 {
+
+	length := rp.Len()
+
+	if length == 0 {
 		return nil
 	}
 
-	var _if interface{}
-	var _else interface{}
-	var _valueIf interface{}
-	var _valueElse interface{}
-
 	parsed := values.([]interface{})
 
-	if rp.Len() == 1 {
-		return conditional(parsed[0])
+	for i := 0; i < length-1; i = i + 2 {
+		if isTrue(parsed[i]) {
+			return parsed[i+1]
+		}
 	}
 
-	if rp.Len() == 2 {
-		_if = conditional(parsed[0])
-		_valueIf = parsed[1]
+	if length%2 == 1 {
+		return parsed[length-1]
 	}
 
-	if rp.Len() == 3 {
-		_if = conditional(parsed[0])
-		_valueIf = parsed[1]
-		_valueElse = parsed[2]
+	return nil
+}
+
+func getVar(value, data interface{}) interface{} {
+	if value == nil {
+		return data
 	}
 
-	if rp.Len() == 4 {
-		_if = conditional(parsed[0])
-		_valueIf = parsed[1]
-		_else = parsed[2]
-		_valueElse = parsed[3]
+	if isString(value) && toString(value) == "" {
+		return data
 	}
 
-	if isBool(_if) && _if.(bool) {
-		return conditional(_valueIf)
+	if isNumber(value) {
+		value = toString(value)
 	}
 
-	if isNumber(_if) && toFloat(_if) != 0 {
-		return conditional(_valueIf)
+	var _default interface{}
+
+	if isSlice(value) { // syntax sugar
+		length := reflect.ValueOf(value).Len()
+
+		if length == 0 {
+			return data
+		}
+
+		if length == 2 {
+			_default = value.([]interface{})[1]
+		}
+
+		value = value.([]interface{})[0].(string)
 	}
 
-	if isString(_if) && len(_if.(string)) > 0 {
-		return conditional(_valueIf)
+	if data == nil {
+		return _default
 	}
 
-	if isBool(_else) && _else.(bool) {
-		return conditional(_valueElse)
+	parts := strings.Split(value.(string), ".")
+
+	var _value interface{}
+
+	for _, part := range parts {
+		if toFloat(part) > 0 {
+			_value = data.([]interface{})[int(toFloat(part))]
+		} else {
+			_value = data.(map[string]interface{})[part]
+		}
+
+		if _value == nil {
+			return _default
+		}
+
+		if isPrimitive(_value) {
+			continue
+		}
+
+		data = _value
 	}
 
-	if isNumber(_else) && toFloat(_else) > 0 {
-		return conditional(_valueElse)
+	if _value == nil {
+		return _default
 	}
 
-	return _valueElse
+	return _value
+}
+
+func missing(values interface{}) interface{} {
+	return nil
 }
 
 func operation(operator string, values, data interface{}) interface{} {
+	if operator == "missing" {
+		return missing(values)
+	}
+
 	if operator == "var" {
 		return getVar(values, data)
 	}
@@ -565,57 +551,8 @@ func operation(operator string, values, data interface{}) interface{} {
 	return equals(parsed[0], parsed[1])
 }
 
-func getVar(value, data interface{}) interface{} {
-	if data == nil {
-		return value
-	}
-
-	var parsed string
-
-	if isSlice(value) {
-		parsed = value.([]interface{})[0].(string)
-	} else if isNumber(value) {
-		index := int(value.(float64))
-		return data.([]interface{})[index]
-	} else {
-		parsed = value.(string)
-	}
-
-	parts := strings.Split(parsed, ".")
-
-	_data := data
-
-	for _, part := range parts {
-		_data = getVarFromData(part, _data, value)
-	}
-
-	return _data
-}
-
-func getVarFromData(value string, data, originalValue interface{}) interface{} {
-	if !isMap(data) {
-		return nil
-	}
-
-	parsedValue := data.(map[string]interface{})[value]
-	if parsedValue == nil && isSlice(originalValue) {
-		parsedValue = originalValue.([]interface{})[1]
-	}
-
-	if parsedValue == nil {
-		return nil
-	}
-
-	switch v := parsedValue.(type) {
-	case int:
-		return interface{}(float64(v))
-	default:
-		return v
-	}
-}
-
 func parseValues(values, data interface{}) interface{} {
-	if isPrimitive(values) {
+	if values == nil || isPrimitive(values) {
 		return values
 	}
 
