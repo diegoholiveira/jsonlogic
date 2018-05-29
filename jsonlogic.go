@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"errors"
+	//"fmt"
 	//"log"
 	"math"
 	"reflect"
@@ -121,14 +122,27 @@ func unary(operator string, value interface{}) interface{} {
 		return -1 * toFloat(value)
 	}
 
+	if operator == "!!" {
+		return !unary("!", value).(bool)
+	}
+
 	var b bool
+
+	if isSlice(value) && reflect.ValueOf(value).Len() > 0 {
+		b = true
+	}
+
+	if isNumber(value) {
+		v := toFloat(value)
+		b = v != 0
+	}
 
 	if isBool(value) {
 		b = value.(bool)
 	}
 
-	if isNumber(value) {
-		b = value.(float64) > 0
+	if isString(value) && len(toString(value)) > 0 {
+		b = true
 	}
 
 	if operator == "!" {
@@ -139,32 +153,55 @@ func unary(operator string, value interface{}) interface{} {
 }
 
 func _and(values []interface{}) interface{} {
-	r := interface{}(true)
-	v := interface{}(float64(0))
+	var v float64
+
+	isBoolExpression := true
 
 	for _, value := range values {
-		if isBool(value) {
-			r = interface{}(r.(bool) && value.(bool))
+		if isSlice(value) {
+			return value
+		}
 
+		if isBool(value) && !value.(bool) {
+			return false
+		}
+
+		if isString(value) && toString(value) == "" {
+			return value
+		}
+
+		if !isNumber(value) {
 			continue
 		}
 
-		if value.(float64) > v.(float64) {
-			v = interface{}(value)
+		isBoolExpression = false
+
+		_value := toFloat(value)
+
+		if _value > v {
+			v = _value
 		}
 	}
 
-	if r.(bool) && v.(float64) > 0 {
-		return v
+	if isBoolExpression {
+		return true
 	}
 
-	return r
+	return v
 }
 
 func _or(values []interface{}) interface{} {
 	for _, value := range values {
 		if isBool(value) && value.(bool) {
 			return true
+		}
+
+		if isString(value) {
+			if len(toString(value)) > 0 {
+				return value
+			}
+
+			continue
 		}
 
 		if isNumber(value) && value.(float64) > 0 {
@@ -351,6 +388,68 @@ func merge(values interface{}) interface{} {
 	return result
 }
 
+func conditional(values interface{}) interface{} {
+	if isPrimitive(values) {
+		return values
+	}
+
+	rp := reflect.ValueOf(values)
+	if rp.Len() == 0 {
+		return nil
+	}
+
+	var _if interface{}
+	var _else interface{}
+	var _valueIf interface{}
+	var _valueElse interface{}
+
+	parsed := values.([]interface{})
+
+	if rp.Len() == 1 {
+		return conditional(parsed[0])
+	}
+
+	if rp.Len() == 2 {
+		_if = conditional(parsed[0])
+		_valueIf = parsed[1]
+	}
+
+	if rp.Len() == 3 {
+		_if = conditional(parsed[0])
+		_valueIf = parsed[1]
+		_valueElse = parsed[2]
+	}
+
+	if rp.Len() == 4 {
+		_if = conditional(parsed[0])
+		_valueIf = parsed[1]
+		_else = parsed[2]
+		_valueElse = parsed[3]
+	}
+
+	if isBool(_if) && _if.(bool) {
+		return conditional(_valueIf)
+	}
+
+	if isNumber(_if) && toFloat(_if) != 0 {
+		return conditional(_valueIf)
+	}
+
+	if isString(_if) && len(_if.(string)) > 0 {
+		return conditional(_valueIf)
+	}
+
+	if isBool(_else) && _else.(bool) {
+		return conditional(_valueElse)
+	}
+
+	if isNumber(_else) && toFloat(_else) > 0 {
+		return conditional(_valueElse)
+	}
+
+	return _valueElse
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "var" {
 		return getVar(values, data)
@@ -366,6 +465,10 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "merge" {
 		return merge(values)
+	}
+
+	if operator == "if" {
+		return conditional(values)
 	}
 
 	if isPrimitive(values) {
