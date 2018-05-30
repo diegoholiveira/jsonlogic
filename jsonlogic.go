@@ -374,6 +374,10 @@ func getVar(value, data interface{}) interface{} {
 	var _value interface{}
 
 	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+
 		if toNumber(part) > 0 {
 			_value = data.([]interface{})[int(toNumber(part))]
 		} else {
@@ -448,6 +452,7 @@ func filter(values, data interface{}) interface{} {
 	result := make([]interface{}, 0)
 	for _, value := range subject.([]interface{}) {
 		v := parseValues(parsed[1], value)
+
 		if isBool(v) && v.(bool) {
 			result = append(result, value)
 		}
