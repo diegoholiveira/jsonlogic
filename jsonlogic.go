@@ -9,16 +9,11 @@ import (
 )
 
 func less(a, b interface{}) bool {
-	switch v := a.(type) {
-	case float64:
-		w := toNumber(b)
-		return w > v
-	case string:
-		w := toString(b)
-		return w > v
+	if isNumber(a) {
+		return toNumber(b) > toNumber(a)
 	}
 
-	return false
+	return toString(b) > toString(a)
 }
 
 func hardEquals(a, b interface{}) bool {
@@ -33,16 +28,11 @@ func hardEquals(a, b interface{}) bool {
 }
 
 func equals(a, b interface{}) bool {
-	switch v := a.(type) {
-	case float64:
-		w := toNumber(b)
-		return v == w
-	case string:
-		w := toString(b)
-		return v == w
+	if isNumber(a) {
+		return toNumber(a) == toNumber(b)
 	}
 
-	return false
+	return toString(a) == toString(b)
 }
 
 func between(operator string, values []interface{}, data interface{}) interface{} {

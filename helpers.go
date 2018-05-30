@@ -18,7 +18,7 @@ func isString(obj interface{}) bool {
 }
 
 func isNumber(obj interface{}) bool {
-	return is(obj, reflect.Int) || is(obj, reflect.Float64)
+	return is(obj, reflect.Float64)
 }
 
 func isPrimitive(obj interface{}) bool {
