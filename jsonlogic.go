@@ -519,6 +519,100 @@ func _map(values, data interface{}) interface{} {
 	return result
 }
 
+func reduce(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+	subject := apply(parsed[0], data)
+
+	if subject == nil {
+		return float64(0)
+	}
+
+	context := map[string]interface{}{
+		"current":     float64(0),
+		"accumulator": toNumber(parsed[2]),
+	}
+
+	for _, value := range subject.([]interface{}) {
+		context["current"] = value
+
+		v := apply(parsed[1], context)
+
+		if v == nil {
+			continue
+		}
+
+		context["accumulator"] = toNumber(v)
+	}
+
+	return context["accumulator"]
+}
+
+func all(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+
+	subject := apply(parsed[0], data)
+
+	if !isTrue(subject) {
+		return false
+	}
+
+	conditions := parsed[1]
+
+	for _, value := range subject.([]interface{}) {
+		v := apply(conditions, value)
+
+		if !isTrue(v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func none(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+
+	subject := apply(parsed[0], data)
+
+	if !isTrue(subject) {
+		return true
+	}
+
+	conditions := parsed[1]
+
+	for _, value := range subject.([]interface{}) {
+		v := apply(conditions, value)
+
+		if isTrue(v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func some(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+
+	subject := apply(parsed[0], data)
+
+	if !isTrue(subject) {
+		return false
+	}
+
+	conditions := parsed[1]
+
+	for _, value := range subject.([]interface{}) {
+		v := apply(conditions, value)
+
+		if isTrue(v) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func operation(operator string, values, data interface{}) interface{} {
 	if operator == "missing" {
 		return missing(values, data)
@@ -672,6 +766,22 @@ func apply(rules, data interface{}) interface{} {
 
 		if operator == "map" {
 			return _map(values, data)
+		}
+
+		if operator == "reduce" {
+			return reduce(values, data)
+		}
+
+		if operator == "all" {
+			return all(values, data)
+		}
+
+		if operator == "none" {
+			return none(values, data)
+		}
+
+		if operator == "some" {
+			return some(values, data)
 		}
 
 		return operation(operator, parseValues(values, data), data)
