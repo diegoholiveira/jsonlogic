@@ -13,7 +13,7 @@ import (
 func less(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		w := toFloat(b)
+		w := toNumber(b)
 		return w > v
 	case string:
 		w := toString(b)
@@ -37,7 +37,7 @@ func hardEquals(a, b interface{}) bool {
 func equals(a, b interface{}) bool {
 	switch v := a.(type) {
 	case float64:
-		w := toFloat(b)
+		w := toNumber(b)
 		return v == w
 	case string:
 		w := toString(b)
@@ -65,11 +65,11 @@ func between(operator string, values []interface{}, data interface{}) interface{
 
 func unary(operator string, value interface{}) interface{} {
 	if operator == "+" || operator == "*" {
-		return toFloat(value)
+		return toNumber(value)
 	}
 
 	if operator == "-" {
-		return -1 * toFloat(value)
+		return -1 * toNumber(value)
 	}
 
 	if operator == "!!" {
@@ -83,7 +83,7 @@ func unary(operator string, value interface{}) interface{} {
 	}
 
 	if isNumber(value) {
-		v := toFloat(value)
+		v := toNumber(value)
 		b = v != 0
 	}
 
@@ -126,7 +126,7 @@ func _and(values []interface{}) interface{} {
 
 		isBoolExpression = false
 
-		_value := toFloat(value)
+		_value := toNumber(value)
 
 		if _value > v {
 			v = _value
@@ -177,8 +177,8 @@ func _in(value interface{}, values interface{}) bool {
 }
 
 func mod(a interface{}, b interface{}) interface{} {
-	_a := toFloat(a)
-	_b := toFloat(b)
+	_a := toNumber(a)
+	_b := toNumber(b)
 
 	return math.Mod(_a, _b)
 }
@@ -206,7 +206,7 @@ func max(values interface{}) interface{} {
 	bigger := math.SmallestNonzeroFloat64
 
 	for _, n := range values.([]interface{}) {
-		_n := toFloat(n)
+		_n := toNumber(n)
 		if _n > bigger {
 			bigger = _n
 		}
@@ -219,7 +219,7 @@ func min(values interface{}) interface{} {
 	smallest := math.MaxFloat64
 
 	for _, n := range values.([]interface{}) {
-		_n := toFloat(n)
+		_n := toNumber(n)
 		if smallest > _n {
 			smallest = _n
 		}
@@ -232,7 +232,7 @@ func sum(values interface{}) interface{} {
 	sum := float64(0)
 
 	for _, n := range values.([]interface{}) {
-		sum += toFloat(n)
+		sum += toNumber(n)
 	}
 
 	return sum
@@ -243,12 +243,12 @@ func minus(values interface{}) interface{} {
 
 	for _, n := range values.([]interface{}) {
 		if sum == 0 {
-			sum = toFloat(n)
+			sum = toNumber(n)
 
 			continue
 		}
 
-		sum -= toFloat(n)
+		sum -= toNumber(n)
 	}
 
 	return sum
@@ -258,7 +258,7 @@ func mult(values interface{}) interface{} {
 	sum := float64(1)
 
 	for _, n := range values.([]interface{}) {
-		sum *= toFloat(n)
+		sum *= toNumber(n)
 	}
 
 	return sum
@@ -269,12 +269,12 @@ func div(values interface{}) interface{} {
 
 	for _, n := range values.([]interface{}) {
 		if sum == 0 {
-			sum = toFloat(n)
+			sum = toNumber(n)
 
 			continue
 		}
 
-		sum /= toFloat(n)
+		sum /= toNumber(n)
 	}
 
 	return sum
@@ -286,7 +286,7 @@ func substr(values interface{}) interface{} {
 
 	runes := []rune(toString(parsed[0]))
 
-	from := int(toFloat(parsed[1]))
+	from := int(toNumber(parsed[1]))
 	length := len(runes)
 
 	if from < 0 {
@@ -294,7 +294,7 @@ func substr(values interface{}) interface{} {
 	}
 
 	if rp.Len() == 3 {
-		length = int(toFloat(parsed[2]))
+		length = int(toNumber(parsed[2]))
 	}
 
 	var to int
@@ -409,8 +409,8 @@ func getVar(value, data interface{}) interface{} {
 	var _value interface{}
 
 	for _, part := range parts {
-		if toFloat(part) > 0 {
-			_value = data.([]interface{})[int(toFloat(part))]
+		if toNumber(part) > 0 {
+			_value = data.([]interface{})[int(toNumber(part))]
 		} else {
 			_value = data.(map[string]interface{})[part]
 		}
@@ -453,7 +453,7 @@ func missing(values, data interface{}) interface{} {
 
 func missingSome(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
-	number := int(toFloat(parsed[0]))
+	number := int(toNumber(parsed[0]))
 	vars := parsed[1]
 
 	missing := make([]interface{}, 0)
@@ -474,6 +474,49 @@ func missingSome(values, data interface{}) interface{} {
 	}
 
 	return make([]interface{}, 0)
+}
+
+func filter(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+	subject := apply(parsed[0], data)
+
+	result := make([]interface{}, 0)
+	for _, value := range subject.([]interface{}) {
+		v := parseValues(parsed[1], value)
+		if isBool(v) && v.(bool) {
+			result = append(result, value)
+		}
+
+		if isNumber(v) && toNumber(v) != 0 {
+			result = append(result, value)
+		}
+	}
+
+	return result
+}
+
+func _map(values, data interface{}) interface{} {
+	parsed := values.([]interface{})
+	subject := apply(parsed[0], data)
+
+	result := make([]interface{}, 0)
+
+	if subject == nil {
+		return result
+	}
+
+	for _, value := range subject.([]interface{}) {
+		v := parseValues(parsed[1], value)
+		if v == nil {
+			continue
+		}
+
+		if isNumber(v) && toNumber(v) != 0 {
+			result = append(result, toNumber(v))
+		}
+	}
+
+	return result
 }
 
 func operation(operator string, values, data interface{}) interface{} {
@@ -623,6 +666,14 @@ func parseValues(values, data interface{}) interface{} {
 
 func apply(rules, data interface{}) interface{} {
 	for operator, values := range rules.(map[string]interface{}) {
+		if operator == "filter" {
+			return filter(values, data)
+		}
+
+		if operator == "map" {
+			return _map(values, data)
+		}
+
 		return operation(operator, parseValues(values, data), data)
 	}
 
@@ -650,7 +701,7 @@ func convertToResult(result interface{}, _result interface{}) {
 }
 
 // Apply executes the rules passed with the data as context
-// and generates an result of any kind (boolean, map, string and others)
+// and generates an result of any kind (bool, map, string and others)
 func Apply(rules, data interface{}, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {

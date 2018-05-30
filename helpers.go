@@ -39,7 +39,7 @@ func isTrue(obj interface{}) bool {
 	}
 
 	if isNumber(obj) {
-		n := toFloat(obj)
+		n := toNumber(obj)
 		return n != 0
 	}
 
@@ -51,7 +51,7 @@ func isTrue(obj interface{}) bool {
 	return false
 }
 
-func toFloat(value interface{}) float64 {
+func toNumber(value interface{}) float64 {
 	if isString(value) {
 		w, _ := strconv.ParseFloat(value.(string), 64)
 
