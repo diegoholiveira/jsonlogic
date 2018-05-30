@@ -2,8 +2,6 @@ package jsonlogic
 
 import (
 	"errors"
-	//"fmt"
-	//"log"
 	"math"
 	"reflect"
 	"strconv"
