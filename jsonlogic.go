@@ -64,24 +64,7 @@ func unary(operator string, value interface{}) interface{} {
 		return !unary("!", value).(bool)
 	}
 
-	var b bool
-
-	if isSlice(value) && reflect.ValueOf(value).Len() > 0 {
-		b = true
-	}
-
-	if isNumber(value) {
-		v := toNumber(value)
-		b = v != 0
-	}
-
-	if isBool(value) {
-		b = value.(bool)
-	}
-
-	if isString(value) && len(toString(value)) > 0 {
-		b = true
-	}
+	b := isTrue(value)
 
 	if operator == "!" {
 		return !b
