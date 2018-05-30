@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -161,13 +160,7 @@ func concat(values interface{}) interface{} {
 
 	var s strings.Builder
 	for _, text := range values.([]interface{}) {
-		if isNumber(text) {
-			s.WriteString(strconv.FormatFloat(text.(float64), 'f', -1, 64))
-		}
-
-		if isString(text) {
-			s.WriteString(text.(string))
-		}
+		s.WriteString(toString(text))
 	}
 
 	return strings.TrimSpace(s.String())
