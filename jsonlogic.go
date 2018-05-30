@@ -1,6 +1,7 @@
 package jsonlogic
 
 import (
+	"bytes"
 	"errors"
 	"math"
 	"reflect"
@@ -158,7 +159,7 @@ func concat(values interface{}) interface{} {
 		return values
 	}
 
-	var s strings.Builder
+	var s bytes.Buffer
 	for _, text := range values.([]interface{}) {
 		s.WriteString(toString(text))
 	}
