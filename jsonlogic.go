@@ -113,23 +113,7 @@ func _and(values []interface{}) interface{} {
 
 func _or(values []interface{}) interface{} {
 	for _, value := range values {
-		if isBool(value) && value.(bool) {
-			return true
-		}
-
-		if isString(value) {
-			if len(toString(value)) > 0 {
-				return value
-			}
-
-			continue
-		}
-
-		if isNumber(value) && value.(float64) > 0 {
-			return value
-		}
-
-		if isMap(value) {
+		if isTrue(value) {
 			return value
 		}
 	}
