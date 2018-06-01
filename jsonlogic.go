@@ -128,6 +128,10 @@ func _or(values []interface{}) interface{} {
 		if isNumber(value) && value.(float64) > 0 {
 			return value
 		}
+
+		if isMap(value) {
+			return value
+		}
 	}
 
 	return false
