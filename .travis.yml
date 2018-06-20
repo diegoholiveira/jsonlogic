@@ -3,3 +3,6 @@ sudo: false
 go:
   - "1.10"
   - master
+matrix:
+  allow_failures:
+    - go: master
