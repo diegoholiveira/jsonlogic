@@ -43,7 +43,7 @@ func isTrue(obj interface{}) bool {
 		return n != 0
 	}
 
-	if isString(obj) || isSlice(obj) {
+	if isString(obj) || isSlice(obj) || isMap(obj) {
 		length := reflect.ValueOf(obj).Len()
 		return length > 0
 	}

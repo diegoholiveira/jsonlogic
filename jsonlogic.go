@@ -6,6 +6,8 @@ import (
 	"math"
 	"reflect"
 	"strings"
+
+	"github.com/mitchellh/copystructure"
 )
 
 func less(a, b interface{}) bool {
@@ -390,6 +392,27 @@ func getVar(value, data interface{}) interface{} {
 	return _value
 }
 
+func setProperty(value, data interface{}) interface{} {
+	_value := value.([]interface{})
+
+	object := _value[0]
+
+	if !isMap(object) {
+		return object
+	}
+
+	property := _value[1].(string)
+	modified, err := copystructure.Copy(object)
+	if err != nil {
+		panic(err)
+	}
+
+	_modified := modified.(map[string]interface{})
+	_modified[property] = parseValues(_value[2], data)
+
+	return interface{}(_modified)
+}
+
 func missing(values, data interface{}) interface{} {
 	if isString(values) {
 		values = []interface{}{values}
@@ -465,12 +488,9 @@ func _map(values, data interface{}) interface{} {
 
 	for _, value := range subject.([]interface{}) {
 		v := parseValues(parsed[1], value)
-		if v == nil {
-			continue
-		}
 
-		if isNumber(v) && toNumber(v) != 0 {
-			result = append(result, toNumber(v))
+		if isTrue(v) {
+			result = append(result, v)
 		}
 	}
 
@@ -582,6 +602,10 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "var" {
 		return getVar(values, data)
+	}
+
+	if operator == "set" {
+		return setProperty(values, data)
 	}
 
 	if operator == "cat" {
