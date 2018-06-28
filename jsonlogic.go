@@ -464,11 +464,7 @@ func filter(values, data interface{}) interface{} {
 	for _, value := range subject.([]interface{}) {
 		v := parseValues(parsed[1], value)
 
-		if isBool(v) && v.(bool) {
-			result = append(result, value)
-		}
-
-		if isNumber(v) && toNumber(v) != 0 {
+		if isTrue(v) {
 			result = append(result, value)
 		}
 	}
