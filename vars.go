@@ -18,7 +18,7 @@ func solveVars(values, data interface{}) interface{} {
 
 				val := getVar(value, data)
 				if val != nil {
-					logic["var"] = val
+					return val
 				} else {
 					logic["var"] = value
 				}

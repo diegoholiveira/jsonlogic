@@ -362,11 +362,7 @@ func TestLocalContext(t *testing.T) {
 			{"==": [
 				{"var": ".age"},
 				{"min": {"map": [
-					[
-						{"age":18, "name":"John"},
-						{"age":20, "name":"Luke"},
-						{"age":18, "name":"Mark"}
-					],
+					{"var": "people"},
 					{"var": ".age"}
 				]}}
 			]}
