@@ -343,11 +343,57 @@ func TestSetAValue(t *testing.T) {
 
 	var expected interface{}
 	json.Unmarshal([]byte(`[
-			{"age": 102, "location": "north"},
-			{"age": 502, "location": "south"}
+		{"age": 102, "location": "north"},
+		{"age": 502, "location": "south"}
 	]`), &expected)
 
 	if !reflect.DeepEqual(expected, result) {
 		t.Fatal("We expect a new object with new data")
+	}
+}
+
+func TestLocalContext(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"filter": [
+			{"var": "people"},
+			{"==": [
+				{"var": ".age"},
+				{"min": {"map": [
+					[
+						{"age":18, "name":"John"},
+						{"age":20, "name":"Luke"},
+						{"age":18, "name":"Mark"}
+					],
+					{"var": ".age"}
+				]}}
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"people": [
+			{"age":18, "name":"John"},
+			{"age":20, "name":"Luke"},
+			{"age":18, "name":"Mark"}
+		]
+	}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`[
+		{"age": 18, "name": "John"},
+		{"age": 18, "name": "Mark"}
+	]`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("filter do not have access to all scope")
 	}
 }
