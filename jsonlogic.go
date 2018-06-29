@@ -10,33 +10,6 @@ import (
 	"github.com/mitchellh/copystructure"
 )
 
-func less(a, b interface{}) bool {
-	if isNumber(a) {
-		return toNumber(b) > toNumber(a)
-	}
-
-	return toString(b) > toString(a)
-}
-
-func hardEquals(a, b interface{}) bool {
-	ra := reflect.ValueOf(a).Kind()
-	rb := reflect.ValueOf(b).Kind()
-
-	if ra != rb {
-		return false
-	}
-
-	return equals(a, b)
-}
-
-func equals(a, b interface{}) bool {
-	if isNumber(a) {
-		return toNumber(a) == toNumber(b)
-	}
-
-	return toString(a) == toString(b)
-}
-
 func between(operator string, values []interface{}, data interface{}) interface{} {
 	a := values[0]
 	b := values[1]
@@ -326,72 +299,6 @@ func conditional(values, data interface{}) interface{} {
 	return nil
 }
 
-func getVar(value, data interface{}) interface{} {
-	if value == nil {
-		return data
-	}
-
-	if isString(value) && toString(value) == "" {
-		return data
-	}
-
-	if isNumber(value) {
-		value = toString(value)
-	}
-
-	var _default interface{}
-
-	if isSlice(value) { // syntax sugar
-		length := reflect.ValueOf(value).Len()
-
-		if length == 0 {
-			return data
-		}
-
-		if length == 2 {
-			_default = value.([]interface{})[1]
-		}
-
-		value = value.([]interface{})[0].(string)
-	}
-
-	if data == nil {
-		return _default
-	}
-
-	parts := strings.Split(value.(string), ".")
-
-	var _value interface{}
-
-	for _, part := range parts {
-		if part == "" {
-			continue
-		}
-
-		if toNumber(part) > 0 {
-			_value = data.([]interface{})[int(toNumber(part))]
-		} else {
-			_value = data.(map[string]interface{})[part]
-		}
-
-		if _value == nil {
-			return _default
-		}
-
-		if isPrimitive(_value) {
-			continue
-		}
-
-		data = _value
-	}
-
-	if _value == nil {
-		return _default
-	}
-
-	return _value
-}
-
 func setProperty(value, data interface{}) interface{} {
 	_value := value.([]interface{})
 
@@ -454,71 +361,6 @@ func missingSome(values, data interface{}) interface{} {
 	}
 
 	return make([]interface{}, 0)
-}
-
-func filter(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
-	subject := apply(parsed[0], data)
-
-	result := make([]interface{}, 0)
-	for _, value := range subject.([]interface{}) {
-		v := parseValues(parsed[1], value)
-
-		if isTrue(v) {
-			result = append(result, value)
-		}
-	}
-
-	return result
-}
-
-func _map(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
-	subject := apply(parsed[0], data)
-
-	result := make([]interface{}, 0)
-
-	if subject == nil {
-		return result
-	}
-
-	for _, value := range subject.([]interface{}) {
-		v := parseValues(parsed[1], value)
-
-		if isTrue(v) {
-			result = append(result, v)
-		}
-	}
-
-	return result
-}
-
-func reduce(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
-	subject := apply(parsed[0], data)
-
-	if subject == nil {
-		return float64(0)
-	}
-
-	context := map[string]interface{}{
-		"current":     float64(0),
-		"accumulator": toNumber(parsed[2]),
-	}
-
-	for _, value := range subject.([]interface{}) {
-		context["current"] = value
-
-		v := apply(parsed[1], context)
-
-		if v == nil {
-			continue
-		}
-
-		context["accumulator"] = toNumber(v)
-	}
-
-	return context["accumulator"]
 }
 
 func all(values, data interface{}) interface{} {
