@@ -101,8 +101,10 @@ func _in(value interface{}, values interface{}) bool {
 		return strings.Contains(values.(string), value.(string))
 	}
 
-	for _, v := range values.([]interface{}) {
-		if v == value {
+	v := values.([]interface{})
+
+	for i := range v {
+		if v[i] == value {
 			return true
 		}
 	}
