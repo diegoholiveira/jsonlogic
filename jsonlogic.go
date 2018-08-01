@@ -104,6 +104,14 @@ func _in(value interface{}, values interface{}) bool {
 	v := values.([]interface{})
 
 	for i := range v {
+		if isNumber(value) {
+			if toNumber(v[i]) == value {
+				return true
+			}
+
+			continue
+		}
+
 		if v[i] == value {
 			return true
 		}
