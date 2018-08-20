@@ -96,23 +96,42 @@ func _or(values []interface{}) interface{} {
 	return false
 }
 
+func _inRange(value interface{}, values interface{}) bool {
+	v := values.([]interface{})
+
+	i := v[0]
+	j := v[1]
+
+	if isNumber(value) {
+		return toNumber(value) >= toNumber(i) && toNumber(j) >= toNumber(value)
+	}
+
+	return toString(value) >= toString(i) && toString(j) >= toString(value)
+}
+
 func _in(value interface{}, values interface{}) bool {
 	if isString(values) {
 		return strings.Contains(values.(string), value.(string))
 	}
 
-	v := values.([]interface{})
-
-	for i := range v {
-		if isNumber(value) {
-			if toNumber(v[i]) == value {
+	for _, element := range values.([]interface{}) {
+		if isSlice(element) {
+			if _inRange(value, element) {
 				return true
 			}
 
 			continue
 		}
 
-		if v[i] == value {
+		if isNumber(value) {
+			if toNumber(element) == value {
+				return true
+			}
+
+			continue
+		}
+
+		if element == value {
 			return true
 		}
 	}
