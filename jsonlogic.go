@@ -439,7 +439,15 @@ func none(values, data interface{}) interface{} {
 func some(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
 
-	subject := apply(parsed[0], data)
+	var subject interface{}
+
+	if isMap(parsed[0]) {
+		subject = apply(parsed[0], data)
+	}
+
+	if isSlice(parsed[0]) {
+		subject = parsed[0]
+	}
 
 	if !isTrue(subject) {
 		return false

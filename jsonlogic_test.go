@@ -436,3 +436,33 @@ func TestListOfRanges(t *testing.T) {
 		t.Fatal("filter do not have access to all scope")
 	}
 }
+
+func TestSomeWithLists(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"some": [
+			[511, 521, 811],
+			{"in":[
+				{"var":""},
+				[1, 2, 3, 511]
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`true`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("list must work with some")
+	}
+}
