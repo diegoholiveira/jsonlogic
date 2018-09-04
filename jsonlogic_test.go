@@ -466,3 +466,43 @@ func TestSomeWithLists(t *testing.T) {
 		t.Fatal("list must work with some")
 	}
 }
+
+func TestInOperatorWorksWithMaps(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"some": [
+			[511,521,811],
+			{"in": [
+				{"var": ""},
+				{"map": [
+					{"var": "my_list"},
+					{"var": ".service_id"}
+				]}
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"my_list": [
+			{"service_id": 511},
+			{"service_id": 771},
+			{"service_id": 521},
+			{"service_id": 181}
+		]
+	}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`true`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("maps must work with in operator")
+	}
+}

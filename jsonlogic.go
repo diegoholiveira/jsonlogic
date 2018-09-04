@@ -453,7 +453,7 @@ func some(values, data interface{}) interface{} {
 		return false
 	}
 
-	conditions := parsed[1]
+	conditions := solveVars(parsed[1], data)
 
 	for _, value := range subject.([]interface{}) {
 		v := apply(conditions, value)
