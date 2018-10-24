@@ -76,7 +76,16 @@ func getVar(value, data interface{}) interface{} {
 		return _default
 	}
 
-	parts := strings.Split(value.(string), ".")
+	_value := getVarsParts(value.(string), data)
+	if _value == nil {
+		return _default
+	}
+
+	return _value
+}
+
+func getVarsParts(value string, data interface{}) interface{} {
+	parts := strings.Split(value, ".")
 
 	var _value interface{}
 
@@ -92,7 +101,7 @@ func getVar(value, data interface{}) interface{} {
 		}
 
 		if _value == nil {
-			return _default
+			return nil
 		}
 
 		if isPrimitive(_value) {
@@ -100,10 +109,6 @@ func getVar(value, data interface{}) interface{} {
 		}
 
 		data = _value
-	}
-
-	if _value == nil {
-		return _default
 	}
 
 	return _value
