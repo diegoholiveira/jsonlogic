@@ -428,6 +428,66 @@ func TestSomeWithLists(t *testing.T) {
 	}
 }
 
+func TestAllWithLists(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"all": [
+			[511, 521, 811],
+			{"in":[
+				{"var":""},
+				[511, 521, 811, 3]
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`true`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("list must work with some")
+	}
+}
+
+func TestNoneWithLists(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"none": [
+			[511, 521, 811],
+			{"in":[
+				{"var":""},
+				[1, 2]
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`true`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("list must work with some")
+	}
+}
+
 func TestInOperatorWorksWithMaps(t *testing.T) {
 	var rules interface{}
 	var data interface{}

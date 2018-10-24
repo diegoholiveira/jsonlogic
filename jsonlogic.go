@@ -372,13 +372,21 @@ func missingSome(values, data interface{}) interface{} {
 func all(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
 
-	subject := apply(parsed[0], data)
+	var subject interface{}
+
+	if isMap(parsed[0]) {
+		subject = apply(parsed[0], data)
+	}
+
+	if isSlice(parsed[0]) {
+		subject = parsed[0]
+	}
 
 	if !isTrue(subject) {
 		return false
 	}
 
-	conditions := parsed[1]
+	conditions := solveVars(parsed[1], data)
 
 	for _, value := range subject.([]interface{}) {
 		v := apply(conditions, value)
@@ -394,13 +402,21 @@ func all(values, data interface{}) interface{} {
 func none(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
 
-	subject := apply(parsed[0], data)
+	var subject interface{}
+
+	if isMap(parsed[0]) {
+		subject = apply(parsed[0], data)
+	}
+
+	if isSlice(parsed[0]) {
+		subject = parsed[0]
+	}
 
 	if !isTrue(subject) {
 		return true
 	}
 
-	conditions := parsed[1]
+	conditions := solveVars(parsed[1], data)
 
 	for _, value := range subject.([]interface{}) {
 		v := apply(conditions, value)
