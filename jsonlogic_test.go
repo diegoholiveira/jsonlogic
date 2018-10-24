@@ -313,45 +313,6 @@ func validateScenario(t *testing.T, scenario interface{}) {
 	}
 }
 
-func TestSetAValue(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"map": [
-			{"var": "objects"},
-			{"set": [
-				{"var": ""},
-				"age",
-				{"+": [{"var": ".age"}, 2]}
-			]}
-		]
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"objects": [
-			{"age": 100, "location": "north"},
-			{"age": 500, "location": "south"}
-		]
-	}`), &data)
-
-	var result interface{}
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var expected interface{}
-	json.Unmarshal([]byte(`[
-		{"age": 102, "location": "north"},
-		{"age": 502, "location": "south"}
-	]`), &expected)
-
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("We expect a new object with new data")
-	}
-}
-
 func TestLocalContext(t *testing.T) {
 	var rules interface{}
 	var data interface{}

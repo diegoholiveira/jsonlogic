@@ -6,8 +6,6 @@ import (
 	"math"
 	"reflect"
 	"strings"
-
-	"github.com/mitchellh/copystructure"
 )
 
 func between(operator string, values []interface{}, data interface{}) interface{} {
@@ -328,27 +326,6 @@ func conditional(values, data interface{}) interface{} {
 	return nil
 }
 
-func setProperty(value, data interface{}) interface{} {
-	_value := value.([]interface{})
-
-	object := _value[0]
-
-	if !isMap(object) {
-		return object
-	}
-
-	property := _value[1].(string)
-	modified, err := copystructure.Copy(object)
-	if err != nil {
-		panic(err)
-	}
-
-	_modified := modified.(map[string]interface{})
-	_modified[property] = parseValues(_value[2], data)
-
-	return interface{}(_modified)
-}
-
 func missing(values, data interface{}) interface{} {
 	if isString(values) {
 		values = []interface{}{values}
@@ -477,10 +454,6 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "var" {
 		return getVar(values, data)
-	}
-
-	if operator == "set" {
-		return setProperty(values, data)
 	}
 
 	if operator == "cat" {
