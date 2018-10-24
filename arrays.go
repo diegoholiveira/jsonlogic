@@ -5,17 +5,11 @@ func filter(values, data interface{}) interface{} {
 
 	var subject interface{}
 
-	if isSlice(parsed[0]) {
-		subject = parsed[0]
-	} else {
+	if isMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
 	result := make([]interface{}, 0)
-
-	if subject == nil {
-		return result
-	}
 
 	logic := solveVars(parsed[1], data)
 
@@ -77,10 +71,6 @@ func reduce(values, data interface{}) interface{} {
 		context["current"] = value
 
 		v := apply(parsed[1], context)
-
-		if v == nil {
-			continue
-		}
 
 		context["accumulator"] = toNumber(v)
 	}
