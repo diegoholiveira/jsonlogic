@@ -2,7 +2,8 @@ language: go
 sudo: false
 go:
   - "1.10"
-  - master
-matrix:
-  allow_failures:
-    - go: master
+  - "1.11"
+script:
+  - go test -coverprofile=coverage.txt -covermode=count
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
