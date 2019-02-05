@@ -685,7 +685,7 @@ func convertToResult(result interface{}, _result interface{}) {
 
 // Apply executes the rules passed with the data as context
 // and generates an result of any kind (bool, map, string and others)
-func Apply(rules, data interface{}, result interface{}) error {
+func Apply(rules, data, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("Result must be a pointer")
@@ -704,4 +704,22 @@ func Apply(rules, data interface{}, result interface{}) error {
 	convertToResult(result, rules)
 
 	return nil
+}
+
+// IsValid verifies if the JSON Logic is valid
+func IsValid(rules interface{}) (valid bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			valid = false
+		}
+	}()
+
+	var result interface{}
+	var data interface{}
+
+	Apply(rules, data, &result)
+
+	valid = true
+
+	return
 }

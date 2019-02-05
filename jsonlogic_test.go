@@ -298,6 +298,10 @@ func validateScenario(t *testing.T, scenario interface{}) {
 	data := scenario.([]interface{})[1]
 	expected := scenario.([]interface{})[2]
 
+	if !IsValid(logic) {
+		t.Fatal("The logic is not valid")
+	}
+
 	err := Apply(logic, data, &result)
 	if err != nil {
 		t.Fatal(err)
@@ -564,5 +568,36 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, result) {
 		t.Fatal("maps must work with in operator")
+	}
+}
+
+func TestJSONLogicValidator(t *testing.T) {
+	scenarios := map[string]struct {
+		Expected bool
+		Rule     string
+	}{
+		"invalid comparison between number and string": {
+			Expected: false,
+			Rule:     `{"in": [1, "b"]}`,
+		},
+		"filter a number should not be valid": {
+			Expected: false,
+			Rule:     `{"filter":[5, {">=":[{"var":""},2]}]}`,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		t.Run(fmt.Sprintf("SCENARIO: %s", name), func(t *testing.T) {
+			rule := make(map[string]interface{})
+
+			err := json.Unmarshal([]byte(scenario.Rule), &rule)
+			if err != nil {
+				t.Fatal(fmt.Errorf("Invalid rule: %s", err.Error()))
+			}
+
+			if scenario.Expected != IsValid(rule) {
+				t.Fatal(fmt.Errorf("Scenario %s failed", name))
+			}
+		})
 	}
 }
