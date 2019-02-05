@@ -66,5 +66,9 @@ func toString(value interface{}) string {
 		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
 	}
 
+	if value == nil {
+		return ""
+	}
+
 	return value.(string)
 }
