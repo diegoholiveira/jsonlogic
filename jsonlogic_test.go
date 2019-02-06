@@ -267,6 +267,7 @@ func TestRulesFromJsonLogic(t *testing.T) {
 	response, err := http.Get("http://jsonlogic.com/tests.json")
 	if err != nil {
 		log.Fatal(err)
+
 		return
 	}
 
@@ -279,6 +280,7 @@ func TestRulesFromJsonLogic(t *testing.T) {
 	err = json.Unmarshal(buffer, &scenarios)
 	if err != nil {
 		log.Println(err)
+
 		return
 	}
 
@@ -299,6 +301,8 @@ func validateScenario(t *testing.T, scenario interface{}) {
 	expected := scenario.([]interface{})[2]
 
 	if !IsValid(logic) {
+		fmt.Println("Logic ", logic)
+
 		t.Fatal("The logic is not valid")
 	}
 
@@ -573,16 +577,16 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 
 func TestJSONLogicValidator(t *testing.T) {
 	scenarios := map[string]struct {
-		Expected bool
-		Rule     string
+		IsValid bool
+		Rule    string
 	}{
-		"invalid comparison between number and string": {
-			Expected: false,
-			Rule:     `{"in": [1, "b"]}`,
+		"invalid operator": {
+			IsValid: false,
+			Rule:    `{"filt":[[10, 1, 100], {">=":[{"var":""},2]}]}`,
 		},
-		"filter a number should not be valid": {
-			Expected: false,
-			Rule:     `{"filter":[5, {">=":[{"var":""},2]}]}`,
+		"invalid condition inside a filter": {
+			IsValid: false,
+			Rule:    `{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`,
 		},
 	}
 
@@ -595,7 +599,7 @@ func TestJSONLogicValidator(t *testing.T) {
 				t.Fatal(fmt.Errorf("Invalid rule: %s", err.Error()))
 			}
 
-			if scenario.Expected != IsValid(rule) {
+			if scenario.IsValid != IsValid(rule) {
 				t.Fatal(fmt.Errorf("Scenario %s failed", name))
 			}
 		})

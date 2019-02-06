@@ -705,21 +705,3 @@ func Apply(rules, data, result interface{}) error {
 
 	return nil
 }
-
-// IsValid verifies if the JSON Logic is valid
-func IsValid(rules interface{}) (valid bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			valid = false
-		}
-	}()
-
-	var result interface{}
-	var data interface{}
-
-	Apply(rules, data, &result)
-
-	valid = true
-
-	return
-}
