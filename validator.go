@@ -84,6 +84,7 @@ func isOperator(op string) bool {
 		"reduce",
 		"all",
 		"none",
+		"set",
 	}
 
 	for _, operator := range operators {

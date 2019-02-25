@@ -588,6 +588,19 @@ func TestJSONLogicValidator(t *testing.T) {
 			IsValid: false,
 			Rule:    `{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`,
 		},
+		"set must be valid": {
+			IsValid: true,
+			Rule: `{
+				"map": [
+					{"var": "objects"},
+					{"set": [
+						{"var": ""},
+						"age",
+						{"+": [{"var": ".age"}, 2]}
+					]}
+				]
+			}`,
+		},
 	}
 
 	for name, scenario := range scenarios {
