@@ -402,6 +402,45 @@ func TestLocalContext(t *testing.T) {
 	}
 }
 
+func TestMapWithZeroValue(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"filter": [
+			{"var": "people"},
+			{"==": [
+				{"var": ".age"},
+				{"min": {"map": [
+					{"var": "people"},
+					{"var": ".age"}
+				]}}
+			]}
+		]
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"people": [
+			{"age":0, "name":"John"}
+		]
+	}`), &data)
+
+	var result interface{}
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var expected interface{}
+	json.Unmarshal([]byte(`[
+		{"age": 0, "name": "John"}
+	]`), &expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatal("Map should work with value 0")
+	}
+}
+
 func TestListOfRanges(t *testing.T) {
 	var rules interface{}
 	var data interface{}
