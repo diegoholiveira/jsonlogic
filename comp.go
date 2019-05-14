@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"reflect"
+
 )
 
 func less(a, b interface{}) bool {
@@ -27,6 +28,8 @@ func equals(a, b interface{}) bool {
 	if isNumber(a) {
 		return toNumber(a) == toNumber(b)
 	}
-
+	if isBool(a) {
+		return isTrue(a) == isTrue(b)
+	}
 	return toString(a) == toString(b)
 }

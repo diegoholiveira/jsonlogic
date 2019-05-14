@@ -3,11 +3,10 @@ package jsonlogic
 import (
 	"bytes"
 	"errors"
+	"github.com/mitchellh/copystructure"
 	"math"
 	"reflect"
 	"strings"
-
-	"github.com/mitchellh/copystructure"
 )
 
 func between(operator string, values []interface{}, data interface{}) interface{} {
@@ -486,7 +485,6 @@ func operation(operator string, values, data interface{}) interface{} {
 	if operator == "missing" {
 		return missing(values, data)
 	}
-
 	if operator == "missing_some" {
 		return missingSome(values, data)
 	}
@@ -656,7 +654,6 @@ func apply(rules, data interface{}) interface{} {
 		if operator == "some" {
 			return some(values, data)
 		}
-
 		return operation(operator, parseValues(values, data), data)
 	}
 

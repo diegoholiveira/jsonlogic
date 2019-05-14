@@ -70,5 +70,6 @@ func toString(value interface{}) string {
 		return ""
 	}
 
+
 	return value.(string)
 }
