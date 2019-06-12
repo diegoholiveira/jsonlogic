@@ -66,6 +66,7 @@ func isOperator(op string) bool {
 		"in",
 		"cat",
 		"%",
+		"abs",
 		"max",
 		"min",
 		"+",

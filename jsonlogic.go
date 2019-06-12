@@ -39,6 +39,10 @@ func unary(operator string, value interface{}) interface{} {
 		return !unary("!", value).(bool)
 	}
 
+	if operator == "abs" {
+		return abs(value)
+	}
+
 	b := isTrue(value)
 
 	if operator == "!" {
@@ -144,6 +148,12 @@ func mod(a interface{}, b interface{}) interface{} {
 	_b := toNumber(b)
 
 	return math.Mod(_a, _b)
+}
+
+func abs(a interface{}) interface{} {
+	_a := toNumber(a)
+
+	return math.Abs(_a)
 }
 
 func concat(values interface{}) interface{} {

@@ -657,3 +657,29 @@ func TestJSONLogicValidator(t *testing.T) {
 		})
 	}
 }
+
+func TestAbsoluteValue(t *testing.T) {
+	var rules interface{}
+	var data interface{}
+
+	json.Unmarshal([]byte(`{
+		"abs": { "var": "test.number" }
+	}`), &rules)
+
+	json.Unmarshal([]byte(`{
+		"test": {
+			"number": -2
+		}
+	}`), &data)
+
+	var result float64
+	err := Apply(rules, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result != 2 {
+		t.Log(result)
+		t.Fatal("The value expected must be equal the value of the context")
+	}
+}
