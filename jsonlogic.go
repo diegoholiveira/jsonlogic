@@ -3,10 +3,11 @@ package jsonlogic
 import (
 	"bytes"
 	"errors"
-	"github.com/mitchellh/copystructure"
 	"math"
 	"reflect"
 	"strings"
+
+	"github.com/mitchellh/copystructure"
 )
 
 func between(operator string, values []interface{}, data interface{}) interface{} {
