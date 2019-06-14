@@ -51,6 +51,21 @@ func TestSimpleComparisonWithInteger(t *testing.T) {
 	}
 }
 
+func TestDivWithOnlyOneValue(t *testing.T) {
+	var rules interface{}
+	json.Unmarshal([]byte(`{"/":[4]}`), &rules)
+
+	var result interface{}
+	err := Apply(rules, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	if result != float64(4) {
+		t.Fatal("Is expected to return the only value present in the array")
+	}
+}
+
 func TestSimpleComparisonWithString(t *testing.T) {
 	var rules interface{}
 	json.Unmarshal([]byte(`{
