@@ -27,7 +27,7 @@ func between(operator string, values []interface{}, data interface{}) interface{
 }
 
 func unary(operator string, value interface{}) interface{} {
-	if operator == "+" || operator == "*" {
+	if operator == "+" || operator == "*" || operator == "/" {
 		return toNumber(value)
 	}
 
