@@ -1,346 +1,52 @@
 package jsonlogic
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
-	"net/http"
-	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/diegoholiveira/jsonlogic/internal"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestAlwaysShouldAlwaysPass(t *testing.T) {
-	var result bool
-	err := Apply(true, nil, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestRulesFromJsonLogic(t *testing.T) {
+	tests := internal.GetScenariosFromOfficialTestSuite()
 
-	if !result {
-		t.Fatal("Always should always pass")
-	}
-}
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("Scenario_%d", i), func(t *testing.T) {
+			var result bytes.Buffer
 
-func TestNeverShouldNeverPass(t *testing.T) {
-	var result bool
-	err := Apply(false, nil, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
+			err := Apply(test.Rule, test.Data, &result)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if result {
-		t.Fatal("Always should never pass")
-	}
-}
-
-func TestSimpleComparisonWithInteger(t *testing.T) {
-	var rules interface{}
-	json.Unmarshal([]byte(`{
-		"==": [1, 1]
-	}`), &rules)
-
-	var result bool
-	err := Apply(rules, nil, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !result {
-		t.Fatal("A simple comparison is expected to be true")
+			if b, err := ioutil.ReadAll(test.Expected); err == nil {
+				assert.JSONEq(t, string(b), result.String())
+			}
+		})
 	}
 }
 
 func TestDivWithOnlyOneValue(t *testing.T) {
-	var rules interface{}
-	json.Unmarshal([]byte(`{"/":[4]}`), &rules)
+	rule := strings.NewReader(`{"/":[4]}`)
+	data := strings.NewReader(`null`)
 
-	var result interface{}
-	err := Apply(rules, nil, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-	
-	if result != float64(4) {
-		t.Fatal("Is expected to return the only value present in the array")
-	}
-}
+	var result bytes.Buffer
 
-func TestSimpleComparisonWithString(t *testing.T) {
-	var rules interface{}
-	json.Unmarshal([]byte(`{
-		"==": ["a", "a"]
-	}`), &rules)
-
-	var result bool
-	err := Apply(rules, nil, &result)
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !result {
-		t.Fatal("A simple comparison is expected to be true")
-	}
-}
-
-func TestComposedComparisons(t *testing.T) {
-	var rules interface{}
-
-	json.Unmarshal([]byte(`{
-		"and": [
-			{"==": [1,1]},
-			{"==": [1,2]}
-		]
-	}`), &rules)
-
-	var result bool
-	err := Apply(rules, nil, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result {
-		t.Fatal("The composed comparison is expected to be false")
-	}
-}
-
-func TestSimpleVar(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"var": "a"
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"a": 10
-	}`), &data)
-
-	var result float64
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result != 10 {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestSimpleVarWithoutSyntacticSugar(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"var": ["a"]
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"a": 10
-	}`), &data)
-
-	var result float64
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result != 10 {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestVariableWithDefaultValue(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"var": ["z", 20]
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"a": 10
-	}`), &data)
-
-	var result float64
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result != 20 {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestSimpleVarComparison(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"==": [
-			{"var": "a"},
-			10
-		]
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"a": 10
-	}`), &data)
-
-	var result bool
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !result {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestComposedVar(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"var": "champ.name"
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"champ": {
-			"name": "Diego"
-		}
-	}`), &data)
-
-	var result string
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result != "Diego" {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestIndexedVar(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"var": 1
-	}`), &rules)
-
-	json.Unmarshal([]byte(`[
-		"apple",
-		"banana",
-		"carrot"
-	]`), &data)
-
-	var result string
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result != "banana" {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestComplexRule(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
-		"and": [
-			{"<": [{"var": "temp"}, 110]},
-			{"==": [{"var": "pie.filling"}, "apple"]}
-		]
-	}`), &rules)
-
-	json.Unmarshal([]byte(`{
-		"temp": 100,
-		"pie": {
-			"filling": "apple"
-		}
-	}`), &data)
-
-	var result bool
-	err := Apply(rules, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !result {
-		t.Fatal("The value expected must be equal the value of the context")
-	}
-}
-
-func TestRulesFromJsonLogic(t *testing.T) {
-	response, err := http.Get("http://jsonlogic.com/tests.json")
-	if err != nil {
-		log.Fatal(err)
-
-		return
-	}
-
-	buffer, _ := ioutil.ReadAll(response.Body)
-
-	response.Body.Close()
-
-	var scenarios []interface{}
-
-	err = json.Unmarshal(buffer, &scenarios)
-	if err != nil {
-		log.Println(err)
-
-		return
-	}
-
-	for _, scenario := range scenarios {
-		if reflect.ValueOf(scenario).Kind() == reflect.String {
-			continue
-		}
-
-		validateScenario(t, scenario)
-	}
-}
-
-func validateScenario(t *testing.T, scenario interface{}) {
-	var result interface{}
-
-	logic := scenario.([]interface{})[0]
-	data := scenario.([]interface{})[1]
-	expected := scenario.([]interface{})[2]
-
-	if !IsValid(logic) {
-		fmt.Println("Logic ", logic)
-
-		t.Fatal("The logic is not valid")
-	}
-
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(expected, result) {
-		fmt.Println("Logic ", logic)
-		fmt.Println("Data ", data)
-		fmt.Println("Expected ", fmt.Sprintf("%v %T", expected, expected))
-		fmt.Println("Result ", fmt.Sprintf("%v %T", result, result))
-
-		t.Fatal("The value expected is not what we expected")
-	}
+	assert.JSONEq(t, `4`, result.String())
 }
 
 func TestSetAValue(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"map": [
 			{"var": "objects"},
 			{"set": [
@@ -349,37 +55,31 @@ func TestSetAValue(t *testing.T) {
 				{"+": [{"var": ".age"}, 2]}
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"objects": [
 			{"age": 100, "location": "north"},
 			{"age": 500, "location": "south"}
 		]
-	}`), &data)
+	}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`[
+	expected := `[
 		{"age": 102, "location": "north"},
 		{"age": 502, "location": "south"}
-	]`), &expected)
+	]`
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("We expect a new object with new data")
-	}
+	assert.JSONEq(t, expected, result.String())
 }
 
 func TestLocalContext(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"filter": [
 			{"var": "people"},
 			{"==": [
@@ -390,38 +90,32 @@ func TestLocalContext(t *testing.T) {
 				]}}
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"people": [
 			{"age":18, "name":"John"},
 			{"age":20, "name":"Luke"},
 			{"age":18, "name":"Mark"}
 		]
-	}`), &data)
+	}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`[
+	expected := `[
 		{"age": 18, "name": "John"},
 		{"age": 18, "name": "Mark"}
-	]`), &expected)
+	]`
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("filter do not have access to all scope")
-	}
+	assert.JSONEq(t, expected, result.String())
 }
 
 func TestMapWithZeroValue(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"filter": [
 			{"var": "people"},
 			{"==": [
@@ -432,35 +126,29 @@ func TestMapWithZeroValue(t *testing.T) {
 				]}}
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"people": [
 			{"age":0, "name":"John"}
 		]
-	}`), &data)
+	}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`[
+	expected := `[
 		{"age": 0, "name": "John"}
-	]`), &expected)
+	]`
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("Map should work with value 0")
-	}
+	assert.JSONEq(t, expected, result.String())
 }
 
 func TestListOfRanges(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"filter": [
 			{"var": "people"},
 			{"in": [
@@ -472,38 +160,32 @@ func TestListOfRanges(t *testing.T) {
 				]
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"people": [
 			{"age":18, "name":"John"},
 			{"age":20, "name":"Luke"},
 			{"age":18, "name":"Mark"}
 		]
-	}`), &data)
+	}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`[
+	expected := `[
 		{"age": 18, "name": "John"},
 		{"age": 18, "name": "Mark"}
-	]`), &expected)
+	]`
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("filter do not have access to all scope")
-	}
+	assert.JSONEq(t, expected, result.String())
 }
 
 func TestSomeWithLists(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"some": [
 			[511, 521, 811],
 			{"in":[
@@ -511,29 +193,21 @@ func TestSomeWithLists(t *testing.T) {
 				[1, 2, 3, 511]
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{}`), &data)
+	data := strings.NewReader(`{}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`true`), &expected)
-
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("list must work with some")
-	}
+	assert.JSONEq(t, "true", result.String())
 }
 
 func TestAllWithLists(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"all": [
 			[511, 521, 811],
 			{"in":[
@@ -541,29 +215,21 @@ func TestAllWithLists(t *testing.T) {
 				[511, 521, 811, 3]
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{}`), &data)
+	data := strings.NewReader("{}")
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`true`), &expected)
-
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("list must work with some")
-	}
+	assert.JSONEq(t, "true", result.String())
 }
 
 func TestNoneWithLists(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"none": [
 			[511, 521, 811],
 			{"in":[
@@ -571,29 +237,21 @@ func TestNoneWithLists(t *testing.T) {
 				[1, 2]
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{}`), &data)
+	data := strings.NewReader("{}")
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`true`), &expected)
-
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("list must work with some")
-	}
+	assert.JSONEq(t, "true", result.String())
 }
 
 func TestInOperatorWorksWithMaps(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"some": [
 			[511,521,811],
 			{"in": [
@@ -604,47 +262,42 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 				]}
 			]}
 		]
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"my_list": [
 			{"service_id": 511},
 			{"service_id": 771},
 			{"service_id": 521},
 			{"service_id": 181}
 		]
-	}`), &data)
+	}`)
 
-	var result interface{}
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var expected interface{}
-	json.Unmarshal([]byte(`true`), &expected)
-
-	if !reflect.DeepEqual(expected, result) {
-		t.Fatal("maps must work with in operator")
-	}
+	assert.JSONEq(t, "true", result.String())
 }
 
 func TestJSONLogicValidator(t *testing.T) {
 	scenarios := map[string]struct {
 		IsValid bool
-		Rule    string
+		Rule    io.Reader
 	}{
 		"invalid operator": {
 			IsValid: false,
-			Rule:    `{"filt":[[10, 1, 100], {">=":[{"var":""},2]}]}`,
+			Rule:    strings.NewReader(`{"filt":[[10, 1, 100], {">=":[{"var":""},2]}]}`),
 		},
 		"invalid condition inside a filter": {
 			IsValid: false,
-			Rule:    `{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`,
+			Rule:    strings.NewReader(`{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`),
 		},
 		"set must be valid": {
 			IsValid: true,
-			Rule: `{
+			Rule: strings.NewReader(`{
 				"map": [
 					{"var": "objects"},
 					{"set": [
@@ -653,48 +306,33 @@ func TestJSONLogicValidator(t *testing.T) {
 						{"+": [{"var": ".age"}, 2]}
 					]}
 				]
-			}`,
+			}`),
 		},
 	}
 
 	for name, scenario := range scenarios {
-		t.Run(fmt.Sprintf("SCENARIO: %s", name), func(t *testing.T) {
-			rule := make(map[string]interface{})
-
-			err := json.Unmarshal([]byte(scenario.Rule), &rule)
-			if err != nil {
-				t.Fatal(fmt.Errorf("Invalid rule: %s", err.Error()))
-			}
-
-			if scenario.IsValid != IsValid(rule) {
-				t.Fatal(fmt.Errorf("Scenario %s failed", name))
-			}
+		t.Run(fmt.Sprintf("SCENARIO:%s", name), func(t *testing.T) {
+			assert.Equal(t, scenario.IsValid, IsValid(scenario.Rule))
 		})
 	}
 }
 
 func TestAbsoluteValue(t *testing.T) {
-	var rules interface{}
-	var data interface{}
-
-	json.Unmarshal([]byte(`{
+	rule := strings.NewReader(`{
 		"abs": { "var": "test.number" }
-	}`), &rules)
+	}`)
 
-	json.Unmarshal([]byte(`{
+	data := strings.NewReader(`{
 		"test": {
 			"number": -2
 		}
-	}`), &data)
+	}`)
 
-	var result float64
-	err := Apply(rules, data, &result)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if result != 2 {
-		t.Log(result)
-		t.Fatal("The value expected must be equal the value of the context")
-	}
+	assert.JSONEq(t, "2", result.String())
 }

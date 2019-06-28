@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/diegoholiveira/jsonlogic.svg)](https://travis-ci.org/diegoholiveira/jsonlogic)
 [![codecov](https://codecov.io/gh/diegoholiveira/jsonlogic/branch/master/graph/badge.svg)](https://codecov.io/gh/diegoholiveira/jsonlogic)
 
+
 Implementation of [JSON Logic](http://jsonlogic.com) in Go Lang.
 
 
@@ -21,31 +22,22 @@ The use of this library is very straightforward. Here's a simple example:
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/diegoholiveira/jsonlogic"
 )
 
 func main() {
-	var logic interface{}
+	logic := strings.NewReader(`{"==": [1, 1]}`)
+	data := strings.NewReader(`{}`)
 
-	err := json.Unmarshal([]byte(`{"==": [1, 1]}`), &logic)
-	if err != nil {
-		fmt.Println(err.Error())
+	var result bytes.Buffer
 
-		return
-	}
+	jsonlogic.Apply(logic, data, &result)
 
-	var result interface{}
-
-	jsonlogic.Apply(
-		logic,
-		nil,
-		&result,
-	)
-
-	fmt.Println(result)
+	fmt.Println(result.String())
 }
 ```
 
@@ -58,35 +50,45 @@ Here's another example, but this time using variables passed in the `data` param
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/diegoholiveira/jsonlogic"
 )
 
+type (
+	User struct {
+		Name     string `json:"name"`
+		Age      int    `json:"age"`
+		Location string `json:"location"`
+	}
+
+	Users []User
+)
+
 func main() {
-	var logic interface{}
-	var data interface{}
-	var result interface{}
+	logic := strings.NewReader(`{
+        "filter": [
+            {"var": "users"},
+            {">=": [
+                {"var": ".age"},
+                18
+            ]}
+        ]
+    }`)
 
-	json.Unmarshal([]byte(`{
-		"filter": [
-			{"var": "users"},
-			{">=": [
-				{"var": ".age"},
-				18
-			]}
-		]
-	}`), &logic)
+	data := strings.NewReader(`{
+        "users": [
+            {"name": "Diego", "age": 33, "location": "Florianópolis"},
+            {"name": "Jack", "age": 12, "location": "London"},
+            {"name": "Pedro", "age": 19, "location": "Lisbon"},
+            {"name": "Leopoldina", "age": 30, "location": "Rio de Janeiro"}
+        ]
+    }`)
 
-	json.Unmarshal([]byte(`{
-		"users": [
-			{"name": "Diego", "age": 33, "location": "Florianópolis"},
-			{"name": "Jack", "age": 12, "location": "London"},
-			{"name": "Pedro", "age": 19, "location": "Lisbon"},
-			{"name": "Leopoldina", "age": 30, "location": "Rio de Janeiro"}
-		]
-	}`), &data)
+	var result bytes.Buffer
 
 	err := jsonlogic.Apply(logic, data, &result)
 	if err != nil {
@@ -95,79 +97,16 @@ func main() {
 		return
 	}
 
-	fmt.Println("Users older than 18:")
-	for _, _user := range result.([]interface{}) {
-		user := _user.(map[string]interface{})
+	var users Users
 
-		fmt.Printf("    - %s\n", user["name"].(string))
+	decoder := json.NewDecoder(&result)
+	decoder.Decode(&users)
+
+	for _, user := range users {
+		fmt.Printf("    - %s\n", user.Name)
 	}
 }
 ```
-
-## Limitations
-
-The `Apply` function have three params as input:
-
-- the first one is the logic to be executed;
-- next you have the data that can be used by the logic;
-- and the last one is the variable to store the result.
-
-The type of those params must be `interface{}` to be easy to reflect of it and use it.
-Also, all values passed in any of the two input params must be one of those:
-
-    bool for JSON booleans,
-    float64 for JSON numbers,
-    string for JSON strings, and
-    nil for JSON null.
-
-This is the same values that `encoding/json` work with.
-
-Here's an example of an invalid data:
-
-```go
-func main() {
-	var rules interface{}
-	var result interface{}
-
-	json.Unmarshal([]byte(`{
-		"filter": [
-			{"var": "users"},
-			{">=": [
-				{"var": ".age"},
-				18
-			]}
-		]
-	}`), &rules)
-
-	data := interface{}(map[string]interface{}{
-		"users": []interface{}{
-			map[string]interface{}{
-				"name":     string("Diego"),
-				"age":      int(33),
-				"location": string("Florianópolis"),
-			},
-		},
-	})
-
-	err := jsonlogic.Apply(rules, data, &result)
-	if err != nil {
-		fmt.Println(err.Error())
-
-		return
-	}
-
-	fmt.Println("Users older than 18:")
-	for _, _user := range result.([]interface{}) {
-		user := _user.(map[string]interface{})
-
-		fmt.Printf("    - %s\n", user["name"].(string))
-	}
-}
-```
-
-This will produce this error: `panic: interface conversion: interface {} is int, not float64`.
-So, to avoid this error, make sure to always work with types compatible with `encoding/json`.
-
 
 # License
 
