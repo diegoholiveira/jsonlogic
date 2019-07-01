@@ -1,12 +1,21 @@
 package jsonlogic
 
-// IsValid verifies if the JSON Logic is valid
-func IsValid(rules interface{}) bool {
-	if isPrimitive(rules) || isSlice(rules) || rules == nil {
-		return true
+import (
+	"encoding/json"
+	"io"
+)
+
+// IsValid reads a JSON Logic rule from io.Reader and validates it
+func IsValid(rule io.Reader) bool {
+	var _rule interface{}
+
+	decoderRule := json.NewDecoder(rule)
+	err := decoderRule.Decode(&_rule)
+	if err != nil {
+		return false
 	}
 
-	return validateJsonLogic(rules)
+	return validateJsonLogic(_rule)
 }
 
 func validateJsonLogic(rules interface{}) bool {

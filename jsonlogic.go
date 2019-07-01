@@ -2,7 +2,8 @@ package jsonlogic
 
 import (
 	"bytes"
-	"errors"
+	"encoding/json"
+	"io"
 	"math"
 	"reflect"
 	"strings"
@@ -671,45 +672,31 @@ func apply(rules, data interface{}) interface{} {
 	return false
 }
 
-func convertToResult(result interface{}, _result interface{}) {
-	value := reflect.ValueOf(result).Elem()
-	target := reflect.TypeOf(result).Elem()
+// Apply read the rule and it's data from io.Reader, executes it
+// and write back a JSON into an io.Writer result
+func Apply(rule, data io.Reader, result io.Writer) error {
+	var _rule interface{}
+	var _data interface{}
 
-	switch target.Kind() {
-	case reflect.Float64:
-		value.SetFloat(_result.(float64))
-	case reflect.String:
-		value.SetString(_result.(string))
-	case reflect.Bool:
-		value.SetBool(_result.(bool))
-	default:
-		if _result == nil {
-			return
-		}
-
-		value.Set(reflect.ValueOf(_result))
-	}
-}
-
-// Apply executes the rules passed with the data as context
-// and generates an result of any kind (bool, map, string and others)
-func Apply(rules, data, result interface{}) error {
-	rv := reflect.ValueOf(result)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("Result must be a pointer")
+	decoderRule := json.NewDecoder(rule)
+	err := decoderRule.Decode(&_rule)
+	if err != nil {
+		return err
 	}
 
-	if !rv.Elem().CanSet() {
-		return errors.New("Result must be addressable")
+	decoderData := json.NewDecoder(data)
+	err = decoderData.Decode(&_data)
+	if err != nil {
+		return err
 	}
 
-	if isMap(rules) {
-		convertToResult(result, apply(rules, data))
+	encoder := json.NewEncoder(result)
 
-		return nil
+	if isMap(_rule) {
+		encoder.Encode(apply(_rule, _data))
+	} else {
+		encoder.Encode(_rule)
 	}
-
-	convertToResult(result, rules)
 
 	return nil
 }
