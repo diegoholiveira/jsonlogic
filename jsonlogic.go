@@ -700,3 +700,35 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 
 	return nil
 }
+
+func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
+	var _rule interface{}
+	var _data interface{}
+
+	err := json.Unmarshal(rule, &_rule)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &_data)
+	if err != nil {
+		return nil, err
+	}
+
+	var result interface{}
+
+	if isMap(_rule) {
+		result = apply(_rule, _data)
+	} else {
+		result = _rule
+	}
+
+	var output json.RawMessage
+
+	output, err = json.Marshal(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
