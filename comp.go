@@ -10,6 +10,10 @@ func less(a, b interface{}) bool {
 		return toNumber(b) > toNumber(a)
 	}
 
+    if isNumber(a) || isNumber(b) {
+		return toNumber(b) > toNumber(a)
+    }
+
 	return toString(b) > toString(a)
 }
 
