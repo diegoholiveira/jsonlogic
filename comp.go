@@ -6,7 +6,7 @@ import (
 )
 
 func less(a, b interface{}) bool {
-	if isNumber(a) {
+	if isString(a) != isString(b) {
 		return toNumber(b) > toNumber(a)
 	}
 
