@@ -732,3 +732,15 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 
 	return output, nil
 }
+
+func ApplyInterface(rule, data interface{}) (interface{}, error) {
+	var result interface{}
+
+	if isMap(rule) {
+		result = apply(rule, data)
+	} else {
+		result = rule
+	}
+
+	return result, nil
+}
