@@ -10,7 +10,7 @@ Implementation of [JSON Logic](http://jsonlogic.com) in Go Lang.
 ## What's JSON Logic?
 
 JSON Logic is a DSL to write logic decisions in JSON. It's has a great specification and is very simple to learn.
-The official website has a great documentation with examples: http://jsonlogic.com
+The [official website](http://jsonlogic.com) has a great documentation with examples.
 
 
 ## How to use it
