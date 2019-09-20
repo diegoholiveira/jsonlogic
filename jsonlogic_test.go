@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/diegoholiveira/jsonlogic/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {
@@ -360,7 +360,6 @@ func TestMergeArrayOfArrays(t *testing.T) {
 
 	var result bytes.Buffer
 	err := Apply(rule, data, &result)
-	t.Log(result.String())
 	if err != nil {
 		t.Fatal(err)
 	}
