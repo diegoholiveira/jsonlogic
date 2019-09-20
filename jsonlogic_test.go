@@ -337,3 +337,34 @@ func TestAbsoluteValue(t *testing.T) {
 
 	assert.JSONEq(t, "2", result.String())
 }
+
+func TestMergeArrayOfArrays(t *testing.T) {
+	rule := strings.NewReader(`{
+		"merge": [
+			[
+				[
+					"18800000",
+					"18800969"
+				]
+			],
+			[
+				[
+					"19840000",
+					"19840969"
+				]
+			]
+		]
+	}`)
+	data := strings.NewReader(`{}`)
+
+	expectedResult := "[[\"18800000\",\"18800969\"],[\"19840000\",\"19840969\"]]"
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	t.Log(result.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.JSONEq(t, expectedResult, result.String())
+}
