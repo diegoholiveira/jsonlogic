@@ -288,16 +288,16 @@ func substr(values interface{}) interface{} {
 	return string(runes[from:to])
 }
 
-func merge(values interface{}) interface{} {
+func merge(values interface{}, level int8) interface{} {
 	result := make([]interface{}, 0)
 
-	if isPrimitive(values) {
+	if isPrimitive(values) || level > 1 {
 		return append(result, values)
 	}
 
 	if isSlice(values) {
 		for _, value := range values.([]interface{}) {
-			_values := merge(value).([]interface{})
+			_values := merge(value, level+1).([]interface{})
 
 			result = append(result, _values...)
 		}
@@ -518,7 +518,7 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	if operator == "merge" {
-		return merge(values)
+		return merge(values, 0)
 	}
 
 	if operator == "if" {
