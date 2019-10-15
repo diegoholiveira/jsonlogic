@@ -184,6 +184,59 @@ func TestListOfRanges(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
+func TestInSortedOperator(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			{"var": "people"},
+			{"in_sorted": [
+				{"var": ".age"},
+				[
+					11.00,
+					[12, 14],
+					[13, 18],
+					2,
+					"20",
+					[32, 38],
+					"a",
+					["b", "d"]					
+				]
+			]}
+		]
+	}`)
+
+	data := strings.NewReader(`{
+		"people": [
+			{"age":"18", "name":"John"},
+			{"age":20, "name":"Luke"},
+			{"age":18, "name":"Mark"},
+			{"age":40, "name":"Donald"},
+			{"age":11, "name":"Mickey"},
+			{"age":"1", "name":"Minnie"},
+			{"age":2, "name":"Mario"},
+			{"age":"a", "name":"Mario"},
+			{"age":"c", "name":"Princess"}
+		]
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[
+		{"age":"18", "name": "John"},
+		{"age":20, "name":"Luke"},
+		{"age":18, "name": "Mark"},
+		{"age":11, "name":"Mickey"},
+		{"age":2, "name":"Mario"},
+		{"age":"a", "name":"Mario"},
+		{"age":"c", "name":"Princess"}
+	]`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
 func TestSomeWithLists(t *testing.T) {
 	rule := strings.NewReader(`{
 		"some": [
