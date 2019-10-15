@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/mitchellh/copystructure"
@@ -112,6 +113,40 @@ func _inRange(value interface{}, values interface{}) bool {
 	}
 
 	return toString(value) >= toString(i) && toString(j) >= toString(value)
+}
+
+func _inOrderedList(value interface{}, values interface{}) bool {
+	valuesSlice := values.([]interface{})
+
+	findElement := func(i int) bool {
+		element := valuesSlice[i]
+
+		if isSlice(valuesSlice[i]) {
+			sliceElement := valuesSlice[i].([]interface{})
+			start := sliceElement[0]
+			end := sliceElement[1]
+
+			if isNumber(value) {
+				return (toNumber(start) <= toNumber(value) && toNumber(end) >= toNumber(value)) || toNumber(end) >= toNumber(value)
+			}
+
+			return (toString(start) <= toString(value) && toString(end) >= toString(value)) || toString(end) >= toString(value)
+		}
+
+		return toString(element) >= toString(value)
+	}
+
+	i := sort.Search(len(valuesSlice),  findElement)
+	if i >= len(valuesSlice) {
+		return false
+	}
+
+	element := valuesSlice[i]
+	if isSlice(element) {
+		return _inRange(value, valuesSlice[i])
+	}
+
+	return toString(valuesSlice[i]) == toString(value)
 }
 
 func _in(value interface{}, values interface{}) bool {
@@ -578,6 +613,10 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "in" {
 		return _in(parsed[0], parsed[1])
+	}
+
+	if operator == "in_ordered_list" {
+		return _inOrderedList(parsed[0], parsed[1])
 	}
 
 	if operator == "%" {

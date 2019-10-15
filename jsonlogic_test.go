@@ -184,6 +184,47 @@ func TestListOfRanges(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
+func TestOrderedListOfRanges(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			{"var": "people"},
+			{"in_ordered_list": [
+				{"var": ".age"},
+				[
+					[12, 14],
+					[13, 18],
+					"20",
+					[32, 38]
+				]
+			]}
+		]
+	}`)
+
+	data := strings.NewReader(`{
+		"people": [
+			{"age":"18", "name":"John"},
+			{"age":20, "name":"Luke"},
+			{"age":18, "name":"Mark"},
+			{"age":40, "name":"Mark"},
+			{"age":"1", "name":"Mark"}
+		]
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[
+		{"age": "18", "name": "John"},
+		{"age": 20, "name":"Luke"},
+		{"age": 18, "name": "Mark"}
+	]`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
 func TestSomeWithLists(t *testing.T) {
 	rule := strings.NewReader(`{
 		"some": [
