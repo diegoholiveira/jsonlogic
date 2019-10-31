@@ -73,6 +73,7 @@ func isOperator(op string) bool {
 		"and",
 		"?:",
 		"in",
+		"in_sorted",
 		"cat",
 		"%",
 		"abs",
