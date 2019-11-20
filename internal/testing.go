@@ -53,6 +53,15 @@ func GetScenariosFromOfficialTestSuite() Tests {
 		return tests
 	}
 
+    // add missing but relevant scenarios
+    var rule []interface{}
+
+    scenarios = append(scenarios,
+        append(rule,
+            make(map[string]interface {}, 0),
+            make(map[string]interface {}, 0),
+            make(map[string]interface {}, 0)))
+
 	for _, scenario := range scenarios {
 		if reflect.ValueOf(scenario).Kind() == reflect.String {
 			continue
