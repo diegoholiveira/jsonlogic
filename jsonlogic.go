@@ -708,7 +708,8 @@ func apply(rules, data interface{}) interface{} {
 		return operation(operator, parseValues(values, data), data)
 	}
 
-	return false
+	// an empty-map rule should return an empty-map
+	return make(map[string]interface{})
 }
 
 // Apply read the rule and it's data from io.Reader, executes it
