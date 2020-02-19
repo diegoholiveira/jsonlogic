@@ -24,7 +24,10 @@ func convertInterfaceToReader(i interface{}) io.Reader {
 	var result bytes.Buffer
 
 	encoder := json.NewEncoder(&result)
-	encoder.Encode(i)
+	err := encoder.Encode(i)
+	if err != nil {
+		panic(err)
+	}
 
 	return &result
 
@@ -53,14 +56,14 @@ func GetScenariosFromOfficialTestSuite() Tests {
 		return tests
 	}
 
-    // add missing but relevant scenarios
-    var rule []interface{}
+	// add missing but relevant scenarios
+	var rule []interface{}
 
-    scenarios = append(scenarios,
-        append(rule,
-            make(map[string]interface {}, 0),
-            make(map[string]interface {}, 0),
-            make(map[string]interface {}, 0)))
+	scenarios = append(scenarios,
+		append(rule,
+			make(map[string]interface{}),
+			make(map[string]interface{}),
+			make(map[string]interface{})))
 
 	for _, scenario := range scenarios {
 		if reflect.ValueOf(scenario).Kind() == reflect.String {
