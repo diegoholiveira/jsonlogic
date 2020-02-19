@@ -133,7 +133,7 @@ func _inSorted(value interface{}, values interface{}) bool {
 		return toString(element) >= toString(value)
 	}
 
-	i := sort.Search(len(valuesSlice),  findElement)
+	i := sort.Search(len(valuesSlice), findElement)
 	if i >= len(valuesSlice) {
 		return false
 	}
@@ -733,12 +733,10 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 	encoder := json.NewEncoder(result)
 
 	if isMap(_rule) {
-		encoder.Encode(apply(_rule, _data))
-	} else {
-		encoder.Encode(_rule)
+		return encoder.Encode(apply(_rule, _data))
 	}
 
-	return nil
+	return encoder.Encode(_rule)
 }
 
 func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
