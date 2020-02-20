@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -198,7 +199,7 @@ func TestInSortedOperator(t *testing.T) {
 					"20",
 					[32, 38],
 					"a",
-					["b", "d"]					
+					["b", "d"]
 				]
 			]}
 		]
@@ -418,4 +419,52 @@ func TestMergeArrayOfArrays(t *testing.T) {
 	}
 
 	assert.JSONEq(t, expectedResult, result.String())
+}
+
+func TestDataWithDefaultValueWithApplyRaw(t *testing.T) {
+	var rule json.RawMessage = json.RawMessage(`{
+		"+": [
+			1,
+			2
+		]
+	}`)
+
+	var expected json.RawMessage = json.RawMessage("3")
+
+	output, err := ApplyRaw(rule, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.JSONEq(t, string(expected), string(output))
+}
+
+func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
+	rule := map[string]interface{}{
+		"+": []interface{}{
+			float64(1),
+			float64(2),
+		},
+	}
+
+	expected := float64(3)
+	output, err := ApplyInterface(rule, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, expected, output.(float64))
+}
+
+func TestMissingOperators(t *testing.T) {
+	rule := map[string]interface{}{
+		"sum": []interface{}{
+			float64(1),
+			float64(2),
+		},
+	}
+
+	_, err := ApplyInterface(rule, nil)
+
+	assert.EqualError(t, err, "The operator \"sum\" is not supported")
 }
