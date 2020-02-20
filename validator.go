@@ -96,6 +96,7 @@ func isOperator(op string) bool {
 		"all",
 		"none",
 		"set",
+		"var",
 	}
 
 	for _, operator := range operators {

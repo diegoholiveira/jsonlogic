@@ -3,6 +3,7 @@ package jsonlogic
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"reflect"
@@ -11,6 +12,14 @@ import (
 
 	"github.com/mitchellh/copystructure"
 )
+
+type ErrInvalidOperator struct {
+	operator string
+}
+
+func (e ErrInvalidOperator) Error() string {
+	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
+}
 
 func between(operator string, values []interface{}, data interface{}) interface{} {
 	a := values[0]
@@ -532,6 +541,7 @@ func operation(operator string, values, data interface{}) interface{} {
 	if operator == "missing" {
 		return missing(values, data)
 	}
+
 	if operator == "missing_some" {
 		return missingSome(values, data)
 	}
@@ -655,7 +665,13 @@ func operation(operator string, values, data interface{}) interface{} {
 		return !hardEquals(parsed[0], parsed[1])
 	}
 
-	return equals(parsed[0], parsed[1])
+	if operator == "==" {
+		return equals(parsed[0], parsed[1])
+	}
+
+	panic(ErrInvalidOperator{
+		operator: operator,
+	})
 }
 
 func parseValues(values, data interface{}) interface{} {
@@ -705,6 +721,7 @@ func apply(rules, data interface{}) interface{} {
 		if operator == "some" {
 			return some(values, data)
 		}
+
 		return operation(operator, parseValues(values, data), data)
 	}
 
@@ -715,31 +732,38 @@ func apply(rules, data interface{}) interface{} {
 // Apply read the rule and it's data from io.Reader, executes it
 // and write back a JSON into an io.Writer result
 func Apply(rule, data io.Reader, result io.Writer) error {
+	if data == nil {
+		data = strings.NewReader("{}")
+	}
+
 	var _rule interface{}
 	var _data interface{}
 
-	decoderRule := json.NewDecoder(rule)
-	err := decoderRule.Decode(&_rule)
+	decoder := json.NewDecoder(rule)
+	err := decoder.Decode(&_rule)
 	if err != nil {
 		return err
 	}
 
-	decoderData := json.NewDecoder(data)
-	err = decoderData.Decode(&_data)
+	decoder = json.NewDecoder(data)
+	err = decoder.Decode(&_data)
 	if err != nil {
 		return err
 	}
 
-	encoder := json.NewEncoder(result)
-
-	if isMap(_rule) {
-		return encoder.Encode(apply(_rule, _data))
+	output, err := ApplyInterface(_rule, _data)
+	if err != nil {
+		return err
 	}
 
-	return encoder.Encode(_rule)
+	return json.NewEncoder(result).Encode(output)
 }
 
 func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
+	if data == nil {
+		data = json.RawMessage("{}")
+	}
+
 	var _rule interface{}
 	var _data interface{}
 
@@ -753,32 +777,24 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 		return nil, err
 	}
 
-	var result interface{}
-
-	if isMap(_rule) {
-		result = apply(_rule, _data)
-	} else {
-		result = _rule
-	}
-
-	var output json.RawMessage
-
-	output, err = json.Marshal(&result)
+	result, err := ApplyInterface(_rule, _data)
 	if err != nil {
 		return nil, err
 	}
 
-	return output, nil
+	return json.Marshal(&result)
 }
 
-func ApplyInterface(rule, data interface{}) (interface{}, error) {
-	var result interface{}
+func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
 
 	if isMap(rule) {
-		result = apply(rule, data)
-	} else {
-		result = rule
+		return apply(rule, data), err
 	}
 
-	return result, nil
+	return rule, err
 }
