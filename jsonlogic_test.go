@@ -478,3 +478,47 @@ func TestZeroDivision(t *testing.T) {
 
 	assert.JSONEq(t, `0`, result.String())
 }
+
+func TestSliceWithOnlyWithNumbersAsKey(t *testing.T) {
+	rule := strings.NewReader(`{"var": "people.0"}`)
+
+	data := strings.NewReader(`{
+		"people": [
+			{"age":18, "name":"John"},
+			{"age":20, "name":"Luke"},
+			{"age":18, "name":"Mark"}
+		]
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"age": 18, "name": "John"}`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestMapWithOnlyWithNumbersAsKey(t *testing.T) {
+	rule := strings.NewReader(`{"var": "people.103"}`)
+
+	data := strings.NewReader(`{
+		"people": {
+			"100": {"age":18, "name":"John"},
+			"101": {"age":20, "name":"Luke"},
+			"103": {"age":18, "name":"Mark"}
+		}
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"age": 18, "name": "Mark"}`
+
+	assert.JSONEq(t, expected, result.String())
+}
