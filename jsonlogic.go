@@ -279,14 +279,14 @@ func mult(values interface{}) interface{} {
 func div(values interface{}) interface{} {
 	var sum float64
 
-	for _, n := range values.([]interface{}) {
-		if sum == 0 {
+	for i, n := range values.([]interface{}) {
+		if i == 0 {
 			sum = toNumber(n)
 
 			continue
 		}
 
-		sum /= toNumber(n)
+		sum = sum / toNumber(n)
 	}
 
 	return sum

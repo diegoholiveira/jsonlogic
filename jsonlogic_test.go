@@ -468,3 +468,13 @@ func TestMissingOperators(t *testing.T) {
 
 	assert.EqualError(t, err, "The operator \"sum\" is not supported")
 }
+
+func TestZeroDivision(t *testing.T) {
+	logic := strings.NewReader(`{"/":[0,10]}`)
+	data := strings.NewReader(`{}`)
+	var result bytes.Buffer
+
+	Apply(logic, data, &result) // nolint:errcheck
+
+	assert.JSONEq(t, `0`, result.String())
+}
