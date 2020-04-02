@@ -10,10 +10,13 @@ import (
 func TestFilterParseTheSubjectFromFirstPosition(t *testing.T) {
 	var parsed interface{}
 
-	json.Unmarshal([]byte(`[
+	err := json.Unmarshal([]byte(`[
 		[1,2,3,4,5],
 		{"%":[{"var":""},2]}
-	]`), &parsed) // nolint:errcheck
+	]`), &parsed)
+	if err != nil {
+		panic(err)
+	}
 
 	result := filter(parsed, nil)
 
@@ -27,10 +30,13 @@ func TestFilterParseTheSubjectFromFirstPosition(t *testing.T) {
 func TestFilterParseTheSubjectFromNullValue(t *testing.T) {
 	var parsed interface{}
 
-	json.Unmarshal([]byte(`[
+	err := json.Unmarshal([]byte(`[
 		null,
 		{"%":[{"var":""},2]}
-	]`), &parsed) // nolint:errcheck
+	]`), &parsed)
+	if err != nil {
+		panic(err)
+	}
 
 	result := filter(parsed, nil)
 
@@ -44,11 +50,14 @@ func TestFilterParseTheSubjectFromNullValue(t *testing.T) {
 func TestReduceSkipNullValues(t *testing.T) {
 	var parsed interface{}
 
-	json.Unmarshal([]byte(`[
+	err := json.Unmarshal([]byte(`[
 		[1,2,null,4,5],
 		{"+":[{"var":"current"}, {"var":"accumulator"}]},
 		0
-	]`), &parsed) // nolint:errcheck
+	]`), &parsed)
+	if err != nil {
+		panic(err)
+	}
 
 	result := reduce(parsed, nil)
 
