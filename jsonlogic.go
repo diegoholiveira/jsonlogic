@@ -19,10 +19,10 @@ func (e ErrInvalidOperator) Error() string {
 	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
 }
 
-func between(operator string, values []interface{}) interface{} {
-	a := values[0]
-	b := values[1]
-	c := values[2]
+func between(operator string, values []interface{}, data interface{}) interface{} {
+	a := parseValues(values[0], data)
+	b := parseValues(values[1], data)
+	c := parseValues(values[2], data)
 
 	if operator == "<" {
 		return less(a, b) && less(b, c)
@@ -32,7 +32,11 @@ func between(operator string, values []interface{}) interface{} {
 		return (less(a, b) || equals(a, b)) && (less(b, c) || equals(b, c))
 	}
 
-	return false
+	if operator == ">=" {
+		return (less(c, b) || equals(c, b)) && (less(b, a) || equals(b, a))
+	}
+
+	return less(c, b) && less(b, a)
 }
 
 func unary(operator string, value interface{}) interface{} {

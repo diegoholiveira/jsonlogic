@@ -96,7 +96,7 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	if len(parsed) == 3 {
-		return between(operator, parsed)
+		return between(operator, parsed, data)
 	}
 
 	if operator == "<" {

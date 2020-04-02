@@ -487,3 +487,45 @@ func TestMapWithOnlyWithNumbersAsKey(t *testing.T) {
 
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestBetweenIsBiggerEq(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+			{">=": [8, {"var": ""}, 3]}
+		]
+	}`)
+
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[3, 4, 5, 6, 7, 8]`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestBetweenIsBigger(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+			{">": [8, {"var": ""}, 3]}
+		]
+	}`)
+
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[4, 5, 6, 7]`
+
+	assert.JSONEq(t, expected, result.String())
+}
