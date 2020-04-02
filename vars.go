@@ -85,10 +85,12 @@ func getVar(value, data interface{}) interface{} {
 			continue
 		}
 
-		if toNumber(part) > 0 {
-			_value = data.([]interface{})[int(toNumber(part))]
-		} else {
+		if isMap(data) {
 			_value = data.(map[string]interface{})[part]
+		}
+
+		if isSlice(data) {
+			_value = data.([]interface{})[int(toNumber(part))]
 		}
 
 		if _value == nil {
