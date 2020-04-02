@@ -29,16 +29,8 @@ func substr(values interface{}) interface{} {
 		to = from + length
 	}
 
-	if from < 0 {
-		from, to = to, len(runes)-from
-	}
-
 	if to > len(runes) {
 		to = len(runes)
-	}
-
-	if from > len(runes) {
-		from = len(runes)
 	}
 
 	return string(runes[from:to])
