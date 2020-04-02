@@ -103,9 +103,5 @@ func getVar(value, data interface{}) interface{} {
 		data = _value
 	}
 
-	if _value == nil {
-		return _default
-	}
-
 	return _value
 }
