@@ -1,12 +1,10 @@
 package jsonlogic
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -21,7 +19,7 @@ func (e ErrInvalidOperator) Error() string {
 	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
 }
 
-func between(operator string, values []interface{}, data interface{}) interface{} {
+func between(operator string, values []interface{}) interface{} {
 	a := values[0]
 	b := values[1]
 	c := values[2]
@@ -188,32 +186,6 @@ func _in(value interface{}, values interface{}) bool {
 	return false
 }
 
-func mod(a interface{}, b interface{}) interface{} {
-	_a := toNumber(a)
-	_b := toNumber(b)
-
-	return math.Mod(_a, _b)
-}
-
-func abs(a interface{}) interface{} {
-	_a := toNumber(a)
-
-	return math.Abs(_a)
-}
-
-func concat(values interface{}) interface{} {
-	if isString(values) {
-		return values
-	}
-
-	var s bytes.Buffer
-	for _, text := range values.([]interface{}) {
-		s.WriteString(toString(text))
-	}
-
-	return strings.TrimSpace(s.String())
-}
-
 func max(values interface{}) interface{} {
 	bigger := math.SmallestNonzeroFloat64
 
@@ -240,98 +212,6 @@ func min(values interface{}) interface{} {
 	return smallest
 }
 
-func sum(values interface{}) interface{} {
-	sum := float64(0)
-
-	for _, n := range values.([]interface{}) {
-		sum += toNumber(n)
-	}
-
-	return sum
-}
-
-func minus(values interface{}) interface{} {
-	var sum float64
-
-	for _, n := range values.([]interface{}) {
-		if sum == 0 {
-			sum = toNumber(n)
-
-			continue
-		}
-
-		sum -= toNumber(n)
-	}
-
-	return sum
-}
-
-func mult(values interface{}) interface{} {
-	sum := float64(1)
-
-	for _, n := range values.([]interface{}) {
-		sum *= toNumber(n)
-	}
-
-	return sum
-}
-
-func div(values interface{}) interface{} {
-	var sum float64
-
-	for i, n := range values.([]interface{}) {
-		if i == 0 {
-			sum = toNumber(n)
-
-			continue
-		}
-
-		sum = sum / toNumber(n)
-	}
-
-	return sum
-}
-
-func substr(values interface{}) interface{} {
-	rp := reflect.ValueOf(values)
-	parsed := values.([]interface{})
-
-	runes := []rune(toString(parsed[0]))
-
-	from := int(toNumber(parsed[1]))
-	length := len(runes)
-
-	if from < 0 {
-		from = length + from
-	}
-
-	if rp.Len() == 3 {
-		length = int(toNumber(parsed[2]))
-	}
-
-	var to int
-	if length < 0 {
-		length = len(runes) + length
-		to = length
-	} else {
-		to = from + length
-	}
-
-	if from < 0 {
-		from, to = to, len(runes)-from
-	}
-
-	if to > len(runes) {
-		to = len(runes)
-	}
-
-	if from > len(runes) {
-		from = len(runes)
-	}
-
-	return string(runes[from:to])
-}
-
 func merge(values interface{}, level int8) interface{} {
 	result := make([]interface{}, 0)
 
@@ -355,15 +235,13 @@ func conditional(values, data interface{}) interface{} {
 		return values
 	}
 
-	rp := reflect.ValueOf(values)
+	parsed := values.([]interface{})
 
-	length := rp.Len()
+	length := len(parsed)
 
 	if length == 0 {
 		return nil
 	}
-
-	parsed := values.([]interface{})
 
 	for i := 0; i < length-1; i = i + 2 {
 		v := parsed[i]
@@ -535,143 +413,6 @@ func some(values, data interface{}) interface{} {
 	}
 
 	return false
-}
-
-func operation(operator string, values, data interface{}) interface{} {
-	if operator == "missing" {
-		return missing(values, data)
-	}
-
-	if operator == "missing_some" {
-		return missingSome(values, data)
-	}
-
-	if operator == "var" {
-		return getVar(values, data)
-	}
-
-	if operator == "set" {
-		return setProperty(values, data)
-	}
-
-	if operator == "cat" {
-		return concat(values)
-	}
-
-	if operator == "substr" {
-		return substr(values)
-	}
-
-	if operator == "merge" {
-		return merge(values, 0)
-	}
-
-	if operator == "if" {
-		return conditional(values, data)
-	}
-
-	if isPrimitive(values) {
-		return unary(operator, values)
-	}
-
-	if operator == "max" {
-		return max(values)
-	}
-
-	if operator == "min" {
-		return min(values)
-	}
-
-	rp := reflect.ValueOf(values)
-	parsed := values.([]interface{})
-
-	if rp.Len() == 1 {
-		return unary(operator, parsed[0])
-	}
-
-	if operator == "+" {
-		return sum(values)
-	}
-
-	if operator == "-" {
-		return minus(values)
-	}
-
-	if operator == "*" {
-		return mult(values)
-	}
-
-	if operator == "/" {
-		return div(values)
-	}
-
-	if operator == "and" {
-		return _and(parsed)
-	}
-
-	if operator == "or" {
-		return _or(parsed)
-	}
-
-	if operator == "?:" {
-		if parsed[0].(bool) {
-			return parsed[1]
-		}
-
-		return parsed[2]
-	}
-
-	if operator == "in" {
-		return _in(parsed[0], parsed[1])
-	}
-
-	if operator == "in_sorted" {
-		return _inSorted(parsed[0], parsed[1])
-	}
-
-	if operator == "%" {
-		return mod(parsed[0], parsed[1])
-	}
-
-	if rp.Len() == 3 {
-		return between(operator, parsed, data)
-	}
-
-	if operator == "<" {
-		return less(parsed[0], parsed[1])
-	}
-
-	if operator == ">" {
-		return less(parsed[1], parsed[0])
-	}
-
-	if operator == "<=" {
-		return less(parsed[0], parsed[1]) || equals(parsed[0], parsed[1])
-	}
-
-	if operator == ">=" {
-		return less(parsed[1], parsed[0]) || equals(parsed[0], parsed[1])
-	}
-
-	if operator == "===" {
-		return hardEquals(parsed[0], parsed[1])
-	}
-
-	if operator == "!=" {
-		return !equals(parsed[0], parsed[1])
-	}
-
-	if operator == "!==" {
-		return !hardEquals(parsed[0], parsed[1])
-	}
-
-	if operator == "==" {
-		return equals(parsed[0], parsed[1])
-	}
-
-	panic(ErrInvalidOperator{
-		operator: operator,
-	})
 }
 
 func parseValues(values, data interface{}) interface{} {

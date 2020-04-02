@@ -30,7 +30,6 @@ func convertInterfaceToReader(i interface{}) io.Reader {
 	}
 
 	return &result
-
 }
 
 func GetScenariosFromOfficialTestSuite() Tests {

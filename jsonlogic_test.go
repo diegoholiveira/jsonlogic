@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/diegoholiveira/jsonlogic/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/internal"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {

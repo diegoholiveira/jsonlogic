@@ -2,7 +2,6 @@ package jsonlogic
 
 import (
 	"reflect"
-
 )
 
 func less(a, b interface{}) bool {

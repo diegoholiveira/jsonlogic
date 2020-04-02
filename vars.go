@@ -1,7 +1,6 @@
 package jsonlogic
 
 import (
-	"reflect"
 	"strings"
 )
 
@@ -59,17 +58,17 @@ func getVar(value, data interface{}) interface{} {
 	var _default interface{}
 
 	if isSlice(value) { // syntax sugar
-		length := reflect.ValueOf(value).Len()
+		v := value.([]interface{})
 
-		if length == 0 {
+		if len(v) == 0 {
 			return data
 		}
 
-		if length == 2 {
-			_default = value.([]interface{})[1]
+		if len(v) == 2 {
+			_default = v[1]
 		}
 
-		value = value.([]interface{})[0].(string)
+		value = v[0].(string)
 	}
 
 	if data == nil {
