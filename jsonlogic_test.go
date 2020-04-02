@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -335,41 +334,6 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 	}
 
 	assert.JSONEq(t, "true", result.String())
-}
-
-func TestJSONLogicValidator(t *testing.T) {
-	scenarios := map[string]struct {
-		IsValid bool
-		Rule    io.Reader
-	}{
-		"invalid operator": {
-			IsValid: false,
-			Rule:    strings.NewReader(`{"filt":[[10, 1, 100], {">=":[{"var":""},2]}]}`),
-		},
-		"invalid condition inside a filter": {
-			IsValid: false,
-			Rule:    strings.NewReader(`{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`),
-		},
-		"set must be valid": {
-			IsValid: true,
-			Rule: strings.NewReader(`{
-				"map": [
-					{"var": "objects"},
-					{"set": [
-						{"var": ""},
-						"age",
-						{"+": [{"var": ".age"}, 2]}
-					]}
-				]
-			}`),
-		},
-	}
-
-	for name, scenario := range scenarios {
-		t.Run(fmt.Sprintf("SCENARIO:%s", name), func(t *testing.T) {
-			assert.Equal(t, scenario.IsValid, IsValid(scenario.Rule))
-		})
-	}
 }
 
 func TestAbsoluteValue(t *testing.T) {

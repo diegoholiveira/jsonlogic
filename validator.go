@@ -31,8 +31,6 @@ func validateJsonLogic(rules interface{}) bool {
 
 			return validateJsonLogic(value)
 		}
-
-		return false
 	}
 
 	if isSlice(rules) {
@@ -48,8 +46,6 @@ func validateJsonLogic(rules interface{}) bool {
 			if isVar(value) || isPrimitive(value) {
 				continue
 			}
-
-			return false
 		}
 
 		return true
@@ -116,10 +112,6 @@ func isVar(value interface{}) bool {
 	_var, ok := value.(map[string]interface{})["var"]
 	if !ok {
 		return false
-	}
-
-	if isSlice(_var) {
-		return validateJsonLogic(_var)
 	}
 
 	return isString(_var) || isNumber(_var) || _var == nil
