@@ -5,13 +5,13 @@ import (
 )
 
 func less(a, b interface{}) bool {
-	if isNumber(a) || isNumber(b) {
-		return toNumber(b) > toNumber(a)
-	}
-
 	// comparison to a nil value is falsy
 	if a == nil || b == nil {
 		return false
+	}
+
+	if isNumber(a) || isNumber(b) {
+		return toNumber(b) > toNumber(a)
 	}
 
 	return toString(b) > toString(a)
@@ -29,13 +29,13 @@ func hardEquals(a, b interface{}) bool {
 }
 
 func equals(a, b interface{}) bool {
-	if isNumber(a) {
-		return toNumber(a) == toNumber(b)
-	}
-
 	// comparison to a nil value is falsy
 	if a == nil || b == nil {
 		return false
+	}
+
+	if isNumber(a) {
+		return toNumber(a) == toNumber(b)
 	}
 
 	if isBool(a) {
