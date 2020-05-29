@@ -2,14 +2,15 @@ package jsonlogic
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"strings"
 	"testing"
 
-	"github.com/diegoholiveira/jsonlogic/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/internal"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {
@@ -198,7 +199,7 @@ func TestInSortedOperator(t *testing.T) {
 					"20",
 					[32, 38],
 					"a",
-					["b", "d"]					
+					["b", "d"]
 				]
 			]}
 		]
@@ -335,41 +336,6 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 	assert.JSONEq(t, "true", result.String())
 }
 
-func TestJSONLogicValidator(t *testing.T) {
-	scenarios := map[string]struct {
-		IsValid bool
-		Rule    io.Reader
-	}{
-		"invalid operator": {
-			IsValid: false,
-			Rule:    strings.NewReader(`{"filt":[[10, 1, 100], {">=":[{"var":""},2]}]}`),
-		},
-		"invalid condition inside a filter": {
-			IsValid: false,
-			Rule:    strings.NewReader(`{"filter":[{"var":"integers"}, {"=": [{"var":""}, [10]]}]}`),
-		},
-		"set must be valid": {
-			IsValid: true,
-			Rule: strings.NewReader(`{
-				"map": [
-					{"var": "objects"},
-					{"set": [
-						{"var": ""},
-						"age",
-						{"+": [{"var": ".age"}, 2]}
-					]}
-				]
-			}`),
-		},
-	}
-
-	for name, scenario := range scenarios {
-		t.Run(fmt.Sprintf("SCENARIO:%s", name), func(t *testing.T) {
-			assert.Equal(t, scenario.IsValid, IsValid(scenario.Rule))
-		})
-	}
-}
-
 func TestAbsoluteValue(t *testing.T) {
 	rule := strings.NewReader(`{
 		"abs": { "var": "test.number" }
@@ -418,4 +384,148 @@ func TestMergeArrayOfArrays(t *testing.T) {
 	}
 
 	assert.JSONEq(t, expectedResult, result.String())
+}
+
+func TestDataWithDefaultValueWithApplyRaw(t *testing.T) {
+	var rule json.RawMessage = json.RawMessage(`{
+		"+": [
+			1,
+			2
+		]
+	}`)
+
+	var expected json.RawMessage = json.RawMessage("3")
+
+	output, err := ApplyRaw(rule, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.JSONEq(t, string(expected), string(output))
+}
+
+func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
+	rule := map[string]interface{}{
+		"+": []interface{}{
+			float64(1),
+			float64(2),
+		},
+	}
+
+	expected := float64(3)
+	output, err := ApplyInterface(rule, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, expected, output.(float64))
+}
+
+func TestMissingOperators(t *testing.T) {
+	rule := map[string]interface{}{
+		"sum": []interface{}{
+			float64(1),
+			float64(2),
+		},
+	}
+
+	_, err := ApplyInterface(rule, nil)
+
+	assert.EqualError(t, err, "The operator \"sum\" is not supported")
+}
+
+func TestZeroDivision(t *testing.T) {
+	logic := strings.NewReader(`{"/":[0,10]}`)
+	data := strings.NewReader(`{}`)
+	var result bytes.Buffer
+
+	Apply(logic, data, &result) // nolint:errcheck
+
+	assert.JSONEq(t, `0`, result.String())
+}
+
+func TestSliceWithOnlyWithNumbersAsKey(t *testing.T) {
+	rule := strings.NewReader(`{"var": "people.0"}`)
+
+	data := strings.NewReader(`{
+		"people": [
+			{"age":18, "name":"John"},
+			{"age":20, "name":"Luke"},
+			{"age":18, "name":"Mark"}
+		]
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"age": 18, "name": "John"}`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestMapWithOnlyWithNumbersAsKey(t *testing.T) {
+	rule := strings.NewReader(`{"var": "people.103"}`)
+
+	data := strings.NewReader(`{
+		"people": {
+			"100": {"age":18, "name":"John"},
+			"101": {"age":20, "name":"Luke"},
+			"103": {"age":18, "name":"Mark"}
+		}
+	}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"age": 18, "name": "Mark"}`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestBetweenIsBiggerEq(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+			{">=": [8, {"var": ""}, 3]}
+		]
+	}`)
+
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[3, 4, 5, 6, 7, 8]`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestBetweenIsBigger(t *testing.T) {
+	rule := strings.NewReader(`{
+		"filter": [
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+			{">": [8, {"var": ""}, 3]}
+		]
+	}`)
+
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[4, 5, 6, 7]`
+
+	assert.JSONEq(t, expected, result.String())
 }

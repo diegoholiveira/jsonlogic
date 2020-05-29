@@ -1,0 +1,22 @@
+run:
+  timeout: 5m
+linters-settings:
+  goimports:
+    local-prefixes: github.com/diegoholiveira/jsonlogic
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - errcheck
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unparam
+    - unused
+    - varcheck
+    - whitespace

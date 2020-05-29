@@ -7,7 +7,9 @@ func filter(values, data interface{}) interface{} {
 
 	if isSlice(parsed[0]) {
 		subject = parsed[0]
-	} else {
+	}
+
+	if isMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
@@ -37,7 +39,9 @@ func _map(values, data interface{}) interface{} {
 
 	if isSlice(parsed[0]) {
 		subject = parsed[0]
-	} else {
+	}
+
+	if isMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
@@ -62,7 +66,16 @@ func _map(values, data interface{}) interface{} {
 
 func reduce(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
-	subject := apply(parsed[0], data)
+
+	var subject interface{}
+
+	if isSlice(parsed[0]) {
+		subject = parsed[0]
+	}
+
+	if isMap(parsed[0]) {
+		subject = apply(parsed[0], data)
+	}
 
 	if subject == nil {
 		return float64(0)
@@ -74,13 +87,13 @@ func reduce(values, data interface{}) interface{} {
 	}
 
 	for _, value := range subject.([]interface{}) {
+		if value == nil {
+			continue
+		}
+
 		context["current"] = value
 
 		v := apply(parsed[1], context)
-
-		if v == nil {
-			continue
-		}
 
 		context["accumulator"] = toNumber(v)
 	}
