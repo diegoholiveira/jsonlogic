@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic"
+	"github.com/diegoholiveira/jsonlogic/v3"
 )
 
 func main() {
@@ -55,7 +55,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic"
+	"github.com/diegoholiveira/jsonlogic/v3"
 )
 
 type (
