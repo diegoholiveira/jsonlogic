@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/diegoholiveira/jsonlogic.svg)](https://travis-ci.org/diegoholiveira/jsonlogic)
 [![codecov](https://codecov.io/gh/diegoholiveira/jsonlogic/branch/master/graph/badge.svg)](https://codecov.io/gh/diegoholiveira/jsonlogic)
+[![Go Report Card](https://goreportcard.com/badge/github.com/diegoholiveira/jsonlogic)](https://goreportcard.com/report/github.com/diegoholiveira/jsonlogic)
 
 
 Implementation of [JSON Logic](http://jsonlogic.com) in Go Lang.
