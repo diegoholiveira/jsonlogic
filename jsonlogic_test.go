@@ -529,3 +529,13 @@ func TestBetweenIsBigger(t *testing.T) {
 
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestUnaryOperation(t *testing.T) {
+	logic := strings.NewReader(`{"and":[{"!":{"var":"var_not_in_data"}}]}`)
+	data := strings.NewReader(`{"some_key": "value"}`)
+
+	var result bytes.Buffer
+	assert.Nil(t, Apply(logic, data, &result))
+
+	assert.JSONEq(t, `true`, result.String())
+}
