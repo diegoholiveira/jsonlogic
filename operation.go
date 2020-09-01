@@ -45,10 +45,30 @@ func operation(operator string, values, data interface{}) interface{} {
 		return min(values)
 	}
 
+	if values == nil {
+		return nil
+	}
+
 	parsed := values.([]interface{})
+
+	if operator == "and" {
+		return _and(parsed)
+	}
+
+	if operator == "or" {
+		return _or(parsed)
+	}
 
 	if len(parsed) == 1 {
 		return unary(operator, parsed[0])
+	}
+
+	if operator == "?:" {
+		if parsed[0].(bool) {
+			return parsed[1]
+		}
+
+		return parsed[2]
 	}
 
 	if operator == "+" {
@@ -65,22 +85,6 @@ func operation(operator string, values, data interface{}) interface{} {
 
 	if operator == "/" {
 		return div(values)
-	}
-
-	if operator == "and" {
-		return _and(parsed)
-	}
-
-	if operator == "or" {
-		return _or(parsed)
-	}
-
-	if operator == "?:" {
-		if parsed[0].(bool) {
-			return parsed[1]
-		}
-
-		return parsed[2]
 	}
 
 	if operator == "in" {
