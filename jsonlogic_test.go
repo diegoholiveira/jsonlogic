@@ -539,3 +539,25 @@ func TestUnaryOperation(t *testing.T) {
 
 	assert.JSONEq(t, `true`, result.String())
 }
+
+func TestInOperatorAgainstNil(t *testing.T) {
+	rule := strings.NewReader(`{"filter":[{"var": "accounts"},{"and":[{"in":["abc",{"var":"tags.tag-1"}]}]}]}`)
+	data := strings.NewReader(`{"accounts":[{"name":"account-1","tags":{"tag-1":"abc"}}, {"name":"account-2","tags":{"tag-2":"xyz"}}]}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[
+		{
+			"name": "account-1",
+			"tags": {
+				"tag-1": "abc"
+			}
+		}
+	]`
+
+	assert.JSONEq(t, expected, result.String())
+}

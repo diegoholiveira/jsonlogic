@@ -161,6 +161,10 @@ func _inSorted(value interface{}, values interface{}) bool {
 }
 
 func _in(value interface{}, values interface{}) bool {
+	if value == nil || values == nil {
+		return false
+	}
+
 	if isString(values) {
 		return strings.Contains(values.(string), value.(string))
 	}
