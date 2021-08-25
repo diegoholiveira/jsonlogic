@@ -591,3 +591,16 @@ func TestReduceFilterAndNotContains(t *testing.T) {
 
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestReduceWithUnsupportedValue(t *testing.T) {
+	b := []byte(`{"reduce":[{"filter":[{"var":"data"},{"==":[{"var":""},""]}]},{"cat":[{"var":"current"},{"var":"accumulator"}]},"str"]}`)
+
+	rule := map[string]interface{}{}
+	_ = json.Unmarshal(b, &rule)
+	data := map[string]interface{}{
+		"data": []interface{}{"str"},
+	}
+
+	_, err := ApplyInterface(rule, data)
+	assert.EqualError(t, err, "The type \"string\" is not supported")
+}

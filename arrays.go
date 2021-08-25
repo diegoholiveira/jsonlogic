@@ -1,5 +1,15 @@
 package jsonlogic
 
+import "fmt"
+
+type ErrReduceDataType struct {
+	dataType string
+}
+
+func (e ErrReduceDataType) Error() string {
+	return fmt.Sprintf("The type \"%s\" is not supported", e.dataType)
+}
+
 func filter(values, data interface{}) interface{} {
 	parsed := values.([]interface{})
 
@@ -93,7 +103,9 @@ func reduce(values, data interface{}) interface{} {
 			accumulator = toNumber(parsed[2])
 			valueType = "number"
 		} else {
-			panic("unsupported types of the default value")
+			panic(ErrReduceDataType{
+				dataType: fmt.Sprintf("%T", parsed[2]),
+			})
 		}
 	}
 
