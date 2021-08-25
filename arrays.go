@@ -115,7 +115,7 @@ func reduce(values, data interface{}) interface{} {
 		switch context["valueType"] {
 		case "bool":
 			context["accumulator"] = isTrue(v)
-		case "nubmer":
+		case "number":
 			context["accumulator"] = toNumber(v)
 		}
 	}
