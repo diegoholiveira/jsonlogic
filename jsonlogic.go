@@ -535,12 +535,12 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 }
 
 func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
-			err = e.(error)
-		}
-	}()
+	// defer func() {
+	// if e := recover(); e != nil {
+	// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
+	// err = e.(error)
+	// }
+	// }()
 
 	if isMap(rule) {
 		return apply(rule, data), err

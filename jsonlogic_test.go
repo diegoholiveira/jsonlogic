@@ -561,3 +561,33 @@ func TestInOperatorAgainstNil(t *testing.T) {
 
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestReduceFilterAndContains(t *testing.T) {
+	rule := strings.NewReader(`{"reduce":[{"filter":[{"var":"data.level1.level2"},{"==":[{"var":"access"},true]}]},{"or":[{"var":"current.access"},{"var":"accumulator"}]},false]}`)
+	data := strings.NewReader(`{"data":{"level1":{"level2":[{"access":true }]}}}}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `true`
+
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestReduceFilterAndNotContains(t *testing.T) {
+	rule := strings.NewReader(`{"reduce":[{"filter":[{"var":"data.level1.level2"},{"==":[{"var":"access"},true]}]},{"or":[{"var":"current.access"},{"var":"accumulator"}]},false]}`)
+	data := strings.NewReader(`{"data":{"level1":{"level2":[{"access":false }]}}}}`)
+
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `false`
+
+	assert.JSONEq(t, expected, result.String())
+}

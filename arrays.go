@@ -81,9 +81,26 @@ func reduce(values, data interface{}) interface{} {
 		return float64(0)
 	}
 
+	var (
+		accumulator interface{}
+		valueType   string
+	)
+	{
+		if isBool(parsed[2]) {
+			accumulator = isTrue(parsed[2])
+			valueType = "bool"
+		} else if isNumber(parsed[2]) {
+			accumulator = toNumber(parsed[2])
+			valueType = "number"
+		} else {
+			panic("unsupported types of the default value")
+		}
+	}
+
 	context := map[string]interface{}{
 		"current":     float64(0),
-		"accumulator": toNumber(parsed[2]),
+		"accumulator": accumulator,
+		"valueType":   valueType,
 	}
 
 	for _, value := range subject.([]interface{}) {
@@ -95,7 +112,12 @@ func reduce(values, data interface{}) interface{} {
 
 		v := apply(parsed[1], context)
 
-		context["accumulator"] = toNumber(v)
+		switch context["valueType"] {
+		case "bool":
+			context["accumulator"] = isTrue(v)
+		case "nubmer":
+			context["accumulator"] = toNumber(v)
+		}
 	}
 
 	return context["accumulator"]
