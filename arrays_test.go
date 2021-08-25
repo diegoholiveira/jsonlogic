@@ -67,3 +67,24 @@ func TestReduceSkipNullValues(t *testing.T) {
 
 	assert.Equal(t, expected, result)
 }
+
+func TestReduceBoolValues(t *testing.T) {
+	var parsed interface{}
+
+	err := json.Unmarshal([]byte(`[
+		[true,false,true,null],
+		{"or":[{"var":"current"}, {"var":"accumulator"}]},
+		false
+	]`), &parsed)
+	if err != nil {
+		panic(err)
+	}
+
+	result := reduce(parsed, nil)
+
+	var expected interface{}
+
+	json.Unmarshal([]byte(`true`), &expected) // nolint:errcheck
+
+	assert.Equal(t, expected, result)
+}
