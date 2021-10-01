@@ -15,10 +15,10 @@ func IsValid(rule io.Reader) bool {
 		return false
 	}
 
-	return validateJsonLogic(_rule)
+	return ValidateJsonLogic(_rule)
 }
 
-func validateJsonLogic(rules interface{}) bool {
+func ValidateJsonLogic(rules interface{}) bool {
 	if isVar(rules) {
 		return true
 	}
@@ -29,14 +29,14 @@ func validateJsonLogic(rules interface{}) bool {
 				return false
 			}
 
-			return validateJsonLogic(value)
+			return ValidateJsonLogic(value)
 		}
 	}
 
 	if isSlice(rules) {
 		for _, value := range rules.([]interface{}) {
 			if isSlice(value) || isMap(value) {
-				if validateJsonLogic(value) {
+				if ValidateJsonLogic(value) {
 					continue
 				}
 
