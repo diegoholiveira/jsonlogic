@@ -1,6 +1,21 @@
 package jsonlogic
 
+// customOperators holds custom operators
+var customOperators = make(map[string]func(values, data interface{}) (result interface{}))
+
+// AddOperator allows for custom operators to be used
+func AddOperator(key string, cb func(values, data interface{}) (result interface{})) {
+	customOperators[key] = cb
+}
+
 func operation(operator string, values, data interface{}) interface{} {
+	// Check against any custom operators
+	for index, customOperation := range customOperators {
+		if operator == index {
+			return customOperation(values, data)
+		}
+	}
+
 	if operator == "missing" {
 		return missing(values, data)
 	}

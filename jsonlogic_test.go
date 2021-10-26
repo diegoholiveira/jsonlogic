@@ -604,3 +604,26 @@ func TestReduceWithUnsupportedValue(t *testing.T) {
 	_, err := ApplyInterface(rule, data)
 	assert.EqualError(t, err, "The type \"string\" is not supported")
 }
+
+func TestAddOperator(t *testing.T) {
+	AddOperator("strlen", func(values, data interface{}) interface{} {
+		v, ok := values.(string)
+
+		if ok {
+			return len(v)
+		}
+		return 0
+	})
+	logic := strings.NewReader(`{ "strlen": { "var": "foo" } }`)
+	data := strings.NewReader(`{"foo": "bar"}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `3`
+
+	assert.JSONEq(t, expected, result.String())
+}
