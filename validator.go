@@ -95,6 +95,10 @@ func isOperator(op string) bool {
 		"var",
 	}
 
+	for key := range customOperators {
+		operators = append(operators, key)
+	}
+
 	for _, operator := range operators {
 		if operator == op {
 			return true
