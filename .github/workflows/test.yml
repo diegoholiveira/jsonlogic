@@ -1,0 +1,22 @@
+on: [push, pull_request]
+name: Continuous Integration
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.14', '1.15', '1.16']
+    name: Running with Go ${{ matrix.go }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Run the tests
+      run: go test -coverprofile=coverage.txt -covermode=count ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        files: coverage.txt
