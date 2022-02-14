@@ -258,7 +258,7 @@ func conditional(values, data interface{}) interface{} {
 		}
 
 		if isTrue(v) {
-			return parsed[i+1]
+			return parseValues(parsed[i+1], data)
 		}
 	}
 
@@ -544,6 +544,16 @@ func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
 
 	if isMap(rule) {
 		return apply(rule, data), err
+	}
+
+	if isSlice(rule) {
+		var parsed []interface{}
+
+		for _, value := range rule.([]interface{}) {
+			parsed = append(parsed, parseValues(value, data))
+		}
+
+		return interface{}(parsed), nil
 	}
 
 	return rule, err
