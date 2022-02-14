@@ -1,6 +1,6 @@
 # Go JSON Logic
 
-![test workflow](https://github.com/diegoholiveira/jsonlogic/actions/workflows/test/badge.svg)
+![test workflow](https://github.com/diegoholiveira/jsonlogic/actions/workflows/test.yml/badge.svg)
 [![codecov](https://codecov.io/gh/diegoholiveira/jsonlogic/branch/master/graph/badge.svg)](https://codecov.io/gh/diegoholiveira/jsonlogic)
 [![Go Report Card](https://goreportcard.com/badge/github.com/diegoholiveira/jsonlogic)](https://goreportcard.com/report/github.com/diegoholiveira/jsonlogic)
 
