@@ -627,3 +627,17 @@ func TestAddOperator(t *testing.T) {
 
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue50(t *testing.T) {
+	logic := strings.NewReader(`{"<": ["abc", 3]}`)
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `false`
+	assert.JSONEq(t, expected, result.String())
+}

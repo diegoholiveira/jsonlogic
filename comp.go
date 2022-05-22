@@ -10,11 +10,11 @@ func less(a, b interface{}) bool {
 		return false
 	}
 
-	if isNumber(a) || isNumber(b) {
-		return toNumber(b) > toNumber(a)
+	if isString(a) || isString(b) {
+		return toString(b) > toString(a)
 	}
 
-	return toString(b) > toString(a)
+	return toNumber(b) > toNumber(a)
 }
 
 func hardEquals(a, b interface{}) bool {
