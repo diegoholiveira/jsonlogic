@@ -641,3 +641,31 @@ func TestIssue50(t *testing.T) {
 	expected := `false`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue51_example1(t *testing.T) {
+	logic := strings.NewReader(`{"==":[{"var":"test"},true]}`)
+	data := strings.NewReader(`{}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `false`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue51_example2(t *testing.T) {
+	logic := strings.NewReader(`{"==":[{"var":"test"},"true"]}`)
+	data := strings.NewReader(`{"test": true}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `false`
+	assert.JSONEq(t, expected, result.String())
+}

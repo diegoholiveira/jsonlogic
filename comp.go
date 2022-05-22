@@ -39,6 +39,9 @@ func equals(a, b interface{}) bool {
 	}
 
 	if isBool(a) {
+		if !isBool(b) {
+			return false
+		}
 		return isTrue(a) == isTrue(b)
 	}
 
