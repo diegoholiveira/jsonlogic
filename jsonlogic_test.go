@@ -669,3 +669,31 @@ func TestIssue51_example2(t *testing.T) {
 	expected := `false`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue52_example1(t *testing.T) {
+	data := strings.NewReader(`{}`)
+	logic := strings.NewReader(`{"substr": ["jsonlogic", -10]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `"jsonlogic"`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue52_example2(t *testing.T) {
+	data := strings.NewReader(`{}`)
+	logic := strings.NewReader(`{"substr": ["jsonlogic", 10]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `"jsonlogic"`
+	assert.JSONEq(t, expected, result.String())
+}

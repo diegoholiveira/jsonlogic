@@ -17,6 +17,11 @@ func substr(values interface{}) interface{} {
 		from = length + from
 	}
 
+	if from < 0 || from > length {
+		// case from is still negative, we must stop right now and return the original string
+		return string(runes)
+	}
+
 	if len(parsed) == 3 {
 		length = int(toNumber(parsed[2]))
 	}
