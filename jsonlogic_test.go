@@ -593,7 +593,7 @@ func TestReduceFilterAndNotContains(t *testing.T) {
 }
 
 func TestReduceWithUnsupportedValue(t *testing.T) {
-	b := []byte(`{"reduce":[{"filter":[{"var":"data"},{"==":[{"var":""},""]}]},{"cat":[{"var":"current"},{"var":"accumulator"}]},"str"]}`)
+	b := []byte(`{"reduce":[{"filter":[{"var":"data"},{"==":[{"var":""},""]}]},{"cat":[{"var":"current"},{"var":"accumulator"}]},null]}`)
 
 	rule := map[string]interface{}{}
 	_ = json.Unmarshal(b, &rule)
@@ -602,7 +602,7 @@ func TestReduceWithUnsupportedValue(t *testing.T) {
 	}
 
 	_, err := ApplyInterface(rule, data)
-	assert.EqualError(t, err, "The type \"string\" is not supported")
+	assert.EqualError(t, err, "The type \"<nil>\" is not supported")
 }
 
 func TestAddOperator(t *testing.T) {
