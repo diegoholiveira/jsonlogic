@@ -88,3 +88,24 @@ func TestReduceBoolValues(t *testing.T) {
 
 	assert.Equal(t, expected, result)
 }
+
+func TestReduceStringValues(t *testing.T) {
+	var parsed interface{}
+
+	err := json.Unmarshal([]byte(`[
+		["a",null,"b"],
+		{"cat":[{"var":"current"}, {"var":"accumulator"}]},
+		""
+	]`), &parsed)
+	if err != nil {
+		panic(err)
+	}
+
+	result := reduce(parsed, nil)
+
+	var expected interface{}
+
+	json.Unmarshal([]byte(`"ba"`), &expected) // nolint:errcheck
+
+	assert.Equal(t, expected, result)
+}

@@ -102,6 +102,9 @@ func reduce(values, data interface{}) interface{} {
 		} else if isNumber(parsed[2]) {
 			accumulator = toNumber(parsed[2])
 			valueType = "number"
+		} else if isString(parsed[2]) {
+			accumulator = toString(parsed[2])
+			valueType = "string"
 		} else {
 			panic(ErrReduceDataType{
 				dataType: fmt.Sprintf("%T", parsed[2]),
@@ -129,6 +132,8 @@ func reduce(values, data interface{}) interface{} {
 			context["accumulator"] = isTrue(v)
 		case "number":
 			context["accumulator"] = toNumber(v)
+		case "string":
+			context["accumulator"] = toString(v)
 		}
 	}
 
