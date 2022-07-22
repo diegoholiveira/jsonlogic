@@ -119,11 +119,11 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	if operator == "<" {
-		return less(parsed[0], parsed[1])
+		return less(at(parsed, 0), at(parsed, 1))
 	}
 
 	if operator == ">" {
-		return less(parsed[1], parsed[0])
+		return less(at(parsed, 1), at(parsed, 0))
 	}
 
 	if operator == "<=" {
