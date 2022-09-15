@@ -350,9 +350,10 @@ func all(values, data interface{}) interface{} {
 		return false
 	}
 
-	conditions := solveVars(parsed[1], data)
+	
 
 	for _, value := range subject.([]interface{}) {
+		conditions := solveVars(parsed[1], value)
 		v := apply(conditions, value)
 
 		if !isTrue(v) {
