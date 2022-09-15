@@ -281,7 +281,34 @@ func TestAllWithLists(t *testing.T) {
 
 	assert.JSONEq(t, "true", result.String())
 }
+func TestAllWithArrayOfMapData(t *testing.T) {
+	data := strings.NewReader(`[
+		{
+		  "P1": "A",
+		  "P2":"a"
+		},
+		
+		{
+		  "P1": "B",
+		  "P2":"b"
+		}
+	  ]`)
+	rule := strings.NewReader(`
+	  {
+		"all": [
+		  { "var": "" },
+		  { "in": [ {"var": "P1"} , ["A","B"]] }
+		]
+	  }
+	`)
+	var result bytes.Buffer
+	err := Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
 
+	}
+	assert.JSONEq(t, "true", result.String())
+}
 func TestNoneWithLists(t *testing.T) {
 	rule := strings.NewReader(`{
 		"none": [
