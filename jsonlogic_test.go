@@ -724,3 +724,20 @@ func TestIssue52_example2(t *testing.T) {
 	expected := `"jsonlogic"`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue58_example(t *testing.T) {
+	data := strings.NewReader(`{"foo": "bar"}`)
+	logic := strings.NewReader(`{"if":[
+		{"==":[{"var":"foo"},"bar"]},{"foo":"is_bar","path":"foo_is_bar"},
+		{"foo":"not_bar","path":"default_object"}
+	]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"foo":"is_bar","path":"foo_is_bar"}`
+	assert.JSONEq(t, expected, result.String())
+}

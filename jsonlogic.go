@@ -350,8 +350,6 @@ func all(values, data interface{}) interface{} {
 		return false
 	}
 
-	
-
 	for _, value := range subject.([]interface{}) {
 		conditions := solveVars(parsed[1], value)
 		v := apply(conditions, value)
@@ -447,7 +445,15 @@ func parseValues(values, data interface{}) interface{} {
 }
 
 func apply(rules, data interface{}) interface{} {
-	for operator, values := range rules.(map[string]interface{}) {
+	ruleMap := rules.(map[string]interface{})
+
+	// A map with more than 1 key counts as a primitive
+	// end recursion
+	if len(ruleMap) > 1 {
+		return ruleMap
+	}
+
+	for operator, values := range ruleMap {
 		if operator == "filter" {
 			return filter(values, data)
 		}
