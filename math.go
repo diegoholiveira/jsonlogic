@@ -28,8 +28,10 @@ func sum(values interface{}) interface{} {
 func minus(values interface{}) interface{} {
 	var sum float64
 
+	isFirst := true
 	for _, n := range values.([]interface{}) {
-		if sum == 0 {
+		if isFirst {
+			isFirst = false
 			sum = toNumber(n)
 
 			continue
