@@ -51,6 +51,16 @@ func isTrue(obj interface{}) bool {
 	return false
 }
 
+func toSliceOfNumbers(values interface{}) []float64 {
+	_values := values.([]interface{})
+
+	numbers := make([]float64, len(_values))
+	for i, n := range _values {
+		numbers[i] = toNumber(n)
+	}
+	return numbers
+}
+
 func toNumber(value interface{}) float64 {
 	if isString(value) {
 		w, _ := strconv.ParseFloat(value.(string), 64)
