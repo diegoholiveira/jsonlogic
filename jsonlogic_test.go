@@ -305,7 +305,6 @@ func TestAllWithArrayOfMapData(t *testing.T) {
 	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
-
 	}
 	assert.JSONEq(t, "true", result.String())
 }
