@@ -26,18 +26,11 @@ func sum(values interface{}) interface{} {
 }
 
 func minus(values interface{}) interface{} {
-	var sum float64
+	_values := toSliceOfNumbers(values)
 
-	isFirst := true
-	for _, n := range values.([]interface{}) {
-		if isFirst {
-			isFirst = false
-			sum = toNumber(n)
-
-			continue
-		}
-
-		sum -= toNumber(n)
+	sum := _values[0]
+	for i := 1; len(_values) > i; i++ {
+		sum -= _values[i]
 	}
 
 	return sum
@@ -54,16 +47,11 @@ func mult(values interface{}) interface{} {
 }
 
 func div(values interface{}) interface{} {
-	var sum float64
+	_values := toSliceOfNumbers(values)
 
-	for i, n := range values.([]interface{}) {
-		if i == 0 {
-			sum = toNumber(n)
-
-			continue
-		}
-
-		sum = sum / toNumber(n)
+	sum := _values[0]
+	for i := 1; len(_values) > i; i++ {
+		sum = sum / _values[i]
 	}
 
 	return sum

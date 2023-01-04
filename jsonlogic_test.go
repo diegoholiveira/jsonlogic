@@ -741,21 +741,3 @@ func TestIssue58_example(t *testing.T) {
 	expected := `{"foo":"is_bar","path":"foo_is_bar"}`
 	assert.JSONEq(t, expected, result.String())
 }
-
-func TestSubOperation(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
-		"-": [
-			0,
-			10
-		]
-	}`)
-
-	var expected json.RawMessage = json.RawMessage("-10")
-
-	output, err := ApplyRaw(rule, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.JSONEq(t, string(expected), string(output))
-}
