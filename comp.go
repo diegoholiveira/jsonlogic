@@ -70,7 +70,8 @@ func hardEquals(a, b interface{}) bool {
 func equals(a, b interface{}) bool {
 	// comparison to a nil value is falsy
 	if a == nil || b == nil {
-		return false
+		// if a and b is nil, return true, else return falsy
+		return a == b
 	}
 
 	if isNumber(a) {

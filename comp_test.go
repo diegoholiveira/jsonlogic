@@ -63,3 +63,8 @@ func TestLessCompareNumberAndNil(t *testing.T) {
 func TestEqualsWithBooleans(t *testing.T) {
 	assert.True(t, equals(true, true))
 }
+
+func TestEqualsWithNil(t *testing.T) {
+	assert.True(t, equals(nil, nil))
+	assert.False(t, equals(nil, ""))
+}
