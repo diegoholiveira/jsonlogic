@@ -1,6 +1,7 @@
 package jsonlogic
 
 import (
+	"encoding/json"
 	"strings"
 )
 
@@ -104,4 +105,22 @@ func getVar(value, data interface{}) interface{} {
 	}
 
 	return _value
+}
+
+func solveVarsBackToJsonLogic(rule, data interface{}) ([]byte, error) {
+	ruleMap := rule.(map[string]interface{})
+	result := make(map[string]interface{})
+
+	for operator, values := range ruleMap {
+		result[operator] = solveVars(values, data)
+	}
+
+	// convert the result to json.RawMessage
+	body, err := json.Marshal(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
