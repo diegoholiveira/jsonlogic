@@ -115,7 +115,6 @@ func solveVarsBackToJsonLogic(rule, data interface{}) ([]byte, error) {
 		result[operator] = solveVars(values, data)
 	}
 
-	// convert the result to json.RawMessage
 	body, err := json.Marshal(result)
 
 	if err != nil {
