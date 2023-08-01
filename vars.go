@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -107,7 +108,7 @@ func getVar(value, data interface{}) interface{} {
 	return _value
 }
 
-func solveVarsBackToJsonLogic(rule, data interface{}) ([]byte, error) {
+func solveVarsBackToJsonLogic(rule, data interface{}) (json.RawMessage, error) {
 	ruleMap := rule.(map[string]interface{})
 	result := make(map[string]interface{})
 
@@ -115,11 +116,19 @@ func solveVarsBackToJsonLogic(rule, data interface{}) ([]byte, error) {
 		result[operator] = solveVars(values, data)
 	}
 
-	body, err := json.Marshal(result)
+	resultJson, err := json.Marshal(result)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return body, nil
+	// we need to use Unquote due to unicode characters (example \u003e= need to be >=)
+	// used for prettier json.RawMessage
+	resultEscaped, err := strconv.Unquote(strings.Replace(strconv.Quote(string(resultJson)), `\\u`, `\u`, -1))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(resultEscaped), nil
 }
