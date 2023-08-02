@@ -1,6 +1,8 @@
 package jsonlogic
 
 import (
+	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -104,4 +106,29 @@ func getVar(value, data interface{}) interface{} {
 	}
 
 	return _value
+}
+
+func solveVarsBackToJsonLogic(rule, data interface{}) (json.RawMessage, error) {
+	ruleMap := rule.(map[string]interface{})
+	result := make(map[string]interface{})
+
+	for operator, values := range ruleMap {
+		result[operator] = solveVars(values, data)
+	}
+
+	resultJson, err := json.Marshal(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// we need to use Unquote due to unicode characters (example \u003e= need to be >=)
+	// used for prettier json.RawMessage
+	resultEscaped, err := strconv.Unquote(strings.Replace(strconv.Quote(string(resultJson)), `\\u`, `\u`, -1))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(resultEscaped), nil
 }

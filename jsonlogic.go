@@ -515,6 +515,28 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 	return json.NewEncoder(result).Encode(output)
 }
 
+func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
+	if data == nil {
+		data = json.RawMessage("{}")
+	}
+
+	// parse rule and data from json.RawMessage to interface
+	var _rule interface{}
+	var _data interface{}
+
+	err := json.Unmarshal(rule, &_rule)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &_data)
+	if err != nil {
+		return nil, err
+	}
+
+	return solveVarsBackToJsonLogic(_rule, _data)
+}
+
 func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 	if data == nil {
 		data = json.RawMessage("{}")

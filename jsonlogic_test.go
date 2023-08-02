@@ -740,3 +740,55 @@ func TestIssue58_example(t *testing.T) {
 	expected := `{"foo":"is_bar","path":"foo_is_bar"}`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestJsonLogicWithSolvedVars(t *testing.T) {
+	rule := json.RawMessage(`{
+		"or":[
+		{
+			"and":[
+				{"==": [{ "var":"is_foo" }, true ]},
+				{"==": [{ "var":"is_bar" }, true ]},
+				{">=": [{ "var":"foo" }, 17179869184 ]},
+				{"==": [{ "var":"bar" }, 0 ]}
+			]
+      	},
+      	{
+			"and":[
+				{"==": [{ "var":"is_bar" }, true ]},
+				{"==": [{ "var":"is_foo" }, false ]},
+				{"==": [{ "var":"foo" }, 34359738368 ]},
+				{"==": [{ "var":"bar" }, 0 ]}
+			]
+      	}]
+    }`)
+
+	data := json.RawMessage(`{"foo": 34359738368, "bar": 10, "is_foo": false, "is_bar": true}`)
+
+	output, err := GetJsonLogicWithSolvedVars(rule, data)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{
+		"or":[
+		{
+			"and":[
+				{ "==":[ false, true ] },
+				{ "==":[ true, true ] },
+				{ ">=":[ 34359738368, 17179869184 ] },
+				{ "==":[ 10, 0 ] }
+			]
+		},
+		{
+			"and":[
+				{ "==":[ true, true ] },
+				{ "==":[ false, false ] },
+				{ "==":[ 34359738368, 34359738368 ] },
+				{ "==":[ 10, 0 ] }
+			]
+		}]
+	}`
+
+	assert.JSONEq(t, expected, string(output))
+}
