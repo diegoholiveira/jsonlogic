@@ -1,15 +1,15 @@
-# Go JSON Logic
+# Go JsonLogic
 
 ![test workflow](https://github.com/diegoholiveira/jsonlogic/actions/workflows/test.yml/badge.svg)
 [![codecov](https://codecov.io/gh/diegoholiveira/jsonlogic/branch/master/graph/badge.svg)](https://codecov.io/gh/diegoholiveira/jsonlogic)
 [![Go Report Card](https://goreportcard.com/badge/github.com/diegoholiveira/jsonlogic)](https://goreportcard.com/report/github.com/diegoholiveira/jsonlogic)
 
-Implementation of [JSON Logic](http://jsonlogic.com) in Go Lang.
+Implementation of [JsonLogic](http://jsonlogic.com) in Go Lang.
 
-## What's JSON Logic?
+## What's JsonLogic?
 
-JSON Logic is a DSL to write logic decisions in JSON. It's has a great specification and is very simple to learn.
-The [official website](http://jsonlogic.com) has a great documentation with examples.
+JsonLogic is a DSL to write logic decisions in JSON. It's has a great specification and is very simple to learn.
+The [official website](http://jsonlogic.com) has great documentation with examples.
 
 ## How to use it
 
@@ -104,7 +104,7 @@ func main() {
 }
 ```
 
-If you have a function you want to expose as a JSON Logic operation, you can use:
+If you have a function you want to expose as a JsonLogic operation, you can use:
 
 ```go
 package main
@@ -138,7 +138,7 @@ func main() {
 }
 ```
 
-If you want to get the json logic used, with the variables replaced by their values : 
+If you want to get the JsonLogic used, with the variables replaced by their values: 
 
 ```go
 package main
@@ -156,48 +156,14 @@ func main() {
 
 	result, err := jsonlogic.GetJsonLogicWithSolvedVars(logic, data)
 
-  if err != nil {
-    fmt.Println(err)
-  }
+	if err != nil {
+		fmt.Println(err)
+	}
   
 	fmt.Println(string(result)) // will output { "==":[false, true] }
 }
-
 ```
 
 # License
 
-This project is licensed under the MIT License - see the LICENSE file for details
-
-
-
-For example, if you specify the folowing rules model :
-
-
-```json
-{
-  "and":[
-    { "==":[{ "var":"VariableA" }, true] },
-    { "==":[{ "var":"VariableB" }, true] },
-    { ">=":[{ "var":"VariableC" }, 17179869184] },
-    { "==":[{ "var":"VariableD" }, "0"] },
-    { "<":[{ "var":"VariableE" }, 20] }
-  ]
-}
-
-```
-
-You will get as output, the folowing response (using a specific data, all variables will be replaced with matching values) :
-
-```json
-{
-  "and":[
-    { "==":[false, true] },
-    { "==":[true, true] },
-    { ">=":[34359738368, 17179869184] },
-    { "==":[12, "0"] },
-    { "<":[14, 20] }
-  ]
-}
-
-```
+This project is licensed under the MIT License - see [LICENSE](./LICENSE) for details.
