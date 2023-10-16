@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"sort"
 	"strings"
 
@@ -195,10 +194,16 @@ func _in(value interface{}, values interface{}) bool {
 }
 
 func max(values interface{}) interface{} {
-	bigger := math.SmallestNonzeroFloat64
+	converted := values.([]interface{})
+	size := len(converted)
+	if size == 0 {
+		return nil
+	}
 
-	for _, n := range values.([]interface{}) {
-		_n := toNumber(n)
+	bigger := toNumber(converted[0])
+
+	for i := 1; i < size; i++ {
+		_n := toNumber(converted[i])
 		if _n > bigger {
 			bigger = _n
 		}
@@ -208,10 +213,16 @@ func max(values interface{}) interface{} {
 }
 
 func min(values interface{}) interface{} {
-	smallest := math.MaxFloat64
+	converted := values.([]interface{})
+	size := len(converted)
+	if size == 0 {
+		return nil
+	}
 
-	for _, n := range values.([]interface{}) {
-		_n := toNumber(n)
+	smallest := toNumber(converted[0])
+
+	for i := 1; i < size; i++ {
+		_n := toNumber(converted[i])
 		if smallest > _n {
 			smallest = _n
 		}
