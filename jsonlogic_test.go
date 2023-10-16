@@ -741,6 +741,48 @@ func TestIssue58_example(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
+func TestIssue71_example_empty_min(t *testing.T) {
+	data := strings.NewReader(`{}`)
+	logic := strings.NewReader(`{"min":[]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `null`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue71_example_empty_max(t *testing.T) {
+	data := strings.NewReader(`{}`)
+	logic := strings.NewReader(`{"max":[]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `null`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue71_example_max(t *testing.T) {
+	data := strings.NewReader(`{}`)
+	logic := strings.NewReader(`{"max":[-3, -2]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `-2`
+	assert.JSONEq(t, expected, result.String())
+}
+
 func TestJsonLogicWithSolvedVars(t *testing.T) {
 	rule := json.RawMessage(`{
 		"or":[
