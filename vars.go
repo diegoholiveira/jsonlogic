@@ -12,7 +12,7 @@ func solveVars(values, data interface{}) interface{} {
 
 		for key, value := range values.(map[string]interface{}) {
 			if key == "var" {
-				if value == "" || strings.HasPrefix(value.(string), ".") {
+				if isString(value) && (value == "" || strings.HasPrefix(value.(string), ".")) {
 					logic["var"] = value
 					continue
 				}

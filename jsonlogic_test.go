@@ -741,6 +741,30 @@ func TestIssue58_example(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
+func TestIssue70(t *testing.T) {
+	data := strings.NewReader(`{"people": [
+		{"age":18, "name":"John"},
+		{"age":20, "name":"Luke"},
+		{"age":18, "name":"Mark"}
+]}`)
+	logic := strings.NewReader(`{"filter": [
+	{"var": ["people"]},
+	{"==": [{"var": ["age"]}, 18]}
+]}`)
+
+	var result bytes.Buffer
+	err := Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[
+    {"age": 18, "name": "John"},
+    {"age": 18, "name": "Mark"}
+]`
+	assert.JSONEq(t, expected, result.String())
+}
+
 func TestIssue71_example_empty_min(t *testing.T) {
 	data := strings.NewReader(`{}`)
 	logic := strings.NewReader(`{"min":[]}`)
