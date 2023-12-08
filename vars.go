@@ -91,7 +91,12 @@ func getVar(value, data interface{}) interface{} {
 		}
 
 		if isSlice(data) {
-			_value = data.([]interface{})[int(toNumber(part))]
+			pos := int(toNumber(part))
+			container := data.([]interface{})
+			if pos >= len(container) {
+				return _default
+			}
+			_value = container[pos]
 		}
 
 		if _value == nil {
