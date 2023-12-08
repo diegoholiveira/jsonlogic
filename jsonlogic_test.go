@@ -807,6 +807,16 @@ func TestIssue71_example_max(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
+func TestIssue74(t *testing.T) {
+	logic := strings.NewReader(`{"if":[ false, {"var":"values.0.categories"}, "else" ]}`)
+	data := strings.NewReader(`{ "values": [] }`)
+
+	var result bytes.Buffer
+	_ = Apply(logic, data, &result)
+	expected := `"else"`
+	assert.JSONEq(t, expected, result.String())
+}
+
 func TestJsonLogicWithSolvedVars(t *testing.T) {
 	rule := json.RawMessage(`{
 		"or":[
