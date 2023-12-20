@@ -6,9 +6,10 @@ import (
 	"io"
 	"sort"
 	"strings"
+
 	// "runtime/debug"
 
-	"github.com/mitchellh/copystructure"
+	"github.com/barkimedes/go-deepcopy"
 )
 
 type ErrInvalidOperator struct {
@@ -291,7 +292,7 @@ func setProperty(value, data interface{}) interface{} {
 	}
 
 	property := _value[1].(string)
-	modified, err := copystructure.Copy(object)
+	modified, err := deepcopy.Anything(object)
 	if err != nil {
 		panic(err)
 	}
