@@ -138,7 +138,7 @@ func main() {
 }
 ```
 
-If you want to get the JsonLogic used, with the variables replaced by their values: 
+If you want to get the JsonLogic used, with the variables replaced by their values:
 
 ```go
 package main
@@ -159,7 +159,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-  
+
 	fmt.Println(string(result)) // will output { "==":[false, true] }
 }
 ```

@@ -550,6 +550,8 @@ func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
 	return solveVarsBackToJsonLogic(_rule, _data)
 }
 
+// ApplyRaw receives a rule and data as json.RawMessage and returns the result
+// of the rule applied to the data.
 func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 	if data == nil {
 		data = json.RawMessage("{}")
@@ -576,6 +578,10 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 	return json.Marshal(&result)
 }
 
+// ApplyInterface receives a rule and data as interface{} and returns the result
+// of the rule applied to the data.
+//
+// Deprecated: Use Apply instead because ApplyInterface will be private in the next version.
 func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
