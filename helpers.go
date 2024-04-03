@@ -18,7 +18,12 @@ func isString(obj interface{}) bool {
 }
 
 func isNumber(obj interface{}) bool {
-	return is(obj, reflect.Float64)
+	switch obj.(type) {
+	case int, float64:
+		return true
+	default:
+		return false
+	}
 }
 
 func isPrimitive(obj interface{}) bool {
@@ -68,12 +73,22 @@ func toNumber(value interface{}) float64 {
 		return w
 	}
 
-	return value.(float64)
+	switch value.(type) {
+	case int:
+		return float64(value.(int))
+	default:
+		return value.(float64)
+	}
 }
 
 func toString(value interface{}) string {
 	if isNumber(value) {
-		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
+		switch value.(type) {
+		case int:
+			return strconv.FormatInt(int64(value.(int)), 10)
+		default:
+			return strconv.FormatFloat(value.(float64), 'f', -1, 64)
+		}
 	}
 
 	if value == nil {
