@@ -45,11 +45,7 @@ func solveVars(values, data interface{}) interface{} {
 }
 
 func getVar(value, data interface{}) interface{} {
-	if value == nil {
-		return data
-	}
-
-	if isString(value) && toString(value) == "" {
+	if value == nil || (isString(value) && toString(value) == "") {
 		return data
 	}
 

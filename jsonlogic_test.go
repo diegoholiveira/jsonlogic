@@ -8,9 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/diegoholiveira/jsonlogic/v3/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {
@@ -281,13 +280,14 @@ func TestAllWithLists(t *testing.T) {
 
 	assert.JSONEq(t, "true", result.String())
 }
+
 func TestAllWithArrayOfMapData(t *testing.T) {
 	data := strings.NewReader(`[
 		{
 		  "P1": "A",
 		  "P2":"a"
 		},
-		
+
 		{
 		  "P1": "B",
 		  "P2":"b"
@@ -308,6 +308,7 @@ func TestAllWithArrayOfMapData(t *testing.T) {
 	}
 	assert.JSONEq(t, "true", result.String())
 }
+
 func TestNoneWithLists(t *testing.T) {
 	rule := strings.NewReader(`{
 		"none": [
@@ -867,4 +868,42 @@ func TestJsonLogicWithSolvedVars(t *testing.T) {
 	}`
 
 	assert.JSONEq(t, expected, string(output))
+}
+
+func TestIssue79(t *testing.T) {
+	rule := strings.NewReader(
+		`{"and": [
+        {"in": [
+          {"var": "flow"},
+          ["BRAND"]
+        ]},
+        {"or": [
+          {"if": [
+            {"missing": ["gender"]},
+            true,
+            false
+          ]},
+          {"some": [
+            {"var": "gender"},
+            {"==": [
+              {"var": null},
+              "men"
+            ]}
+          ]}
+        ]}
+      ]}`,
+	)
+
+	data := strings.NewReader(`{"category":["sneakers"],"flow":"BRAND","gender":["men"],"market":"US"}`)
+
+	var result bytes.Buffer
+
+	err := Apply(rule, data, &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `true`
+	assert.JSONEq(t, expected, result.String())
 }

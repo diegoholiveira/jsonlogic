@@ -7,8 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	// "runtime/debug"
-
 	"github.com/barkimedes/go-deepcopy"
 )
 
@@ -422,10 +420,14 @@ func some(values, data interface{}) interface{} {
 		return false
 	}
 
-	conditions := solveVars(parsed[1], data)
-
 	for _, value := range subject.([]interface{}) {
-		v := apply(conditions, value)
+		v := apply(
+			solveVars(
+				solveVars(parsed[1], value),
+				data,
+			),
+			value,
+		)
 
 		if isTrue(v) {
 			return true
