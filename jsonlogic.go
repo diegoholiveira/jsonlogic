@@ -423,8 +423,8 @@ func some(values, data interface{}) interface{} {
 	for _, value := range subject.([]interface{}) {
 		v := apply(
 			solveVars(
-				solveVars(parsed[1], value),
-				data,
+				solveVars(parsed[1], data),
+				value,
 			),
 			value,
 		)

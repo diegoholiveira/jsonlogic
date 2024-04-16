@@ -907,3 +907,28 @@ func TestIssue79(t *testing.T) {
 	expected := `true`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue81(t *testing.T) {
+	rule := `{
+      "some": [
+        {"var": "A"},
+        {"!=": [
+          {"var": ".B"},
+          {"var": "B"}
+        ]}
+      ]}
+         `
+
+	data := `{"A":[{"B":1}], "B":2}`
+
+	var result bytes.Buffer
+
+	err := Apply(strings.NewReader(rule), strings.NewReader(data), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `true`
+	assert.JSONEq(t, expected, result.String())
+}
