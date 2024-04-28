@@ -66,7 +66,7 @@ func _map(values, data interface{}) interface{} {
 	for _, value := range subject.([]interface{}) {
 		v := parseValues(logic, value)
 
-		if isTrue(v) || isNumber(v) {
+		if isTrue(v) || isNumber(v) || isBool(v) {
 			result = append(result, v)
 		}
 	}
