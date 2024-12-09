@@ -133,6 +133,10 @@ func _in(value interface{}, values interface{}) bool {
 		return strings.Contains(values.(string), value.(string))
 	}
 
+	if !isSlice(values) {
+		return false
+	}
+
 	for _, element := range values.([]interface{}) {
 		if isSlice(element) {
 			if _inRange(value, element) {

@@ -74,7 +74,7 @@ func operation(operator string, values, data interface{}) interface{} {
 		return _or(parsed)
 	}
 
-	if len(parsed) == 1 {
+	if operator != "in" && len(parsed) == 1 {
 		return unary(operator, parsed[0])
 	}
 
