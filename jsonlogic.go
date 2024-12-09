@@ -522,7 +522,7 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 		return err
 	}
 
-	output, err := ApplyInterface(_rule, _data)
+	output, err := applyInterface(_rule, _data)
 	if err != nil {
 		return err
 	}
@@ -572,7 +572,7 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 		return nil, err
 	}
 
-	result, err := ApplyInterface(_rule, _data)
+	result, err := applyInterface(_rule, _data)
 	if err != nil {
 		return nil, err
 	}
@@ -580,11 +580,9 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 	return json.Marshal(&result)
 }
 
-// ApplyInterface receives a rule and data as interface{} and returns the result
+// applyInterface receives a rule and data as interface{} and returns the result
 // of the rule applied to the data.
-//
-// Deprecated: Use Apply instead because ApplyInterface will be private in the next version.
-func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
+func applyInterface(rule, data interface{}) (output interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
