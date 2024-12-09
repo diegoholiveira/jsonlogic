@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 
 	"github.com/barkimedes/go-deepcopy"
@@ -125,40 +124,6 @@ func _inRange(value interface{}, values interface{}) bool {
 	return toString(value) >= toString(i) && toString(j) >= toString(value)
 }
 
-// Expect values to be in alphabetical ascending order
-func _inSorted(value interface{}, values interface{}) bool {
-	valuesSlice := values.([]interface{})
-
-	findElement := func(i int) bool {
-		element := valuesSlice[i]
-
-		if isSlice(valuesSlice[i]) {
-			sliceElement := valuesSlice[i].([]interface{})
-			start := sliceElement[0]
-			end := sliceElement[1]
-
-			return (toString(start) <= toString(value) && toString(end) >= toString(value)) || toString(end) > toString(value)
-		}
-
-		return toString(element) >= toString(value)
-	}
-
-	i := sort.Search(len(valuesSlice), findElement)
-	if i >= len(valuesSlice) {
-		return false
-	}
-
-	if isSlice(valuesSlice[i]) {
-		sliceElement := valuesSlice[i].([]interface{})
-		start := sliceElement[0]
-		end := sliceElement[1]
-
-		return toString(start) <= toString(value) && toString(end) >= toString(value)
-	}
-
-	return toString(valuesSlice[i]) == toString(value)
-}
-
 func _in(value interface{}, values interface{}) bool {
 	if value == nil || values == nil {
 		return false
@@ -166,6 +131,10 @@ func _in(value interface{}, values interface{}) bool {
 
 	if isString(values) {
 		return strings.Contains(values.(string), value.(string))
+	}
+
+	if !isSlice(values) {
+		return false
 	}
 
 	for _, element := range values.([]interface{}) {
@@ -522,7 +491,7 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 		return err
 	}
 
-	output, err := ApplyInterface(_rule, _data)
+	output, err := applyInterface(_rule, _data)
 	if err != nil {
 		return err
 	}
@@ -572,7 +541,7 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 		return nil, err
 	}
 
-	result, err := ApplyInterface(_rule, _data)
+	result, err := applyInterface(_rule, _data)
 	if err != nil {
 		return nil, err
 	}
@@ -580,11 +549,9 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 	return json.Marshal(&result)
 }
 
-// ApplyInterface receives a rule and data as interface{} and returns the result
+// applyInterface receives a rule and data as interface{} and returns the result
 // of the rule applied to the data.
-//
-// Deprecated: Use Apply instead because ApplyInterface will be private in the next version.
-func ApplyInterface(rule, data interface{}) (output interface{}, err error) {
+func applyInterface(rule, data interface{}) (output interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -42,7 +41,7 @@ func GetScenariosFromOfficialTestSuite() Tests {
 		return tests
 	}
 
-	buffer, _ := ioutil.ReadAll(response.Body)
+	buffer, _ := io.ReadAll(response.Body)
 
 	response.Body.Close()
 

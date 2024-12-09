@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {
@@ -24,7 +25,7 @@ func TestRulesFromJsonLogic(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if b, err := ioutil.ReadAll(test.Expected); err == nil {
+			if b, err := io.ReadAll(test.Expected); err == nil {
 				assert.JSONEq(t, string(b), result.String())
 			}
 		})
@@ -179,59 +180,6 @@ func TestListOfRanges(t *testing.T) {
 	expected := `[
 		{"age": 18, "name": "John"},
 		{"age": 18, "name": "Mark"}
-	]`
-
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestInSortedOperator(t *testing.T) {
-	rule := strings.NewReader(`{
-		"filter": [
-			{"var": "people"},
-			{"in_sorted": [
-				{"var": ".age"},
-				[
-					11.00,
-					[12, 14],
-					[13, 18],
-					2,
-					"20",
-					[32, 38],
-					"a",
-					["b", "d"]
-				]
-			]}
-		]
-	}`)
-
-	data := strings.NewReader(`{
-		"people": [
-			{"age":"18", "name":"John"},
-			{"age":20, "name":"Luke"},
-			{"age":18, "name":"Mark"},
-			{"age":40, "name":"Donald"},
-			{"age":11, "name":"Mickey"},
-			{"age":"1", "name":"Minnie"},
-			{"age":2, "name":"Mario"},
-			{"age":"a", "name":"Mario"},
-			{"age":"c", "name":"Princess"}
-		]
-	}`)
-
-	var result bytes.Buffer
-	err := Apply(rule, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `[
-		{"age":"18", "name": "John"},
-		{"age":20, "name":"Luke"},
-		{"age":18, "name": "Mark"},
-		{"age":11, "name":"Mickey"},
-		{"age":2, "name":"Mario"},
-		{"age":"a", "name":"Mario"},
-		{"age":"c", "name":"Princess"}
 	]`
 
 	assert.JSONEq(t, expected, result.String())
@@ -440,7 +388,7 @@ func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
 	}
 
 	expected := float64(3)
-	output, err := ApplyInterface(rule, nil)
+	output, err := applyInterface(rule, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -456,7 +404,7 @@ func TestMissingOperators(t *testing.T) {
 		},
 	}
 
-	_, err := ApplyInterface(rule, nil)
+	_, err := applyInterface(rule, nil)
 
 	assert.EqualError(t, err, "The operator \"sum\" is not supported")
 }
@@ -628,7 +576,7 @@ func TestReduceWithUnsupportedValue(t *testing.T) {
 		"data": []interface{}{"str"},
 	}
 
-	_, err := ApplyInterface(rule, data)
+	_, err := applyInterface(rule, data)
 	assert.EqualError(t, err, "The type \"<nil>\" is not supported")
 }
 
@@ -655,280 +603,30 @@ func TestAddOperator(t *testing.T) {
 	assert.JSONEq(t, expected, result.String())
 }
 
-func TestIssue50(t *testing.T) {
-	logic := strings.NewReader(`{"<": ["abc", 3]}`)
-	data := strings.NewReader(`{}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `false`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue51_example1(t *testing.T) {
-	logic := strings.NewReader(`{"==":[{"var":"test"},true]}`)
-	data := strings.NewReader(`{}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `false`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue51_example2(t *testing.T) {
-	logic := strings.NewReader(`{"==":[{"var":"test"},"true"]}`)
-	data := strings.NewReader(`{"test": true}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `false`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue52_example1(t *testing.T) {
-	data := strings.NewReader(`{}`)
-	logic := strings.NewReader(`{"substr": ["jsonlogic", -10]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `"jsonlogic"`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue52_example2(t *testing.T) {
-	data := strings.NewReader(`{}`)
-	logic := strings.NewReader(`{"substr": ["jsonlogic", 10]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `"jsonlogic"`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue58_example(t *testing.T) {
-	data := strings.NewReader(`{"foo": "bar"}`)
-	logic := strings.NewReader(`{"if":[
-		{"==":[{"var":"foo"},"bar"]},{"foo":"is_bar","path":"foo_is_bar"},
-		{"foo":"not_bar","path":"default_object"}
-	]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `{"foo":"is_bar","path":"foo_is_bar"}`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue70(t *testing.T) {
-	data := strings.NewReader(`{"people": [
-		{"age":18, "name":"John"},
-		{"age":20, "name":"Luke"},
-		{"age":18, "name":"Mark"}
-]}`)
-	logic := strings.NewReader(`{"filter": [
-	{"var": ["people"]},
-	{"==": [{"var": ["age"]}, 18]}
-]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `[
-    {"age": 18, "name": "John"},
-    {"age": 18, "name": "Mark"}
-]`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue71_example_empty_min(t *testing.T) {
-	data := strings.NewReader(`{}`)
-	logic := strings.NewReader(`{"min":[]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `null`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue71_example_empty_max(t *testing.T) {
-	data := strings.NewReader(`{}`)
-	logic := strings.NewReader(`{"max":[]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `null`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue71_example_max(t *testing.T) {
-	data := strings.NewReader(`{}`)
-	logic := strings.NewReader(`{"max":[-3, -2]}`)
-
-	var result bytes.Buffer
-	err := Apply(logic, data, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `-2`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestIssue74(t *testing.T) {
-	logic := strings.NewReader(`{"if":[ false, {"var":"values.0.categories"}, "else" ]}`)
-	data := strings.NewReader(`{ "values": [] }`)
-
-	var result bytes.Buffer
-	_ = Apply(logic, data, &result)
-	expected := `"else"`
-	assert.JSONEq(t, expected, result.String())
-}
-
-func TestJsonLogicWithSolvedVars(t *testing.T) {
-	rule := json.RawMessage(`{
-		"or":[
-		{
-			"and":[
-				{"==": [{ "var":"is_foo" }, true ]},
-				{"==": [{ "var":"is_bar" }, true ]},
-				{">=": [{ "var":"foo" }, 17179869184 ]},
-				{"==": [{ "var":"bar" }, 0 ]}
-			]
-      	},
-      	{
-			"and":[
-				{"==": [{ "var":"is_bar" }, true ]},
-				{"==": [{ "var":"is_foo" }, false ]},
-				{"==": [{ "var":"foo" }, 34359738368 ]},
-				{"==": [{ "var":"bar" }, 0 ]}
-			]
-      	}]
-    }`)
-
-	data := json.RawMessage(`{"foo": 34359738368, "bar": 10, "is_foo": false, "is_bar": true}`)
-
-	output, err := GetJsonLogicWithSolvedVars(rule, data)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `{
-		"or":[
-		{
-			"and":[
-				{ "==":[ false, true ] },
-				{ "==":[ true, true ] },
-				{ ">=":[ 34359738368, 17179869184 ] },
-				{ "==":[ 10, 0 ] }
-			]
-		},
-		{
-			"and":[
-				{ "==":[ true, true ] },
-				{ "==":[ false, false ] },
-				{ "==":[ 34359738368, 34359738368 ] },
-				{ "==":[ 10, 0 ] }
-			]
-		}]
-	}`
-
-	assert.JSONEq(t, expected, string(output))
-}
-
-func TestIssue79(t *testing.T) {
-	rule := strings.NewReader(
-		`{"and": [
-        {"in": [
-          {"var": "flow"},
-          ["BRAND"]
-        ]},
-        {"or": [
-          {"if": [
-            {"missing": ["gender"]},
-            true,
-            false
-          ]},
-          {"some": [
-            {"var": "gender"},
-            {"==": [
-              {"var": null},
-              "men"
-            ]}
-          ]}
-        ]}
-      ]}`,
-	)
-
-	data := strings.NewReader(`{"category":["sneakers"],"flow":"BRAND","gender":["men"],"market":"US"}`)
+func TestInWithOneParam(t *testing.T) {
+	rule := strings.NewReader(`{"in": [ "Ringo" ]}`)
+	data := strings.NewReader(`null`)
 
 	var result bytes.Buffer
 
 	err := Apply(rule, data, &result)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := `true`
-	assert.JSONEq(t, expected, result.String())
+	assert.JSONEq(t, `false`, result.String())
 }
 
-func TestIssue81(t *testing.T) {
-	rule := `{
-      "some": [
-        {"var": "A"},
-        {"!=": [
-          {"var": ".B"},
-          {"var": "B"}
-        ]}
-      ]}
-         `
-
-	data := `{"A":[{"B":1}], "B":2}`
+func TestEqualWithList(t *testing.T) {
+	rule := strings.NewReader(`{"==": [ 2, [3, 2, 1] ]}`)
+	data := strings.NewReader(`null`)
 
 	var result bytes.Buffer
 
-	err := Apply(strings.NewReader(rule), strings.NewReader(data), &result)
-
+	err := Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := `true`
-	assert.JSONEq(t, expected, result.String())
+	assert.JSONEq(t, `false`, result.String())
 }

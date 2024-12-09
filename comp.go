@@ -75,7 +75,7 @@ func equals(a, b interface{}) bool {
 	}
 
 	if isNumber(a) {
-		return toNumber(a) == toNumber(b)
+		return isPrimitive(b) && toNumber(a) == toNumber(b)
 	}
 
 	if isBool(a) {
@@ -83,6 +83,10 @@ func equals(a, b interface{}) bool {
 			return false
 		}
 		return isTrue(a) == isTrue(b)
+	}
+
+	if !isString(a) || !isString(b) {
+		return false
 	}
 
 	return toString(a) == toString(b)

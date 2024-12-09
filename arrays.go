@@ -1,6 +1,8 @@
 package jsonlogic
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ErrReduceDataType struct {
 	dataType string
@@ -95,15 +97,21 @@ func reduce(values, data interface{}) interface{} {
 		accumulator interface{}
 		valueType   string
 	)
+
 	{
-		if isBool(parsed[2]) {
-			accumulator = isTrue(parsed[2])
+		initialValue := parsed[2]
+		if isMap(initialValue) {
+			initialValue = apply(initialValue, data)
+		}
+
+		if isBool(initialValue) {
+			accumulator = isTrue(initialValue)
 			valueType = "bool"
-		} else if isNumber(parsed[2]) {
-			accumulator = toNumber(parsed[2])
+		} else if isNumber(initialValue) {
+			accumulator = toNumber(initialValue)
 			valueType = "number"
-		} else if isString(parsed[2]) {
-			accumulator = toString(parsed[2])
+		} else if isString(initialValue) {
+			accumulator = toString(initialValue)
 			valueType = "string"
 		} else {
 			panic(ErrReduceDataType{
