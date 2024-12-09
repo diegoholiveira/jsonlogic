@@ -1,111 +1,79 @@
-package jsonlogic
+package jsonlogic_test
 
 import (
-	"encoding/json"
+	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/v3"
 )
 
 func TestFilterParseTheSubjectFromFirstPosition(t *testing.T) {
-	var parsed interface{}
-
-	err := json.Unmarshal([]byte(`[
+	rule := strings.NewReader(`{"filter": [
 		[1,2,3,4,5],
 		{"%":[{"var":""},2]}
-	]`), &parsed)
-	if err != nil {
-		panic(err)
-	}
+	]}`)
 
-	result := filter(parsed, nil)
+	var result bytes.Buffer
 
-	var expected interface{}
-
-	json.Unmarshal([]byte(`[1,3,5]`), &expected) // nolint:errcheck
-
-	assert.Equal(t, expected, result)
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.Nil(t, err)
+	assert.JSONEq(t, `[1,3,5]`, result.String())
 }
 
 func TestFilterParseTheSubjectFromNullValue(t *testing.T) {
-	var parsed interface{}
-
-	err := json.Unmarshal([]byte(`[
+	rule := strings.NewReader(`{"filter": [
 		null,
 		{"%":[{"var":""},2]}
-	]`), &parsed)
-	if err != nil {
-		panic(err)
-	}
+	]}`)
 
-	result := filter(parsed, nil)
+	var result bytes.Buffer
 
-	var expected interface{}
-
-	json.Unmarshal([]byte(`[]`), &expected) // nolint:errcheck
-
-	assert.Equal(t, expected, result)
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.Nil(t, err)
+	assert.JSONEq(t, `[]`, result.String())
 }
 
 func TestReduceSkipNullValues(t *testing.T) {
-	var parsed interface{}
-
-	err := json.Unmarshal([]byte(`[
+	rule := strings.NewReader(`{"reduce": [
 		[1,2,null,4,5],
 		{"+":[{"var":"current"}, {"var":"accumulator"}]},
 		0
-	]`), &parsed)
-	if err != nil {
-		panic(err)
-	}
+	]}`)
 
-	result := reduce(parsed, nil)
+	var result bytes.Buffer
 
-	var expected interface{}
-
-	json.Unmarshal([]byte(`12`), &expected) // nolint:errcheck
-
-	assert.Equal(t, expected, result)
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.Nil(t, err)
+	assert.JSONEq(t, `12`, result.String())
 }
 
 func TestReduceBoolValues(t *testing.T) {
-	var parsed interface{}
-
-	err := json.Unmarshal([]byte(`[
+	rule := strings.NewReader(`{"reduce": [
 		[true,false,true,null],
 		{"or":[{"var":"current"}, {"var":"accumulator"}]},
 		false
-	]`), &parsed)
-	if err != nil {
-		panic(err)
-	}
+	]}`)
 
-	result := reduce(parsed, nil)
+	var result bytes.Buffer
 
-	var expected interface{}
-
-	json.Unmarshal([]byte(`true`), &expected) // nolint:errcheck
-
-	assert.Equal(t, expected, result)
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.Nil(t, err)
+	assert.JSONEq(t, `true`, result.String())
 }
 
 func TestReduceStringValues(t *testing.T) {
-	var parsed interface{}
-
-	err := json.Unmarshal([]byte(`[
+	rule := strings.NewReader(`{"reduce": [
 		["a",null,"b"],
 		{"cat":[{"var":"current"}, {"var":"accumulator"}]},
 		""
-	]`), &parsed)
-	if err != nil {
-		panic(err)
-	}
+	]}`)
 
-	result := reduce(parsed, nil)
+	var result bytes.Buffer
 
-	var expected interface{}
-
-	json.Unmarshal([]byte(`"ba"`), &expected) // nolint:errcheck
-
-	assert.Equal(t, expected, result)
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.Nil(t, err)
+	assert.JSONEq(t, `"ba"`, result.String())
 }
