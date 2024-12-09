@@ -103,11 +103,10 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	if operator == "in" {
-		return _in(parsed[0], parsed[1])
-	}
-
-	if operator == "in_sorted" {
-		return _inSorted(parsed[0], parsed[1])
+		if len(parsed) > 1 {
+			return _in(parsed[0], parsed[1])
+		}
+		return _in(parsed[0], nil)
 	}
 
 	if operator == "%" {
