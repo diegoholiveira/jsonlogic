@@ -63,12 +63,14 @@ func unary(operator string, value interface{}) interface{} {
 	return b
 }
 
-func _and(values []interface{}) interface{} {
+func _and(values, data interface{}) interface{} {
+	values = getValuesWithoutParsing(values, data)
 	var v float64
 
 	isBoolExpression := true
 
-	for _, value := range values {
+	for _, value := range values.([]interface{}) {
+		value = parseValues(value, data)
 		if isSlice(value) {
 			return value
 		}
@@ -101,9 +103,11 @@ func _and(values []interface{}) interface{} {
 	return v
 }
 
-func _or(values []interface{}) interface{} {
-	for _, value := range values {
-		if isTrue(value) {
+func _or(values, data interface{}) interface{} {
+	values = getValuesWithoutParsing(values, data)
+
+	for _, value := range values.([]interface{}) {
+		if isTrue(parseValues(value, data)) {
 			return value
 		}
 	}
@@ -428,6 +432,22 @@ func parseValues(values, data interface{}) interface{} {
 	return parsed
 }
 
+// If values represents a map (an operation), returns the result. Otherwise returns the
+// values without parsing. This means that each of the returned values might be a subtree
+// of JSONLogic.
+// Used in lazy evaluation of "AND" and "OR" operators
+func getValuesWithoutParsing(values, data interface{}) interface{} {
+	if values == nil || isPrimitive(values) {
+		return values
+	}
+
+	if isMap(values) {
+		return apply(values, data)
+	}
+
+	return values.([]interface{})
+}
+
 func apply(rules, data interface{}) interface{} {
 	ruleMap := rules.(map[string]interface{})
 
@@ -462,7 +482,7 @@ func apply(rules, data interface{}) interface{} {
 			return some(values, data)
 		}
 
-		return operation(operator, parseValues(values, data), data)
+		return operation(operator, values, data)
 	}
 
 	// an empty-map rule should return an empty-map
