@@ -9,6 +9,19 @@ func AddOperator(key string, cb func(values, data interface{}) (result interface
 }
 
 func operation(operator string, values, data interface{}) interface{} {
+	// "AND" evaluates values lazily, so parseValues() is delayed until needed
+	if operator == "and" {
+		return _and(values, data)
+	}
+
+	// "OR" evaluates values lazily, so parseValues() is delayed until needed
+	if operator == "or" {
+		return _or(values, data)
+	}
+
+	// Parse the entire remaining tree and eval recursively for non-lazy eval operators
+	values = parseValues(values, data)
+
 	// Check against any custom operators
 	for index, customOperation := range customOperators {
 		if operator == index {
@@ -65,14 +78,6 @@ func operation(operator string, values, data interface{}) interface{} {
 	}
 
 	parsed := values.([]interface{})
-
-	if operator == "and" {
-		return _and(parsed)
-	}
-
-	if operator == "or" {
-		return _or(parsed)
-	}
 
 	if operator != "in" && len(parsed) == 1 {
 		return unary(operator, parsed[0])
