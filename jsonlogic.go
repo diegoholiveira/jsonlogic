@@ -13,6 +13,29 @@ type ErrInvalidOperator struct {
 	operator string
 }
 
+type Engine struct {
+    rulesCache map[string]interface{}
+    mu         sync.Mutex
+}
+
+func NewEngine() *Engine {
+    return &Engine{
+        rulesCache: make(map[string]interface{}),
+    }
+}
+
+func (e *Engine) Build(rules string) error {
+    var decodedRules interface{}
+    if err := json.Unmarshal([]byte(rules), &decodedRules); err != nil {
+        return err
+    }
+    
+    e.mu.Lock()
+    defer e.mu.Unlock()
+    e.rulesCache[rules] = decodedRules
+    return nil
+}
+
 func (e ErrInvalidOperator) Error() string {
 	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
 }
@@ -517,6 +540,50 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 	}
 
 	return json.NewEncoder(result).Encode(output)
+}
+
+func (e *Engine) Apply(rule, data io.Reader, result io.Writer) error {
+    if data == nil {
+        data = strings.NewReader("{}")
+    }
+
+    var _rule interface{}
+    var _data interface{}
+
+    ruleStr := new(strings.Builder)
+    _, err := io.Copy(ruleStr, rule)
+    if err != nil {
+        return err
+    }
+
+    ruleKey := ruleStr.String()
+
+    e.mu.Lock()
+    if cachedRule, exists := e.rulesCache[ruleKey]; exists {
+        _rule = cachedRule
+    } else {
+        decoder := json.NewDecoder(strings.NewReader(ruleKey))
+        err := decoder.Decode(&_rule)
+        if err != nil {
+            e.mu.Unlock()
+            return err
+        }
+        e.rulesCache[ruleKey] = _rule
+    }
+    e.mu.Unlock()
+
+    decoder := json.NewDecoder(data)
+    err = decoder.Decode(&_data)
+    if err != nil {
+        return err
+    }
+
+    output, err := applyInterface(_rule, _data)
+    if err != nil {
+        return err
+    }
+
+    return json.NewEncoder(result).Encode(output)
 }
 
 func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
