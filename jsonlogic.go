@@ -561,16 +561,17 @@ func (e *Engine) Apply(rule, data io.Reader, result io.Writer) error {
     e.mu.Lock()
     if cachedRule, exists := e.rulesCache[ruleKey]; exists {
         _rule = cachedRule
+        e.mu.Unlock()
     } else {
-        decoder := json.NewDecoder(strings.NewReader(ruleKey))
-        err := decoder.Decode(&_rule)
-        if err != nil {
-            e.mu.Unlock()
+        e.mu.Unlock()
+        if err := e.Build(ruleKey); err != nil {
             return err
         }
-        e.rulesCache[ruleKey] = _rule
+
+        e.mu.Lock()
+        _rule = e.rulesCache[ruleKey]
+        e.mu.Unlock()
     }
-    e.mu.Unlock()
 
     decoder := json.NewDecoder(data)
     err = decoder.Decode(&_data)
