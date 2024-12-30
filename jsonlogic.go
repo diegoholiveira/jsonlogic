@@ -1,10 +1,13 @@
 package jsonlogic
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/barkimedes/go-deepcopy"
 )
@@ -14,26 +17,37 @@ type ErrInvalidOperator struct {
 }
 
 type Engine struct {
-    rulesCache map[string]interface{}
-    mu         sync.Mutex
+	rulesCache map[string]interface{}
+	mu         sync.Mutex
 }
 
 func NewEngine() *Engine {
-    return &Engine{
-        rulesCache: make(map[string]interface{}),
-    }
+	return &Engine{
+		rulesCache: make(map[string]interface{}),
+	}
 }
 
-func (e *Engine) Build(rules string) error {
-    var decodedRules interface{}
-    if err := json.Unmarshal([]byte(rules), &decodedRules); err != nil {
-        return err
-    }
-    
-    e.mu.Lock()
-    defer e.mu.Unlock()
-    e.rulesCache[rules] = decodedRules
-    return nil
+func (e *Engine) Build(ruleKey, hashKey string) error {
+	// Check if the rule is already cached
+	e.mu.Lock()
+	if _, exists := e.rulesCache[hashKey]; exists {
+		e.mu.Unlock()
+		return nil // Rule already cached, no need to rebuild
+	}
+	e.mu.Unlock()
+
+	// Decode the rules JSON
+	var decodedRules interface{}
+	if err := json.Unmarshal([]byte(ruleKey), &decodedRules); err != nil {
+		return err
+	}
+
+	// Store the decoded rules in the cache using the hashKey
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.rulesCache[hashKey] = decodedRules
+
+	return nil
 }
 
 func (e ErrInvalidOperator) Error() string {
@@ -521,7 +535,6 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 
 	var _rule interface{}
 	var _data interface{}
-
 	decoder := json.NewDecoder(rule)
 	err := decoder.Decode(&_rule)
 	if err != nil {
@@ -543,48 +556,39 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 }
 
 func (e *Engine) Apply(rule, data io.Reader, result io.Writer) error {
-    if data == nil {
-        data = strings.NewReader("{}")
-    }
+	if data == nil {
+		data = strings.NewReader("{}")
+	}
 
-    var _rule interface{}
-    var _data interface{}
+	var _rule interface{}
+	var _data interface{}
 
-    ruleStr := new(strings.Builder)
-    _, err := io.Copy(ruleStr, rule)
-    if err != nil {
-        return err
-    }
+	ruleStr := new(strings.Builder)
+	_, err := io.Copy(ruleStr, rule)
+	if err != nil {
+		return err
+	}
 
-    ruleKey := ruleStr.String()
+	ruleKey := ruleStr.String()
 
-    e.mu.Lock()
-    if cachedRule, exists := e.rulesCache[ruleKey]; exists {
-        _rule = cachedRule
-        e.mu.Unlock()
-    } else {
-        e.mu.Unlock()
-        if err := e.Build(ruleKey); err != nil {
-            return err
-        }
+	hash := sha256.Sum256([]byte(ruleKey))
+	hashKey := hex.EncodeToString(hash[:])
 
-        e.mu.Lock()
-        _rule = e.rulesCache[ruleKey]
-        e.mu.Unlock()
-    }
+	e.Build(ruleKey, hashKey)
+	_rule = e.rulesCache[hashKey]
 
-    decoder := json.NewDecoder(data)
-    err = decoder.Decode(&_data)
-    if err != nil {
-        return err
-    }
+	decoder := json.NewDecoder(data)
+	err = decoder.Decode(&_data)
+	if err != nil {
+		return err
+	}
 
-    output, err := applyInterface(_rule, _data)
-    if err != nil {
-        return err
-    }
+	output, err := applyInterface(_rule, _data)
+	if err != nil {
+		return err
+	}
 
-    return json.NewEncoder(result).Encode(output)
+	return json.NewEncoder(result).Encode(output)
 }
 
 func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
