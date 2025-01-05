@@ -1,4 +1,4 @@
-package jsonlogic
+package jsonlogic_test
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/diegoholiveira/jsonlogic/v3/internal"
 )
 
@@ -20,7 +21,7 @@ func TestRulesFromJsonLogic(t *testing.T) {
 		t.Run(fmt.Sprintf("Scenario_%d", i), func(t *testing.T) {
 			var result bytes.Buffer
 
-			err := Apply(test.Rule, test.Data, &result)
+			err := jsonlogic.Apply(test.Rule, test.Data, &result)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -38,7 +39,7 @@ func TestDivWithOnlyOneValue(t *testing.T) {
 
 	var result bytes.Buffer
 
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +67,7 @@ func TestSetAValue(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +103,7 @@ func TestLocalContext(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +137,7 @@ func TestMapWithZeroValue(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,7 +173,7 @@ func TestListOfRanges(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +200,7 @@ func TestSomeWithLists(t *testing.T) {
 	data := strings.NewReader(`{}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +222,7 @@ func TestAllWithLists(t *testing.T) {
 	data := strings.NewReader("{}")
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +251,7 @@ func TestAllWithArrayOfMapData(t *testing.T) {
 	  }
 	`)
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +272,7 @@ func TestNoneWithLists(t *testing.T) {
 	data := strings.NewReader("{}")
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +304,7 @@ func TestInOperatorWorksWithMaps(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -323,7 +324,7 @@ func TestAbsoluteValue(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,7 +354,7 @@ func TestMergeArrayOfArrays(t *testing.T) {
 	expectedResult := "[[\"18800000\",\"18800969\"],[\"19840000\",\"19840969\"]]"
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -371,7 +372,7 @@ func TestDataWithDefaultValueWithApplyRaw(t *testing.T) {
 
 	var expected json.RawMessage = json.RawMessage("3")
 
-	output, err := ApplyRaw(rule, nil)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -388,7 +389,7 @@ func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
 	}
 
 	expected := float64(3)
-	output, err := applyInterface(rule, nil)
+	output, err := jsonlogic.ApplyInterface(rule, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,7 +405,7 @@ func TestMissingOperators(t *testing.T) {
 		},
 	}
 
-	_, err := applyInterface(rule, nil)
+	_, err := jsonlogic.ApplyInterface(rule, nil)
 
 	assert.EqualError(t, err, "The operator \"sum\" is not supported")
 }
@@ -414,7 +415,7 @@ func TestZeroDivision(t *testing.T) {
 	data := strings.NewReader(`{}`)
 	var result bytes.Buffer
 
-	Apply(logic, data, &result) // nolint:errcheck
+	jsonlogic.Apply(logic, data, &result) // nolint:errcheck
 
 	assert.JSONEq(t, `0`, result.String())
 }
@@ -431,7 +432,7 @@ func TestSliceWithOnlyWithNumbersAsKey(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +454,7 @@ func TestMapWithOnlyWithNumbersAsKey(t *testing.T) {
 	}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -474,7 +475,7 @@ func TestBetweenIsBiggerEq(t *testing.T) {
 	data := strings.NewReader(`{}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -495,7 +496,7 @@ func TestBetweenIsBigger(t *testing.T) {
 	data := strings.NewReader(`{}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -510,7 +511,7 @@ func TestUnaryOperation(t *testing.T) {
 	data := strings.NewReader(`{"some_key": "value"}`)
 
 	var result bytes.Buffer
-	assert.Nil(t, Apply(logic, data, &result))
+	assert.Nil(t, jsonlogic.Apply(logic, data, &result))
 
 	assert.JSONEq(t, `true`, result.String())
 }
@@ -520,7 +521,7 @@ func TestInOperatorAgainstNil(t *testing.T) {
 	data := strings.NewReader(`{"accounts":[{"name":"account-1","tags":{"tag-1":"abc"}}, {"name":"account-2","tags":{"tag-2":"xyz"}}]}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -542,7 +543,7 @@ func TestReduceFilterAndContains(t *testing.T) {
 	data := strings.NewReader(`{"data":{"level1":{"level2":[{"access":true }]}}}}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -557,7 +558,7 @@ func TestReduceFilterAndNotContains(t *testing.T) {
 	data := strings.NewReader(`{"data":{"level1":{"level2":[{"access":false }]}}}}`)
 
 	var result bytes.Buffer
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -576,12 +577,12 @@ func TestReduceWithUnsupportedValue(t *testing.T) {
 		"data": []interface{}{"str"},
 	}
 
-	_, err := applyInterface(rule, data)
+	_, err := jsonlogic.ApplyInterface(rule, data)
 	assert.EqualError(t, err, "The type \"<nil>\" is not supported")
 }
 
 func TestAddOperator(t *testing.T) {
-	AddOperator("strlen", func(values, data interface{}) interface{} {
+	jsonlogic.AddOperator("strlen", func(values, data interface{}) interface{} {
 		v, ok := values.(string)
 
 		if ok {
@@ -593,7 +594,7 @@ func TestAddOperator(t *testing.T) {
 	data := strings.NewReader(`{"foo": "bar"}`)
 
 	var result bytes.Buffer
-	err := Apply(logic, data, &result)
+	err := jsonlogic.Apply(logic, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -609,7 +610,7 @@ func TestInWithOneParam(t *testing.T) {
 
 	var result bytes.Buffer
 
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -623,7 +624,7 @@ func TestEqualWithList(t *testing.T) {
 
 	var result bytes.Buffer
 
-	err := Apply(rule, data, &result)
+	err := jsonlogic.Apply(rule, data, &result)
 	if err != nil {
 		t.Fatal(err)
 	}

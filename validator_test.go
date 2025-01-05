@@ -1,4 +1,4 @@
-package jsonlogic
+package jsonlogic_test
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/v3"
 )
 
 func TestJSONLogicValidator(t *testing.T) {
@@ -47,7 +49,7 @@ func TestJSONLogicValidator(t *testing.T) {
 
 	for name, scenario := range scenarios {
 		t.Run(fmt.Sprintf("SCENARIO:%s", name), func(t *testing.T) {
-			assert.Equal(t, scenario.IsValid, IsValid(scenario.Rule))
+			assert.Equal(t, scenario.IsValid, jsonlogic.IsValid(scenario.Rule))
 		})
 	}
 }
