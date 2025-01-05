@@ -1,14 +1,14 @@
 package jsonlogic
 
 // customOperators holds custom operators
-var customOperators = make(map[string]func(values, data interface{}) (result interface{}))
+var customOperators = make(map[string]func(values, data any) (result any))
 
 // AddOperator allows for custom operators to be used
-func AddOperator(key string, cb func(values, data interface{}) (result interface{})) {
+func AddOperator(key string, cb func(values, data any) (result any)) {
 	customOperators[key] = cb
 }
 
-func operation(operator string, values, data interface{}) interface{} {
+func operation(operator string, values, data any) any {
 	// "AND" evaluates values lazily, so parseValues() is delayed until needed
 	if operator == "and" {
 		return _and(values, data)
@@ -77,7 +77,7 @@ func operation(operator string, values, data interface{}) interface{} {
 		return nil
 	}
 
-	parsed := values.([]interface{})
+	parsed := values.([]any)
 
 	if operator != "in" && len(parsed) == 1 {
 		return unary(operator, parsed[0])

@@ -5,19 +5,19 @@ import (
 	"strconv"
 )
 
-func is(obj interface{}, kind reflect.Kind) bool {
+func is(obj any, kind reflect.Kind) bool {
 	return obj != nil && reflect.TypeOf(obj).Kind() == kind
 }
 
-func isBool(obj interface{}) bool {
+func isBool(obj any) bool {
 	return is(obj, reflect.Bool)
 }
 
-func isString(obj interface{}) bool {
+func isString(obj any) bool {
 	return is(obj, reflect.String)
 }
 
-func isNumber(obj interface{}) bool {
+func isNumber(obj any) bool {
 	switch obj.(type) {
 	case int, float64:
 		return true
@@ -26,19 +26,19 @@ func isNumber(obj interface{}) bool {
 	}
 }
 
-func isPrimitive(obj interface{}) bool {
+func isPrimitive(obj any) bool {
 	return isBool(obj) || isString(obj) || isNumber(obj)
 }
 
-func isMap(obj interface{}) bool {
+func isMap(obj any) bool {
 	return is(obj, reflect.Map)
 }
 
-func isSlice(obj interface{}) bool {
+func isSlice(obj any) bool {
 	return is(obj, reflect.Slice)
 }
 
-func isTrue(obj interface{}) bool {
+func isTrue(obj any) bool {
 	if isBool(obj) {
 		return obj.(bool)
 	}
@@ -56,8 +56,8 @@ func isTrue(obj interface{}) bool {
 	return false
 }
 
-func toSliceOfNumbers(values interface{}) []float64 {
-	_values := values.([]interface{})
+func toSliceOfNumbers(values any) []float64 {
+	_values := values.([]any)
 
 	numbers := make([]float64, len(_values))
 	for i, n := range _values {
@@ -66,26 +66,26 @@ func toSliceOfNumbers(values interface{}) []float64 {
 	return numbers
 }
 
-func toNumber(value interface{}) float64 {
+func toNumber(value any) float64 {
 	if isString(value) {
 		w, _ := strconv.ParseFloat(value.(string), 64)
 
 		return w
 	}
 
-	switch value.(type) {
+	switch value := value.(type) {
 	case int:
-		return float64(value.(int))
+		return float64(value)
 	default:
 		return value.(float64)
 	}
 }
 
-func toString(value interface{}) string {
+func toString(value any) string {
 	if isNumber(value) {
-		switch value.(type) {
+		switch value := value.(type) {
 		case int:
-			return strconv.FormatInt(int64(value.(int)), 10)
+			return strconv.FormatInt(int64(value), 10)
 		default:
 			return strconv.FormatFloat(value.(float64), 'f', -1, 64)
 		}

@@ -119,7 +119,7 @@ import (
 
 func main() {
 	// add a new operator "strlen" for get string length
-	jsonlogic.AddOperator("strlen", func(values, data interface{}) interface{} {
+	jsonlogic.AddOperator("strlen", func(values, data any) any {
 		v, ok := values.(string)
 		if ok {
 			return len(v)

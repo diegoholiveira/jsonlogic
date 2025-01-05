@@ -12,10 +12,10 @@ func (e ErrReduceDataType) Error() string {
 	return fmt.Sprintf("The type \"%s\" is not supported", e.dataType)
 }
 
-func filter(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
+func filter(values, data any) any {
+	parsed := values.([]any)
 
-	var subject interface{}
+	var subject any
 
 	if isSlice(parsed[0]) {
 		subject = parsed[0]
@@ -25,7 +25,7 @@ func filter(values, data interface{}) interface{} {
 		subject = apply(parsed[0], data)
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 
 	if subject == nil {
 		return result
@@ -33,7 +33,7 @@ func filter(values, data interface{}) interface{} {
 
 	logic := solveVars(parsed[1], data)
 
-	for _, value := range subject.([]interface{}) {
+	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
 
 		if isTrue(v) {
@@ -44,10 +44,10 @@ func filter(values, data interface{}) interface{} {
 	return result
 }
 
-func _map(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
+func _map(values, data any) any {
+	parsed := values.([]any)
 
-	var subject interface{}
+	var subject any
 
 	if isSlice(parsed[0]) {
 		subject = parsed[0]
@@ -57,7 +57,7 @@ func _map(values, data interface{}) interface{} {
 		subject = apply(parsed[0], data)
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 
 	if subject == nil {
 		return result
@@ -65,7 +65,7 @@ func _map(values, data interface{}) interface{} {
 
 	logic := solveVars(parsed[1], data)
 
-	for _, value := range subject.([]interface{}) {
+	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
 
 		if isTrue(v) || isNumber(v) || isBool(v) {
@@ -76,10 +76,10 @@ func _map(values, data interface{}) interface{} {
 	return result
 }
 
-func reduce(values, data interface{}) interface{} {
-	parsed := values.([]interface{})
+func reduce(values, data any) any {
+	parsed := values.([]any)
 
-	var subject interface{}
+	var subject any
 
 	if isSlice(parsed[0]) {
 		subject = parsed[0]
@@ -94,7 +94,7 @@ func reduce(values, data interface{}) interface{} {
 	}
 
 	var (
-		accumulator interface{}
+		accumulator any
 		valueType   string
 	)
 
@@ -120,13 +120,13 @@ func reduce(values, data interface{}) interface{} {
 		}
 	}
 
-	context := map[string]interface{}{
+	context := map[string]any{
 		"current":     float64(0),
 		"accumulator": accumulator,
 		"valueType":   valueType,
 	}
 
-	for _, value := range subject.([]interface{}) {
+	for _, value := range subject.([]any) {
 		if value == nil {
 			continue
 		}
