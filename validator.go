@@ -7,7 +7,7 @@ import (
 
 // IsValid reads a JSON Logic rule from io.Reader and validates it
 func IsValid(rule io.Reader) bool {
-	var _rule interface{}
+	var _rule any
 
 	decoderRule := json.NewDecoder(rule)
 	err := decoderRule.Decode(&_rule)
@@ -18,13 +18,13 @@ func IsValid(rule io.Reader) bool {
 	return ValidateJsonLogic(_rule)
 }
 
-func ValidateJsonLogic(rules interface{}) bool {
+func ValidateJsonLogic(rules any) bool {
 	if isVar(rules) {
 		return true
 	}
 
 	if isMap(rules) {
-		for operator, value := range rules.(map[string]interface{}) {
+		for operator, value := range rules.(map[string]any) {
 			if !isOperator(operator) {
 				return false
 			}
@@ -34,7 +34,7 @@ func ValidateJsonLogic(rules interface{}) bool {
 	}
 
 	if isSlice(rules) {
-		for _, value := range rules.([]interface{}) {
+		for _, value := range rules.([]any) {
 			if isSlice(value) || isMap(value) {
 				if ValidateJsonLogic(value) {
 					continue
@@ -107,12 +107,12 @@ func isOperator(op string) bool {
 	return false
 }
 
-func isVar(value interface{}) bool {
+func isVar(value any) bool {
 	if !isMap(value) {
 		return false
 	}
 
-	_var, ok := value.(map[string]interface{})["var"]
+	_var, ok := value.(map[string]any)["var"]
 	if !ok {
 		return false
 	}

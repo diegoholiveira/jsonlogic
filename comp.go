@@ -7,7 +7,7 @@ import (
 )
 
 // at simulate undefined in javascript
-func at(values []interface{}, index int) interface{} {
+func at(values []any, index int) any {
 	if index >= 0 && index < len(values) {
 		return values[index]
 	}
@@ -16,7 +16,7 @@ func at(values []interface{}, index int) interface{} {
 
 type undefinedType struct{}
 
-func toNumberForLess(v interface{}) float64 {
+func toNumberForLess(v any) float64 {
 	switch value := v.(type) {
 	case nil:
 		return 0
@@ -45,7 +45,7 @@ func toNumberForLess(v interface{}) float64 {
 
 // less reference javascript implementation
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than#description
-func less(a, b interface{}) bool {
+func less(a, b any) bool {
 	// If both values are strings, they are compared as strings,
 	// based on the values of the Unicode code points they contain.
 	if isString(a) && isString(b) {
@@ -56,7 +56,7 @@ func less(a, b interface{}) bool {
 	return toNumberForLess(b) > toNumberForLess(a)
 }
 
-func hardEquals(a, b interface{}) bool {
+func hardEquals(a, b any) bool {
 	ra := reflect.ValueOf(a).Kind()
 	rb := reflect.ValueOf(b).Kind()
 
@@ -67,7 +67,7 @@ func hardEquals(a, b interface{}) bool {
 	return equals(a, b)
 }
 
-func equals(a, b interface{}) bool {
+func equals(a, b any) bool {
 	// comparison to a nil value is falsy
 	if a == nil || b == nil {
 		// if a and b is nil, return true, else return falsy

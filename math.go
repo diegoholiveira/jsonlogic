@@ -2,30 +2,30 @@ package jsonlogic
 
 import "math"
 
-func mod(a interface{}, b interface{}) interface{} {
+func mod(a any, b any) any {
 	_a := toNumber(a)
 	_b := toNumber(b)
 
 	return math.Mod(_a, _b)
 }
 
-func abs(a interface{}) interface{} {
+func abs(a any) any {
 	_a := toNumber(a)
 
 	return math.Abs(_a)
 }
 
-func sum(values interface{}) interface{} {
+func sum(values any) any {
 	sum := float64(0)
 
-	for _, n := range values.([]interface{}) {
+	for _, n := range values.([]any) {
 		sum += toNumber(n)
 	}
 
 	return sum
 }
 
-func minus(values interface{}) interface{} {
+func minus(values any) any {
 	_values := toSliceOfNumbers(values)
 
 	sum := _values[0]
@@ -36,17 +36,17 @@ func minus(values interface{}) interface{} {
 	return sum
 }
 
-func mult(values interface{}) interface{} {
+func mult(values any) any {
 	sum := float64(1)
 
-	for _, n := range values.([]interface{}) {
+	for _, n := range values.([]any) {
 		sum *= toNumber(n)
 	}
 
 	return sum
 }
 
-func div(values interface{}) interface{} {
+func div(values any) any {
 	_values := toSliceOfNumbers(values)
 
 	sum := _values[0]

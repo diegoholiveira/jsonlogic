@@ -19,7 +19,7 @@ type (
 	Tests []Test
 )
 
-func convertInterfaceToReader(i interface{}) io.Reader {
+func convertInterfaceToReader(i any) io.Reader {
 	var result bytes.Buffer
 
 	encoder := json.NewEncoder(&result)
@@ -45,7 +45,7 @@ func GetScenariosFromOfficialTestSuite() Tests {
 
 	response.Body.Close()
 
-	var scenarios []interface{}
+	var scenarios []any
 
 	err = json.Unmarshal(buffer, &scenarios)
 	if err != nil {
@@ -55,13 +55,13 @@ func GetScenariosFromOfficialTestSuite() Tests {
 	}
 
 	// add missing but relevant scenarios
-	var rule []interface{}
+	var rule []any
 
 	scenarios = append(scenarios,
 		append(rule,
-			make(map[string]interface{}),
-			make(map[string]interface{}),
-			make(map[string]interface{})))
+			make(map[string]any),
+			make(map[string]any),
+			make(map[string]any)))
 
 	for _, scenario := range scenarios {
 		if reflect.ValueOf(scenario).Kind() == reflect.String {
@@ -69,9 +69,9 @@ func GetScenariosFromOfficialTestSuite() Tests {
 		}
 
 		tests = append(tests, Test{
-			Rule:     convertInterfaceToReader(scenario.([]interface{})[0]),
-			Data:     convertInterfaceToReader(scenario.([]interface{})[1]),
-			Expected: convertInterfaceToReader(scenario.([]interface{})[2]),
+			Rule:     convertInterfaceToReader(scenario.([]any)[0]),
+			Data:     convertInterfaceToReader(scenario.([]any)[1]),
+			Expected: convertInterfaceToReader(scenario.([]any)[2]),
 		})
 	}
 

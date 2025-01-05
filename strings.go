@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func substr(values interface{}) interface{} {
-	parsed := values.([]interface{})
+func substr(values any) any {
+	parsed := values.([]any)
 
 	runes := []rune(toString(parsed[0]))
 
@@ -41,13 +41,13 @@ func substr(values interface{}) interface{} {
 	return string(runes[from:to])
 }
 
-func concat(values interface{}) interface{} {
+func concat(values any) any {
 	if isString(values) {
 		return values
 	}
 
 	var s bytes.Buffer
-	for _, text := range values.([]interface{}) {
+	for _, text := range values.([]any) {
 		s.WriteString(toString(text))
 	}
 

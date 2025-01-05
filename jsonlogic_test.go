@@ -381,8 +381,8 @@ func TestDataWithDefaultValueWithApplyRaw(t *testing.T) {
 }
 
 func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
-	rule := map[string]interface{}{
-		"+": []interface{}{
+	rule := map[string]any{
+		"+": []any{
 			float64(1),
 			float64(2),
 		},
@@ -398,8 +398,8 @@ func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
 }
 
 func TestMissingOperators(t *testing.T) {
-	rule := map[string]interface{}{
-		"sum": []interface{}{
+	rule := map[string]any{
+		"sum": []any{
 			float64(1),
 			float64(2),
 		},
@@ -571,10 +571,10 @@ func TestReduceFilterAndNotContains(t *testing.T) {
 func TestReduceWithUnsupportedValue(t *testing.T) {
 	b := []byte(`{"reduce":[{"filter":[{"var":"data"},{"==":[{"var":""},""]}]},{"cat":[{"var":"current"},{"var":"accumulator"}]},null]}`)
 
-	rule := map[string]interface{}{}
+	rule := map[string]any{}
 	_ = json.Unmarshal(b, &rule)
-	data := map[string]interface{}{
-		"data": []interface{}{"str"},
+	data := map[string]any{
+		"data": []any{"str"},
 	}
 
 	_, err := jsonlogic.ApplyInterface(rule, data)
@@ -582,7 +582,7 @@ func TestReduceWithUnsupportedValue(t *testing.T) {
 }
 
 func TestAddOperator(t *testing.T) {
-	jsonlogic.AddOperator("strlen", func(values, data interface{}) interface{} {
+	jsonlogic.AddOperator("strlen", func(values, data any) any {
 		v, ok := values.(string)
 
 		if ok {
