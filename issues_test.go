@@ -306,11 +306,29 @@ func TestIssue81(t *testing.T) {
 	var result bytes.Buffer
 
 	err := jsonlogic.Apply(strings.NewReader(rule), strings.NewReader(data), &result)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	expected := `true`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue96(t *testing.T) {
+	rule := `{"map":[
+      {"var":"integers"},
+	  {"*":[{"var":[""]},2]}
+    ]}`
+
+	data := `{"integers": [1,2,3]}`
+
+	var result bytes.Buffer
+
+	err := jsonlogic.Apply(strings.NewReader(rule), strings.NewReader(data), &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `[2, 4, 6]`
 	assert.JSONEq(t, expected, result.String())
 }
