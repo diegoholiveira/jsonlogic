@@ -17,6 +17,11 @@ func solveVars(values, data any) any {
 					continue
 				}
 
+				if isEmptySlice(value) {
+					logic["var"] = ""
+					continue
+				}
+
 				val := getVar(value, data)
 				if val != nil {
 					return val

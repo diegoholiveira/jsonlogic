@@ -38,6 +38,20 @@ func isSlice(obj any) bool {
 	return is(obj, reflect.Slice)
 }
 
+func isEmptySlice(obj any) bool {
+	if !isSlice(obj) {
+		return false
+	}
+
+	for _, v := range obj.([]any) {
+		if isTrue(v) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func isTrue(obj any) bool {
 	if isBool(obj) {
 		return obj.(bool)
