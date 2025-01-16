@@ -107,8 +107,9 @@ func _or(values, data any) any {
 	values = getValuesWithoutParsing(values, data)
 
 	for _, value := range values.([]any) {
-		if isTrue(parseValues(value, data)) {
-			return value
+		parsed := parseValues(value, data)
+		if isTrue(parsed) {
+			return parsed
 		}
 	}
 

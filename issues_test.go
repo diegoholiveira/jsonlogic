@@ -332,3 +332,18 @@ func TestIssue96(t *testing.T) {
 	expected := `[2, 4, 6]`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue98(t *testing.T) {
+	rule := `{"or": [{"and": [true]}]}`
+	data := `{}`
+
+	var result bytes.Buffer
+
+	err := jsonlogic.Apply(strings.NewReader(rule), strings.NewReader(data), &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `true`
+	assert.JSONEq(t, expected, result.String())
+}
