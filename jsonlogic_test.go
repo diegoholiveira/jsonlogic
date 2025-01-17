@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 	"testing"
 
@@ -15,22 +14,33 @@ import (
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {
-	tests := internal.GetScenariosFromOfficialTestSuite()
+	suites := map[string][]internal.Test{
+		"Official": internal.GetScenariosFromOfficialTestSuite(),
+		"Proposed in https://github.com/jwadhams/json-logic/pull/48": internal.GetScenariosFromProposedOfficialTestSuite(),
+	}
 
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("Scenario_%d", i), func(t *testing.T) {
-			var result bytes.Buffer
+	for suiteName, tests := range suites {
+		t.Run(suiteName, func(t *testing.T) {
+			for i, test := range tests {
+				t.Run(fmt.Sprintf("Scenario_%d", i), func(t *testing.T) {
+					result, err := jsonlogic.ApplyInterface(test.Rule, test.Data)
+					if err != nil {
+						t.Fatal(err)
+					}
 
-			err := jsonlogic.Apply(test.Rule, test.Data, &result)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if b, err := io.ReadAll(test.Expected); err == nil {
-				assert.JSONEq(t, string(b), result.String())
+					assert.Equal(t, test.Expected, result, "Applying rule %v to data %v", toJSON(test.Rule), toJSON(test.Data))
+				})
 			}
 		})
 	}
+}
+
+func toJSON(val any) string {
+	res, err := json.Marshal(val)
+	if err != nil {
+		panic(err)
+	}
+	return string(res)
 }
 
 func TestDivWithOnlyOneValue(t *testing.T) {

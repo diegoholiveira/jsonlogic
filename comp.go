@@ -4,6 +4,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // at simulate undefined in javascript
@@ -31,6 +32,10 @@ func toNumberForLess(v any) float64 {
 			return 0
 		}
 	case string:
+		if strings.TrimSpace(value) == "" {
+			return 0
+		}
+
 		n, err := strconv.ParseFloat(value, 64)
 		switch err {
 		case strconv.ErrRange, nil:
@@ -74,15 +79,12 @@ func equals(a, b any) bool {
 		return a == b
 	}
 
-	if isNumber(a) {
-		return isPrimitive(b) && toNumber(a) == toNumber(b)
+	if isPrimitive(a) && isPrimitive(b) && (isNumber(a) || isNumber(b)) {
+		return toNumberForLess(a) == toNumberForLess(b)
 	}
 
-	if isBool(a) {
-		if !isBool(b) {
-			return false
-		}
-		return isTrue(a) == isTrue(b)
+	if isBool(a) || isBool(b) {
+		return isTruthy(a) == isTruthy(b)
 	}
 
 	if !isString(a) || !isString(b) {
@@ -90,4 +92,12 @@ func equals(a, b any) bool {
 	}
 
 	return toString(a) == toString(b)
+}
+
+func isTruthy(v any) bool {
+	return toNumberForLess(v) == 1
+}
+
+func isFalsey(v any) bool {
+	return toNumberForLess(v) == 0
 }
