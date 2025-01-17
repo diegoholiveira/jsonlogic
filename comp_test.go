@@ -68,3 +68,7 @@ func TestEqualsWithNil(t *testing.T) {
 	assert.True(t, equals(nil, nil))
 	assert.False(t, equals(nil, ""))
 }
+
+func TestEqualsWithNumberAndString(t *testing.T) {
+	assert.True(t, equals("1", 1))
+}
