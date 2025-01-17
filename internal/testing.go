@@ -3,17 +3,20 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 )
 
 type (
 	Test struct {
-		Rule     io.Reader
-		Data     io.Reader
-		Expected io.Reader
+		Rule     any
+		Data     any
+		Expected any
 	}
 
 	Tests []Test
@@ -31,27 +34,39 @@ func convertInterfaceToReader(i any) io.Reader {
 	return &result
 }
 
+var testFile = flag.String("jsonlogic-test-file", "", "tests.json file to use instead of http://jsonlogic.com/tests.json")
+
 func GetScenariosFromOfficialTestSuite() Tests {
 	var tests Tests
 
-	response, err := http.Get("http://jsonlogic.com/tests.json")
-	if err != nil {
-		log.Fatal(err)
+	var buffer []byte
+	if *testFile != "" {
+		fmt.Printf("reading from local file\n")
+		var err error
+		buffer, err = os.ReadFile(*testFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		response, err := http.Get("http://jsonlogic.com/tests.json")
+		if err != nil {
+			log.Fatal(err)
 
-		return tests
+			return tests
+		}
+
+		buffer, err = io.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response.Body.Close()
 	}
 
-	buffer, _ := io.ReadAll(response.Body)
-
-	response.Body.Close()
-
 	var scenarios []any
-
-	err = json.Unmarshal(buffer, &scenarios)
+	var err = json.Unmarshal(buffer, &scenarios)
 	if err != nil {
 		log.Fatal(err)
-
-		return tests
 	}
 
 	// add missing but relevant scenarios
@@ -69,9 +84,9 @@ func GetScenariosFromOfficialTestSuite() Tests {
 		}
 
 		tests = append(tests, Test{
-			Rule:     convertInterfaceToReader(scenario.([]any)[0]),
-			Data:     convertInterfaceToReader(scenario.([]any)[1]),
-			Expected: convertInterfaceToReader(scenario.([]any)[2]),
+			Rule:     scenario.([]any)[0],
+			Data:     scenario.([]any)[1],
+			Expected: scenario.([]any)[2],
 		})
 	}
 
