@@ -1,11 +1,10 @@
 package jsonlogic
 
 import (
-	"math"
 	"reflect"
-	"strconv"
-	"strings"
 )
+
+type undefinedType struct{}
 
 // at simulate undefined in javascript
 func at(values []any, index int) any {
@@ -13,39 +12,6 @@ func at(values []any, index int) any {
 		return values[index]
 	}
 	return undefinedType{}
-}
-
-type undefinedType struct{}
-
-func toNumberForLess(v any) float64 {
-	switch value := v.(type) {
-	case nil:
-		return 0
-	case undefinedType:
-		return math.NaN()
-	case float32, float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return reflect.ValueOf(value).Convert(reflect.TypeOf(float64(0))).Float()
-	case bool: // Boolean values true and false are converted to 1 and 0 respectively.
-		if value {
-			return 1
-		} else {
-			return 0
-		}
-	case string:
-		if strings.TrimSpace(value) == "" {
-			return 0
-		}
-
-		n, err := strconv.ParseFloat(value, 64)
-		switch err {
-		case strconv.ErrRange, nil:
-			return n
-		default:
-			return math.NaN()
-		}
-	default:
-		return math.NaN()
-	}
 }
 
 // less reference javascript implementation
@@ -58,7 +24,7 @@ func less(a, b any) bool {
 	}
 
 	// Otherwise the values are compared as numeric values.
-	return toNumberForLess(b) > toNumberForLess(a)
+	return toNumberFromAny(b) > toNumberFromAny(a)
 }
 
 func hardEquals(a, b any) bool {
@@ -79,25 +45,9 @@ func equals(a, b any) bool {
 		return a == b
 	}
 
-	if isPrimitive(a) && isPrimitive(b) && (isNumber(a) || isNumber(b)) {
-		return toNumberForLess(a) == toNumberForLess(b)
+	if isString(a) && isString(b) {
+		return a == b
 	}
 
-	if isBool(a) || isBool(b) {
-		return isTruthy(a) == isTruthy(b)
-	}
-
-	if !isString(a) || !isString(b) {
-		return false
-	}
-
-	return toString(a) == toString(b)
-}
-
-func isTruthy(v any) bool {
-	return toNumberForLess(v) == 1
-}
-
-func isFalsey(v any) bool {
-	return toNumberForLess(v) == 0
+	return toNumberFromAny(a) == toNumberFromAny(b)
 }

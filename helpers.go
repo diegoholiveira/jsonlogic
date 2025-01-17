@@ -1,8 +1,10 @@
 package jsonlogic
 
 import (
+	"math"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func is(obj any, kind reflect.Kind) bool {
@@ -58,13 +60,11 @@ func isTrue(obj any) bool {
 	}
 
 	if isNumber(obj) {
-		n := toNumber(obj)
-		return n != 0
+		return toNumber(obj) != 0
 	}
 
 	if isString(obj) || isSlice(obj) || isMap(obj) {
-		length := reflect.ValueOf(obj).Len()
-		return length > 0
+		return reflect.ValueOf(obj).Len() > 0
 	}
 
 	return false
@@ -92,6 +92,50 @@ func toNumber(value any) float64 {
 		return float64(value)
 	default:
 		return value.(float64)
+	}
+}
+
+// toNumberFromAny converts various input types to float64.
+//
+// Examples:
+//
+//	toNumberFromAny(42)                             // Returns: 42.0
+//	toNumberFromAny("3.14")                         // Returns: 3.14
+//	toNumberFromAny(true)                           // Returns: 1.0
+//	toNumberFromAny(false)                          // Returns: 0.0
+//	toNumberFromAny([]int{1, 2, 3})                 // Returns: 3.0 (length of slice)
+//	toNumberFromAny(map[string]int{"a": 1, "b": 2}) // Returns: 2.0 (length of map)
+//	toNumberFromAny(nil)                            // Returns: 0.0
+//
+// Note: For unsupported types, it returns 0.0
+func toNumberFromAny(v any) float64 {
+	switch value := v.(type) {
+	case nil:
+		return 0
+	case undefinedType:
+		return math.NaN()
+	case float32, float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return reflect.ValueOf(value).Convert(reflect.TypeOf(float64(0))).Float()
+	case bool: // Boolean values true and false are converted to 1 and 0 respectively.
+		if value {
+			return 1
+		} else {
+			return 0
+		}
+	case string:
+		if strings.TrimSpace(value) == "" {
+			return 0
+		}
+
+		n, err := strconv.ParseFloat(value, 64)
+		switch err {
+		case strconv.ErrRange, nil:
+			return n
+		default:
+			return math.NaN()
+		}
+	default:
+		return math.NaN()
 	}
 }
 
