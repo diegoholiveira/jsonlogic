@@ -3,8 +3,6 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -34,37 +32,39 @@ func convertInterfaceToReader(i any) io.Reader {
 	return &result
 }
 
-var testFile = flag.String("jsonlogic-test-file", "", "tests.json file to use instead of http://jsonlogic.com/tests.json")
-
-func GetScenariosFromOfficialTestSuite() Tests {
-	var tests Tests
-
-	var buffer []byte
-	if *testFile != "" {
-		fmt.Printf("reading from local file\n")
-		var err error
-		buffer, err = os.ReadFile(*testFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		response, err := http.Get("http://jsonlogic.com/tests.json")
-		if err != nil {
-			log.Fatal(err)
-
-			return tests
-		}
-
-		buffer, err = io.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		response.Body.Close()
+// This gets the tests.json file that we've proposed become the new official one in
+// https://github.com/jwadhams/json-logic/pull/48 but that hasn't merged yet.
+func GetScenariosFromProposedOfficialTestSuite() Tests {
+	var err error
+	buffer, err := os.ReadFile("internal/json_logic_pr_48_tests.json")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	var scenarios []any
-	var err = json.Unmarshal(buffer, &scenarios)
+	return getScenariosFromFile(buffer)
+}
+
+func GetScenariosFromOfficialTestSuite() Tests {
+	response, err := http.Get("http://jsonlogic.com/tests.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	buffer, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	response.Body.Close()
+	return getScenariosFromFile(buffer)
+}
+
+func getScenariosFromFile(buffer []byte) Tests {
+	var (
+		tests     Tests
+		scenarios []any
+		err       = json.Unmarshal(buffer, &scenarios)
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
