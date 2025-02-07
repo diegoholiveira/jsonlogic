@@ -12,6 +12,10 @@ import (
 )
 
 func TestJSONLogicValidator(t *testing.T) {
+	jsonlogic.AddOperator("customOperator", func(values, data any) any {
+		return values
+	})
+
 	scenarios := map[string]struct {
 		IsValid bool
 		Rule    io.Reader
@@ -41,7 +45,8 @@ func TestJSONLogicValidator(t *testing.T) {
 						{"var": ""},
 						"age",
 						{"+": [{"var": ".age"}, 2]}
-					]}
+					]},
+					{"customOperator": [1, 2, 3]}
 				]
 			}`),
 		},
