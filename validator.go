@@ -5,6 +5,45 @@ import (
 	"io"
 )
 
+var operators = map[string]bool{
+	"==":           true,
+	"===":          true,
+	"!=":           true,
+	"!==":          true,
+	">":            true,
+	">=":           true,
+	"<":            true,
+	"<=":           true,
+	"!":            true,
+	"or":           true,
+	"and":          true,
+	"?:":           true,
+	"in":           true,
+	"cat":          true,
+	"%":            true,
+	"abs":          true,
+	"max":          true,
+	"min":          true,
+	"+":            true,
+	"-":            true,
+	"*":            true,
+	"/":            true,
+	"substr":       true,
+	"merge":        true,
+	"if":           true,
+	"!!":           true,
+	"missing":      true,
+	"missing_some": true,
+	"some":         true,
+	"filter":       true,
+	"map":          true,
+	"reduce":       true,
+	"all":          true,
+	"none":         true,
+	"set":          true,
+	"var":          true,
+}
+
 // IsValid reads a JSON Logic rule from io.Reader and validates it
 func IsValid(rule io.Reader) bool {
 	var _rule any
@@ -55,56 +94,13 @@ func ValidateJsonLogic(rules any) bool {
 }
 
 func isOperator(op string) bool {
-	operators := []string{
-		"==",
-		"===",
-		"!=",
-		"!==",
-		">",
-		">=",
-		"<",
-		"<=",
-		"!",
-		"or",
-		"and",
-		"?:",
-		"in",
-		"cat",
-		"%",
-		"abs",
-		"max",
-		"min",
-		"+",
-		"-",
-		"*",
-		"/",
-		"substr",
-		"merge",
-		"if",
-		"!!",
-		"missing",
-		"missing_some",
-		"some",
-		"filter",
-		"map",
-		"reduce",
-		"all",
-		"none",
-		"set",
-		"var",
+	_, isOperator := operators[op]
+
+	if !isOperator && customOperators[op] != nil {
+		return true
 	}
 
-	for customOperator := range customOperators {
-		operators = append(operators, customOperator)
-	}
-
-	for _, operator := range operators {
-		if operator == op {
-			return true
-		}
-	}
-
-	return false
+	return isOperator
 }
 
 func isVar(value any) bool {

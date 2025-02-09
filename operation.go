@@ -23,10 +23,9 @@ func operation(operator string, values, data any) any {
 	values = parseValues(values, data)
 
 	// Check against any custom operators
-	for index, customOperation := range customOperators {
-		if operator == index {
-			return customOperation(values, data)
-		}
+	customOperation, isCustomOperation := customOperators[operator]
+	if isCustomOperation {
+		return customOperation(values, data)
 	}
 
 	if operator == "missing" {
