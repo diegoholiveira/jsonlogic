@@ -641,3 +641,17 @@ func TestEqualWithList(t *testing.T) {
 
 	assert.JSONEq(t, `false`, result.String())
 }
+
+func TestMinusWithEmptyList(t *testing.T) {
+	rule := strings.NewReader(`{"-": []}`)
+	data := strings.NewReader(`null`)
+
+	var result bytes.Buffer
+
+	err := jsonlogic.Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.JSONEq(t, `0`, result.String())
+}

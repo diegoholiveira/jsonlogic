@@ -26,11 +26,15 @@ func sum(values any) any {
 }
 
 func minus(values any) any {
-	_values := toSliceOfNumbers(values)
+	_values := values.([]any)
 
-	sum := _values[0]
+	if len(_values) == 0 {
+		return 0
+	}
+
+	sum := toNumber(_values[0])
 	for i := 1; len(_values) > i; i++ {
-		sum -= _values[i]
+		sum -= toNumber(_values[i])
 	}
 
 	return sum
