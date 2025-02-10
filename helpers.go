@@ -70,16 +70,6 @@ func isTrue(obj any) bool {
 	return false
 }
 
-func toSliceOfNumbers(values any) []float64 {
-	_values := values.([]any)
-
-	numbers := make([]float64, len(_values))
-	for i, n := range _values {
-		numbers[i] = toNumber(n)
-	}
-	return numbers
-}
-
 func toNumber(value any) float64 {
 	if isString(value) {
 		w, _ := strconv.ParseFloat(value.(string), 64)
