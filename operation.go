@@ -1,5 +1,9 @@
 package jsonlogic
 
+import (
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
+)
+
 // customOperators holds custom operators
 var customOperators = make(map[string]func(values, data any) (result any))
 
@@ -122,35 +126,35 @@ func operation(operator string, values, data any) any {
 	}
 
 	if operator == "<" {
-		return less(at(parsed, 0), at(parsed, 1))
+		return less(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == ">" {
-		return less(at(parsed, 1), at(parsed, 0))
+		return less(javascript.At(parsed, 1), javascript.At(parsed, 0))
 	}
 
 	if operator == "<=" {
-		return less(parsed[0], parsed[1]) || equals(parsed[0], parsed[1])
+		return less(javascript.At(parsed, 0), javascript.At(parsed, 1)) || equals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == ">=" {
-		return less(parsed[1], parsed[0]) || equals(parsed[0], parsed[1])
+		return less(javascript.At(parsed, 1), javascript.At(parsed, 0)) || equals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == "===" {
-		return hardEquals(parsed[0], parsed[1])
+		return hardEquals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == "!=" {
-		return !equals(parsed[0], parsed[1])
+		return !equals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == "!==" {
-		return !hardEquals(parsed[0], parsed[1])
+		return !hardEquals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	if operator == "==" {
-		return equals(parsed[0], parsed[1])
+		return equals(javascript.At(parsed, 0), javascript.At(parsed, 1))
 	}
 
 	panic(ErrInvalidOperator{
