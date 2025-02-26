@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 // less reference javascript implementation
@@ -11,8 +12,8 @@ import (
 func less(a, b any) bool {
 	// If both values are strings, they are compared as strings,
 	// based on the values of the Unicode code points they contain.
-	if isString(a) && isString(b) {
-		return toString(b) > toString(a)
+	if typing.IsString(a) && typing.IsString(b) {
+		return typing.ToString(b) > typing.ToString(a)
 	}
 
 	// Otherwise the values are compared as numeric values.
@@ -37,7 +38,7 @@ func equals(a, b any) bool {
 		return a == b
 	}
 
-	if isString(a) && isString(b) {
+	if typing.IsString(a) && typing.IsString(b) {
 		return a == b
 	}
 

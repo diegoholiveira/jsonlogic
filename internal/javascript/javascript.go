@@ -1,3 +1,4 @@
+// Package javascript provides utilities for working with JavaScript code and runtime integration.
 package javascript
 
 import (

@@ -4,20 +4,22 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 func solveVars(values, data any) any {
-	if isMap(values) {
+	if typing.IsMap(values) {
 		logic := map[string]any{}
 
 		for key, value := range values.(map[string]any) {
 			if key == "var" {
-				if isString(value) && (value == "" || strings.HasPrefix(value.(string), ".")) {
+				if typing.IsString(value) && (value == "" || strings.HasPrefix(value.(string), ".")) {
 					logic["var"] = value
 					continue
 				}
 
-				if isEmptySlice(value) {
+				if typing.IsEmptySlice(value) {
 					logic["var"] = ""
 					continue
 				}
@@ -36,7 +38,7 @@ func solveVars(values, data any) any {
 		return any(logic)
 	}
 
-	if isSlice(values) {
+	if typing.IsSlice(values) {
 		logic := []any{}
 
 		for _, value := range values.([]any) {
@@ -51,23 +53,23 @@ func solveVars(values, data any) any {
 
 func getVar(value, data any) any {
 	if value == nil {
-		if !isPrimitive(data) {
+		if !typing.IsPrimitive(data) {
 			return nil
 		}
 		return data
 	}
 
-	if isString(value) && toString(value) == "" {
+	if typing.IsString(value) && typing.ToString(value) == "" {
 		return data
 	}
 
-	if isNumber(value) {
-		value = toString(value)
+	if typing.IsNumber(value) {
+		value = typing.ToString(value)
 	}
 
 	var _default any
 
-	if isSlice(value) { // syntax sugar
+	if typing.IsSlice(value) { // syntax sugar
 		v := value.([]any)
 
 		if len(v) == 0 {
@@ -94,12 +96,12 @@ func getVar(value, data any) any {
 			continue
 		}
 
-		if isMap(data) {
+		if typing.IsMap(data) {
 			_value = data.(map[string]any)[part]
 		}
 
-		if isSlice(data) {
-			pos := int(toNumber(part))
+		if typing.IsSlice(data) {
+			pos := int(typing.ToNumber(part))
 			container := data.([]any)
 			if pos >= len(container) {
 				return _default
@@ -111,7 +113,7 @@ func getVar(value, data any) any {
 			return _default
 		}
 
-		if isPrimitive(_value) {
+		if typing.IsPrimitive(_value) {
 			continue
 		}
 

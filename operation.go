@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 // customOperators holds custom operators
@@ -64,7 +65,7 @@ func operation(operator string, values, data any) any {
 		return conditional(values, data)
 	}
 
-	if isPrimitive(values) {
+	if typing.IsPrimitive(values) {
 		return unary(operator, values)
 	}
 

@@ -2,6 +2,8 @@ package jsonlogic
 
 import (
 	"fmt"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 type ErrReduceDataType struct {
@@ -17,11 +19,11 @@ func filter(values, data any) any {
 
 	var subject any
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
@@ -36,7 +38,7 @@ func filter(values, data any) any {
 	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
 
-		if isTrue(v) {
+		if typing.IsTrue(v) {
 			result = append(result, value)
 		}
 	}
@@ -49,11 +51,11 @@ func _map(values, data any) any {
 
 	var subject any
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
@@ -68,7 +70,7 @@ func _map(values, data any) any {
 	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
 
-		if isTrue(v) || isNumber(v) || isBool(v) {
+		if typing.IsTrue(v) || typing.IsNumber(v) || typing.IsBool(v) {
 			result = append(result, v)
 		}
 	}
@@ -81,11 +83,11 @@ func reduce(values, data any) any {
 
 	var subject any
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
@@ -100,18 +102,18 @@ func reduce(values, data any) any {
 
 	{
 		initialValue := parsed[2]
-		if isMap(initialValue) {
+		if typing.IsMap(initialValue) {
 			initialValue = apply(initialValue, data)
 		}
 
-		if isBool(initialValue) {
-			accumulator = isTrue(initialValue)
+		if typing.IsBool(initialValue) {
+			accumulator = typing.IsTrue(initialValue)
 			valueType = "bool"
-		} else if isNumber(initialValue) {
-			accumulator = toNumber(initialValue)
+		} else if typing.IsNumber(initialValue) {
+			accumulator = typing.ToNumber(initialValue)
 			valueType = "number"
-		} else if isString(initialValue) {
-			accumulator = toString(initialValue)
+		} else if typing.IsString(initialValue) {
+			accumulator = typing.ToString(initialValue)
 			valueType = "string"
 		} else {
 			panic(ErrReduceDataType{
@@ -137,11 +139,11 @@ func reduce(values, data any) any {
 
 		switch context["valueType"] {
 		case "bool":
-			context["accumulator"] = isTrue(v)
+			context["accumulator"] = typing.IsTrue(v)
 		case "number":
-			context["accumulator"] = toNumber(v)
+			context["accumulator"] = typing.ToNumber(v)
 		case "string":
-			context["accumulator"] = toString(v)
+			context["accumulator"] = typing.ToString(v)
 		}
 	}
 
