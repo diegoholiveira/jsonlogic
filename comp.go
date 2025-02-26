@@ -2,17 +2,9 @@ package jsonlogic
 
 import (
 	"reflect"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 )
-
-type undefinedType struct{}
-
-// at simulate undefined in javascript
-func at(values []any, index int) any {
-	if index >= 0 && index < len(values) {
-		return values[index]
-	}
-	return undefinedType{}
-}
 
 // less reference javascript implementation
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than#description
@@ -24,7 +16,7 @@ func less(a, b any) bool {
 	}
 
 	// Otherwise the values are compared as numeric values.
-	return toNumberFromAny(b) > toNumberFromAny(a)
+	return javascript.ToNumber(b) > javascript.ToNumber(a)
 }
 
 func hardEquals(a, b any) bool {
@@ -49,5 +41,5 @@ func equals(a, b any) bool {
 		return a == b
 	}
 
-	return toNumberFromAny(a) == toNumberFromAny(b)
+	return javascript.ToNumber(a) == javascript.ToNumber(b)
 }

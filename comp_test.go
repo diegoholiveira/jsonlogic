@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 )
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than#string_to_string_comparison
@@ -45,8 +47,8 @@ func TestLessCompareBooleanNullUndefinedNan(t *testing.T) {
 	assert.False(t, less(nil, 0))
 	assert.True(t, less(nil, 1))
 
-	assert.False(t, less(undefinedType{}, 3))
-	assert.False(t, less(3, undefinedType{}))
+	assert.False(t, less(javascript.UndefinedType{}, 3))
+	assert.False(t, less(3, javascript.UndefinedType{}))
 
 	assert.False(t, less(3, math.NaN()))
 	assert.False(t, less(math.NaN(), 3))
