@@ -3,6 +3,8 @@ package jsonlogic
 import (
 	"encoding/json"
 	"io"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 var operators = map[string]bool{
@@ -62,7 +64,7 @@ func ValidateJsonLogic(rules any) bool {
 		return true
 	}
 
-	if isMap(rules) {
+	if typing.IsMap(rules) {
 		for operator, value := range rules.(map[string]any) {
 			if !isOperator(operator) {
 				return false
@@ -72,9 +74,9 @@ func ValidateJsonLogic(rules any) bool {
 		}
 	}
 
-	if isSlice(rules) {
+	if typing.IsSlice(rules) {
 		for _, value := range rules.([]any) {
-			if isSlice(value) || isMap(value) {
+			if typing.IsSlice(value) || typing.IsMap(value) {
 				if ValidateJsonLogic(value) {
 					continue
 				}
@@ -82,7 +84,7 @@ func ValidateJsonLogic(rules any) bool {
 				return false
 			}
 
-			if isVar(value) || isPrimitive(value) {
+			if isVar(value) || typing.IsPrimitive(value) {
 				continue
 			}
 		}
@@ -90,7 +92,7 @@ func ValidateJsonLogic(rules any) bool {
 		return true
 	}
 
-	return isPrimitive(rules)
+	return typing.IsPrimitive(rules)
 }
 
 func isOperator(op string) bool {
@@ -104,7 +106,7 @@ func isOperator(op string) bool {
 }
 
 func isVar(value any) bool {
-	if !isMap(value) {
+	if !typing.IsMap(value) {
 		return false
 	}
 
@@ -113,5 +115,5 @@ func isVar(value any) bool {
 		return false
 	}
 
-	return isString(_var) || isNumber(_var) || _var == nil
+	return typing.IsString(_var) || typing.IsNumber(_var) || _var == nil
 }

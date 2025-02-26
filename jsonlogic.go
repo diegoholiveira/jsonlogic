@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/barkimedes/go-deepcopy"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 type ErrInvalidOperator struct {
@@ -39,11 +41,11 @@ func between(operator string, values []any, data any) any {
 
 func unary(operator string, value any) any {
 	if operator == "+" || operator == "*" || operator == "/" {
-		return toNumber(value)
+		return typing.ToNumber(value)
 	}
 
 	if operator == "-" {
-		return -1 * toNumber(value)
+		return -1 * typing.ToNumber(value)
 	}
 
 	if operator == "!!" {
@@ -54,7 +56,7 @@ func unary(operator string, value any) any {
 		return abs(value)
 	}
 
-	b := isTrue(value)
+	b := typing.IsTrue(value)
 
 	if operator == "!" {
 		return !b
@@ -65,31 +67,32 @@ func unary(operator string, value any) any {
 
 func _and(values, data any) any {
 	values = getValuesWithoutParsing(values, data)
+
 	var v float64
 
 	isBoolExpression := true
 
 	for _, value := range values.([]any) {
 		value = parseValues(value, data)
-		if isSlice(value) {
+		if typing.IsSlice(value) {
 			return value
 		}
 
-		if isBool(value) && !value.(bool) {
+		if typing.IsBool(value) && !value.(bool) {
 			return false
 		}
 
-		if isString(value) && toString(value) == "" {
+		if typing.IsString(value) && typing.ToString(value) == "" {
 			return value
 		}
 
-		if !isNumber(value) {
+		if !typing.IsNumber(value) {
 			continue
 		}
 
 		isBoolExpression = false
 
-		_value := toNumber(value)
+		_value := typing.ToNumber(value)
 
 		if _value > v {
 			v = _value
@@ -108,7 +111,7 @@ func _or(values, data any) any {
 
 	for _, value := range values.([]any) {
 		parsed := parseValues(value, data)
-		if isTrue(parsed) {
+		if typing.IsTrue(parsed) {
 			return parsed
 		}
 	}
@@ -122,11 +125,11 @@ func _inRange(value any, values any) bool {
 	i := v[0]
 	j := v[1]
 
-	if isNumber(value) {
-		return toNumber(value) >= toNumber(i) && toNumber(j) >= toNumber(value)
+	if typing.IsNumber(value) {
+		return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
 	}
 
-	return toString(value) >= toString(i) && toString(j) >= toString(value)
+	return typing.ToString(value) >= typing.ToString(i) && typing.ToString(j) >= typing.ToString(value)
 }
 
 func _in(value any, values any) bool {
@@ -134,16 +137,16 @@ func _in(value any, values any) bool {
 		return false
 	}
 
-	if isString(values) {
+	if typing.IsString(values) {
 		return strings.Contains(values.(string), value.(string))
 	}
 
-	if !isSlice(values) {
+	if !typing.IsSlice(values) {
 		return false
 	}
 
 	for _, element := range values.([]any) {
-		if isSlice(element) {
+		if typing.IsSlice(element) {
 			if _inRange(value, element) {
 				return true
 			}
@@ -151,8 +154,8 @@ func _in(value any, values any) bool {
 			continue
 		}
 
-		if isNumber(value) {
-			if toNumber(element) == value {
+		if typing.IsNumber(value) {
+			if typing.ToNumber(element) == value {
 				return true
 			}
 
@@ -174,10 +177,10 @@ func max(values any) any {
 		return nil
 	}
 
-	bigger := toNumber(converted[0])
+	bigger := typing.ToNumber(converted[0])
 
 	for i := 1; i < size; i++ {
-		_n := toNumber(converted[i])
+		_n := typing.ToNumber(converted[i])
 		if _n > bigger {
 			bigger = _n
 		}
@@ -193,10 +196,10 @@ func min(values any) any {
 		return nil
 	}
 
-	smallest := toNumber(converted[0])
+	smallest := typing.ToNumber(converted[0])
 
 	for i := 1; i < size; i++ {
-		_n := toNumber(converted[i])
+		_n := typing.ToNumber(converted[i])
 		if smallest > _n {
 			smallest = _n
 		}
@@ -208,11 +211,11 @@ func min(values any) any {
 func merge(values any, level int8) any {
 	result := make([]any, 0)
 
-	if isPrimitive(values) || level > 1 {
+	if typing.IsPrimitive(values) || level > 1 {
 		return append(result, values)
 	}
 
-	if isSlice(values) {
+	if typing.IsSlice(values) {
 		for _, value := range values.([]any) {
 			_values := merge(value, level+1).([]any)
 
@@ -224,7 +227,7 @@ func merge(values any, level int8) any {
 }
 
 func conditional(values, data any) any {
-	if isPrimitive(values) {
+	if typing.IsPrimitive(values) {
 		return values
 	}
 
@@ -238,11 +241,11 @@ func conditional(values, data any) any {
 
 	for i := 0; i < length-1; i = i + 2 {
 		v := parsed[i]
-		if isMap(v) {
+		if typing.IsMap(v) {
 			v = getVar(parsed[i], data)
 		}
 
-		if isTrue(v) {
+		if typing.IsTrue(v) {
 			return parseValues(parsed[i+1], data)
 		}
 	}
@@ -259,7 +262,7 @@ func setProperty(value, data any) any {
 
 	object := _value[0]
 
-	if !isMap(object) {
+	if !typing.IsMap(object) {
 		return object
 	}
 
@@ -276,7 +279,7 @@ func setProperty(value, data any) any {
 }
 
 func missing(values, data any) any {
-	if isString(values) {
+	if typing.IsString(values) {
 		values = []any{values}
 	}
 
@@ -295,7 +298,7 @@ func missing(values, data any) any {
 
 func missingSome(values, data any) any {
 	parsed := values.([]any)
-	number := int(toNumber(parsed[0]))
+	number := int(typing.ToNumber(parsed[0]))
 	vars := parsed[1]
 
 	missing := make([]any, 0)
@@ -323,15 +326,15 @@ func all(values, data any) any {
 
 	var subject any
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if !isTrue(subject) {
+	if !typing.IsTrue(subject) {
 		return false
 	}
 
@@ -339,7 +342,7 @@ func all(values, data any) any {
 		conditions := solveVars(parsed[1], value)
 		v := apply(conditions, value)
 
-		if !isTrue(v) {
+		if !typing.IsTrue(v) {
 			return false
 		}
 	}
@@ -352,15 +355,15 @@ func none(values, data any) any {
 
 	var subject any
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if !isTrue(subject) {
+	if !typing.IsTrue(subject) {
 		return true
 	}
 
@@ -369,7 +372,7 @@ func none(values, data any) any {
 	for _, value := range subject.([]any) {
 		v := apply(conditions, value)
 
-		if isTrue(v) {
+		if typing.IsTrue(v) {
 			return false
 		}
 	}
@@ -382,15 +385,15 @@ func some(values, data any) any {
 
 	var subject any
 
-	if isMap(parsed[0]) {
+	if typing.IsMap(parsed[0]) {
 		subject = apply(parsed[0], data)
 	}
 
-	if isSlice(parsed[0]) {
+	if typing.IsSlice(parsed[0]) {
 		subject = parsed[0]
 	}
 
-	if !isTrue(subject) {
+	if !typing.IsTrue(subject) {
 		return false
 	}
 
@@ -403,7 +406,7 @@ func some(values, data any) any {
 			value,
 		)
 
-		if isTrue(v) {
+		if typing.IsTrue(v) {
 			return true
 		}
 	}
@@ -412,18 +415,18 @@ func some(values, data any) any {
 }
 
 func parseValues(values, data any) any {
-	if values == nil || isPrimitive(values) {
+	if values == nil || typing.IsPrimitive(values) {
 		return values
 	}
 
-	if isMap(values) {
+	if typing.IsMap(values) {
 		return apply(values, data)
 	}
 
 	parsed := make([]any, 0)
 
 	for _, value := range values.([]any) {
-		if isMap(value) {
+		if typing.IsMap(value) {
 			parsed = append(parsed, apply(value, data))
 		} else {
 			parsed = append(parsed, value)
@@ -438,11 +441,11 @@ func parseValues(values, data any) any {
 // of JSONLogic.
 // Used in lazy evaluation of "AND" and "OR" operators
 func getValuesWithoutParsing(values, data any) any {
-	if values == nil || isPrimitive(values) {
+	if values == nil || typing.IsPrimitive(values) {
 		return values
 	}
 
-	if isMap(values) {
+	if typing.IsMap(values) {
 		return apply(values, data)
 	}
 
@@ -580,11 +583,11 @@ func ApplyInterface(rule, data any) (output any, err error) {
 		}
 	}()
 
-	if isMap(rule) {
+	if typing.IsMap(rule) {
 		return apply(rule, data), err
 	}
 
-	if isSlice(rule) {
+	if typing.IsSlice(rule) {
 		var parsed []any
 
 		for _, value := range rule.([]any) {
