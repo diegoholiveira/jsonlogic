@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/barkimedes/go-deepcopy"
+
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
@@ -146,4 +148,25 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	}
 
 	return []byte(resultEscaped), nil
+}
+
+func setProperty(value, data any) any {
+	_value := value.([]any)
+
+	object := _value[0]
+
+	if !typing.IsMap(object) {
+		return object
+	}
+
+	property := _value[1].(string)
+	modified, err := deepcopy.Anything(object)
+	if err != nil {
+		panic(err)
+	}
+
+	_modified := modified.(map[string]any)
+	_modified[property] = parseValues(_value[2], data)
+
+	return any(_modified)
 }

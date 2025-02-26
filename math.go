@@ -68,3 +68,41 @@ func div(values any) any {
 
 	return sum
 }
+
+func max(values any) any {
+	converted := values.([]any)
+	size := len(converted)
+	if size == 0 {
+		return nil
+	}
+
+	bigger := typing.ToNumber(converted[0])
+
+	for i := 1; i < size; i++ {
+		_n := typing.ToNumber(converted[i])
+		if _n > bigger {
+			bigger = _n
+		}
+	}
+
+	return bigger
+}
+
+func min(values any) any {
+	converted := values.([]any)
+	size := len(converted)
+	if size == 0 {
+		return nil
+	}
+
+	smallest := typing.ToNumber(converted[0])
+
+	for i := 1; i < size; i++ {
+		_n := typing.ToNumber(converted[i])
+		if smallest > _n {
+			smallest = _n
+		}
+	}
+
+	return smallest
+}
