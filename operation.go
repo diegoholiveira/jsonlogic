@@ -1,9 +1,19 @@
 package jsonlogic
 
 import (
+	"fmt"
+
 	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
+
+type ErrInvalidOperator struct {
+	operator string
+}
+
+func (e ErrInvalidOperator) Error() string {
+	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
+}
 
 // customOperators holds custom operators
 var customOperators = make(map[string]func(values, data any) (result any))

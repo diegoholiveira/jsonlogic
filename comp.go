@@ -44,3 +44,36 @@ func equals(a, b any) bool {
 
 	return javascript.ToNumber(a) == javascript.ToNumber(b)
 }
+
+func between(operator string, values []any, data any) any {
+	a := parseValues(values[0], data)
+	b := parseValues(values[1], data)
+	c := parseValues(values[2], data)
+
+	if operator == "<" {
+		return less(a, b) && less(b, c)
+	}
+
+	if operator == "<=" {
+		return (less(a, b) || equals(a, b)) && (less(b, c) || equals(b, c))
+	}
+
+	if operator == ">=" {
+		return (less(c, b) || equals(c, b)) && (less(b, a) || equals(b, a))
+	}
+
+	return less(c, b) && less(b, a)
+}
+
+func _inRange(value any, values any) bool {
+	v := values.([]any)
+
+	i := v[0]
+	j := v[1]
+
+	if typing.IsNumber(value) {
+		return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
+	}
+
+	return typing.ToString(value) >= typing.ToString(i) && typing.ToString(j) >= typing.ToString(value)
+}
