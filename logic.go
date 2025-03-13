@@ -105,11 +105,11 @@ func unary(operator string, value any) any {
 	}
 
 	if operator == "floor" {
-		return floor(value)
+		return floor(typing.ToNumber(value))
 	}
 
 	if operator == "ceil" {
-		return ceil(value)
+		return ceil(typing.ToNumber(value))
 	}
 
 	b := typing.IsTrue(value)
