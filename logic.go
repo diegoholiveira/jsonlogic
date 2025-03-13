@@ -104,6 +104,14 @@ func unary(operator string, value any) any {
 		return abs(value)
 	}
 
+	if operator == "floor" {
+		return floor(value)
+	}
+
+	if operator == "ceil" {
+		return ceil(value)
+	}
+
 	b := typing.IsTrue(value)
 
 	if operator == "!" {
