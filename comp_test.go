@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
+	"github.com/qoala-platform/jsonlogic/v3/internal/javascript"
 )
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than#string_to_string_comparison

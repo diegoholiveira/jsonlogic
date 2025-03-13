@@ -3,7 +3,7 @@ package jsonlogic
 import (
 	"math"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 func mod(a any, b any) any {
@@ -105,4 +105,14 @@ func min(values any) any {
 	}
 
 	return smallest
+}
+
+func floor(value any) any {
+	converted := value.(float64)
+	return math.Floor(converted)
+}
+
+func ceil(value any) any {
+	converted := value.(float64)
+	return math.Ceil(converted)
 }

@@ -1,4 +1,4 @@
-module github.com/diegoholiveira/jsonlogic/v3
+module github.com/qoala-platform/jsonlogic/v3
 
 go 1.18
 

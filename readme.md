@@ -1,8 +1,8 @@
 # Go JsonLogic
 
-![test workflow](https://github.com/diegoholiveira/jsonlogic/actions/workflows/test.yml/badge.svg)
+![test workflow](https://github.com/qoala-engineering/jsonlogic/actions/workflows/test.yml/badge.svg)
 [![codecov](https://codecov.io/gh/diegoholiveira/jsonlogic/branch/master/graph/badge.svg)](https://codecov.io/gh/diegoholiveira/jsonlogic)
-[![Go Report Card](https://goreportcard.com/badge/github.com/diegoholiveira/jsonlogic)](https://goreportcard.com/report/github.com/diegoholiveira/jsonlogic)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qoala-engineering/jsonlogic)](https://goreportcard.com/report/github.com/qoala-engineering/jsonlogic)
 
 Implementation of [JsonLogic](http://jsonlogic.com) in Go Lang.
 
@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	"github.com/qoala-engineering/jsonlogic/v3"
 )
 
 func main() {
@@ -51,7 +51,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	"github.com/qoala-engineering/jsonlogic/v3"
 )
 
 type (
@@ -114,7 +114,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	"github.com/qoala-engineering/jsonlogic/v3"
 )
 
 func main() {
@@ -147,7 +147,7 @@ import (
 	"fmt"
 	"encoding/json"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	"github.com/qoala-engineering/jsonlogic/v3"
 )
 
 func main() {

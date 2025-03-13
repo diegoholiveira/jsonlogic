@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	"github.com/qoala-platform/jsonlogic/v3"
 	"github.com/stretchr/testify/assert"
 )
 
