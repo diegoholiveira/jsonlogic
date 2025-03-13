@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 type ErrReduceDataType struct {

@@ -3,8 +3,8 @@ package jsonlogic
 import (
 	"fmt"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/javascript"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 type ErrInvalidOperator struct {
@@ -85,6 +85,14 @@ func operation(operator string, values, data any) any {
 
 	if operator == "min" {
 		return min(values)
+	}
+
+	if operator == "floor" {
+		return floor(values)
+	}
+
+	if operator == "ceil" {
+		return ceil(values)
 	}
 
 	if values == nil {

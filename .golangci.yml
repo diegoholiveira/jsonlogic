@@ -2,7 +2,7 @@ run:
   timeout: 5m
 linters-settings:
   goimports:
-    local-prefixes: github.com/diegoholiveira/jsonlogic
+    local-prefixes: github.com/qoala-engineering/jsonlogic
 linters:
   disable-all: true
   enable:

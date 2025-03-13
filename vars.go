@@ -7,7 +7,7 @@ import (
 
 	"github.com/barkimedes/go-deepcopy"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 func solveVars(values, data any) any {

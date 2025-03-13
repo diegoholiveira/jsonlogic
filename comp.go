@@ -3,8 +3,8 @@ package jsonlogic
 import (
 	"reflect"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/javascript"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 // less reference javascript implementation

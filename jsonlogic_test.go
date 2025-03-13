@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
-	"github.com/diegoholiveira/jsonlogic/v3/internal"
+	"github.com/qoala-platform/jsonlogic/v3"
+	"github.com/qoala-platform/jsonlogic/v3/internal"
 )
 
 func TestRulesFromJsonLogic(t *testing.T) {

@@ -1,6 +1,6 @@
 package jsonlogic
 
-import "github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+import "github.com/qoala-platform/jsonlogic/v3/internal/typing"
 
 func _and(values, data any) any {
 	values = getValuesWithoutParsing(values, data)

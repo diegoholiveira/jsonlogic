@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/qoala-platform/jsonlogic/v3/internal/typing"
 )
 
 var operators = map[string]bool{
