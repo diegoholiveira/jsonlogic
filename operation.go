@@ -95,6 +95,10 @@ func operation(operator string, values, data any) any {
 		return ceil(values)
 	}
 
+	if operator == "round" {
+		return round(values)
+	}
+
 	if values == nil {
 		return nil
 	}

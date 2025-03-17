@@ -44,6 +44,7 @@ var operators = map[string]bool{
 	"none":         true,
 	"set":          true,
 	"var":          true,
+	"round":        true,
 }
 
 // IsValid reads a JSON Logic rule from io.Reader and validates it
