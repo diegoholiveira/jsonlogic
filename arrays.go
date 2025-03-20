@@ -65,14 +65,12 @@ func _map(values, data any) any {
 		return result
 	}
 
-	logic := solveVars(parsed[1], data)
+	logic := parsed[1]
 
 	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
 
-		if typing.IsTrue(v) || typing.IsNumber(v) || typing.IsBool(v) {
-			result = append(result, v)
-		}
+		result = append(result, v)
 	}
 
 	return result
