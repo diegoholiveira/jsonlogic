@@ -91,35 +91,29 @@ func getVar(value, data any) any {
 
 	parts := strings.Split(value.(string), ".")
 
-	var _value any
+	var _value any = data
 
 	for _, part := range parts {
 		if part == "" {
 			continue
 		}
 
-		if typing.IsMap(data) {
-			_value = data.(map[string]any)[part]
-		}
-
-		if typing.IsSlice(data) {
+		if typing.IsMap(_value) {
+			_value = _value.(map[string]any)[part]
+		} else if typing.IsSlice(_value) {
 			pos := int(typing.ToNumber(part))
-			container := data.([]any)
+			container := _value.([]any)
 			if pos >= len(container) {
 				return _default
 			}
 			_value = container[pos]
+		} else {
+			return _default
 		}
 
 		if _value == nil {
 			return _default
 		}
-
-		if typing.IsPrimitive(_value) {
-			continue
-		}
-
-		data = _value
 	}
 
 	return _value

@@ -347,3 +347,17 @@ func TestIssue98(t *testing.T) {
 	expected := `true`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue110(t *testing.T) {
+	logic := strings.NewReader(`{ "map":[{"var": "arr"},{"var":["xxx", "default"]}]}`)
+	data := strings.NewReader(`{"arr": [{"xxx": "111","yyy": "222"},{"xxx": "333","yyy": "444"}]}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(logic, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `["111","333"]`
+	assert.JSONEq(t, expected, result.String())
+}
