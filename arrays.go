@@ -15,9 +15,7 @@ func (e ErrReduceDataType) Error() string {
 	return fmt.Sprintf("The type \"%s\" is not supported", e.dataType)
 }
 
-func filter(values, data any) any {
-	parsed := values.([]any)
-
+func extractSubject(parsed []any, data any) any {
 	var subject any
 
 	if typing.IsSlice(parsed[0]) {
@@ -28,6 +26,12 @@ func filter(values, data any) any {
 		subject = apply(parsed[0], data)
 	}
 
+	return subject
+}
+
+func filter(values, data any) any {
+	parsed := values.([]any)
+	subject := extractSubject(parsed, data)
 	result := make([]any, 0)
 
 	if subject == nil {
@@ -49,17 +53,7 @@ func filter(values, data any) any {
 
 func _map(values, data any) any {
 	parsed := values.([]any)
-
-	var subject any
-
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
-	}
-
+	subject := extractSubject(parsed, data)
 	result := make([]any, 0)
 
 	if subject == nil {
@@ -70,7 +64,6 @@ func _map(values, data any) any {
 
 	for _, value := range subject.([]any) {
 		v := parseValues(logic, value)
-
 		result = append(result, v)
 	}
 
@@ -79,16 +72,7 @@ func _map(values, data any) any {
 
 func reduce(values, data any) any {
 	parsed := values.([]any)
-
-	var subject any
-
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
-	}
+	subject := extractSubject(parsed, data)
 
 	if subject == nil {
 		return float64(0)
@@ -250,16 +234,7 @@ func missingSome(values, data any) any {
 
 func all(values, data any) any {
 	parsed := values.([]any)
-
-	var subject any
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
-	}
-
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
+	subject := extractSubject(parsed, data)
 
 	if !typing.IsTrue(subject) {
 		return false
@@ -279,16 +254,7 @@ func all(values, data any) any {
 
 func none(values, data any) any {
 	parsed := values.([]any)
-
-	var subject any
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
-	}
-
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
+	subject := extractSubject(parsed, data)
 
 	if !typing.IsTrue(subject) {
 		return true
@@ -309,16 +275,7 @@ func none(values, data any) any {
 
 func some(values, data any) any {
 	parsed := values.([]any)
-
-	var subject any
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
-	}
-
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
+	subject := extractSubject(parsed, data)
 
 	if !typing.IsTrue(subject) {
 		return false
