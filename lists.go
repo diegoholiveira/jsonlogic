@@ -40,10 +40,6 @@ func filter(values, data any) any {
 	subjectSlice := subject.([]any)
 	subjectLen := len(subjectSlice)
 
-	if subjectLen == 0 {
-		return []any{}
-	}
-
 	// Pre-allocate result with capacity that's reasonable for filtering
 	// Assuming at least half might pass the filter (heuristic)
 	result := make([]any, 0, subjectLen/2)
@@ -71,10 +67,6 @@ func _map(values, data any) any {
 
 	subjectSlice := subject.([]any)
 	subjectLen := len(subjectSlice)
-
-	if subjectLen == 0 {
-		return []any{}
-	}
 
 	result := make([]any, 0, subjectLen)
 
@@ -153,9 +145,6 @@ func reduce(values, data any) any {
 
 func _in(values, data any) any {
 	values = parseValues(values, data)
-	if !typing.IsSlice(values) {
-		return false
-	}
 
 	parsed := values.([]any)
 
@@ -202,10 +191,6 @@ func merge(values, data any) any {
 	values = parseValues(values, data)
 	if typing.IsPrimitive(values) {
 		return []any{values}
-	}
-
-	if !typing.IsSlice(values) {
-		return []any{}
 	}
 
 	inputSlice := values.([]any)
@@ -353,9 +338,5 @@ func _inRange(value any, values []any) bool {
 	i := values[0]
 	j := values[1]
 
-	if typing.IsNumber(value) {
-		return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
-	}
-
-	return typing.ToString(value) >= typing.ToString(i) && typing.ToString(j) >= typing.ToString(value)
+	return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
 }

@@ -58,11 +58,6 @@ func ValidateJsonLogic(rules any) bool {
 
 func isOperator(op string) bool {
 	_, isOperator := operators[op]
-
-	if !isOperator && operators[op] != nil {
-		return true
-	}
-
 	return isOperator
 }
 
