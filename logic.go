@@ -58,34 +58,48 @@ func _or(values, data any) any {
 	return false
 }
 
-func conditional(values, data any) any {
-	values = parseValues(values, data)
+func evaluateClause(clause any, data any) any {
+	parsed := parseValues(clause, data)
 
+	if typing.IsMap(parsed) {
+		return apply(parsed, data)
+	}
+
+	return parsed
+}
+
+func conditional(values, data any) any {
 	if typing.IsPrimitive(values) {
 		return values
 	}
 
-	parsed := values.([]any)
+	values = getValuesWithoutParsing(values, data)
 
-	length := len(parsed)
+	clauses := values.([]any)
+
+	length := len(clauses)
 
 	if length == 0 {
 		return nil
 	}
 
+	// Evaluate each if/then pair
 	for i := 0; i < length-1; i = i + 2 {
-		v := parsed[i]
-		if typing.IsMap(v) {
-			v = getVar(parsed[i], data)
+		condition := parseValues(clauses[i], data)
+
+		if typing.IsMap(condition) {
+			condition = getVar(condition, data)
 		}
 
-		if typing.IsTrue(v) {
-			return parseValues(parsed[i+1], data)
+		// If the condition is true, evaluate and return the then clause
+		if typing.IsTrue(condition) {
+			return evaluateClause(clauses[i+1], data)
 		}
 	}
 
+	// If no matches and there is an odd number of clauses, evaluate and return the else clause
 	if length%2 == 1 {
-		return parsed[length-1]
+		return evaluateClause(clauses[length-1], data)
 	}
 
 	return nil

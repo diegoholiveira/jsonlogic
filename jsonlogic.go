@@ -171,7 +171,7 @@ func parseValues(values, data any) any {
 // If values represents a map (an operation), returns the result. Otherwise returns the
 // values without parsing. This means that each of the returned values might be a subtree
 // of JSONLogic.
-// Used in lazy evaluation of "AND" and "OR" operators
+// Used in lazy evaluation of "AND", "OR", and "IF" operators
 func getValuesWithoutParsing(values, data any) any {
 	if values == nil || typing.IsPrimitive(values) {
 		return values
