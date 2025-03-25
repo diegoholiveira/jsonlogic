@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+if [ $# -eq 0 ]; then
+	echo -e "${RED}Error: Missing version argument${NC}"
+	echo -e "Usage: $0 <version>"
+	echo -e "Example: $0 v3.7.5"
+	exit 1
+fi
+
+PUBLISHED_VERSION="$1"
+
+uv run --with colorama bench.py "${PUBLISHED_VERSION}"

@@ -1,6 +1,8 @@
 package jsonlogic
 
-import "github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+import (
+	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+)
 
 func _and(values, data any) any {
 	values = getValuesWithoutParsing(values, data)
@@ -57,6 +59,8 @@ func _or(values, data any) any {
 }
 
 func conditional(values, data any) any {
+	values = parseValues(values, data)
+
 	if typing.IsPrimitive(values) {
 		return values
 	}
@@ -87,28 +91,10 @@ func conditional(values, data any) any {
 	return nil
 }
 
-func unary(operator string, value any) any {
-	if operator == "+" || operator == "*" || operator == "/" {
-		return typing.ToNumber(value)
+func negative(values, data any) any {
+	values = parseValues(values, data)
+	if typing.IsSlice(values) {
+		return !typing.IsTrue(values.([]any)[0])
 	}
-
-	if operator == "-" {
-		return -1 * typing.ToNumber(value)
-	}
-
-	if operator == "!!" {
-		return !unary("!", value).(bool)
-	}
-
-	if operator == "abs" {
-		return abs(value)
-	}
-
-	b := typing.IsTrue(value)
-
-	if operator == "!" {
-		return !b
-	}
-
-	return b
+	return !typing.IsTrue(values)
 }

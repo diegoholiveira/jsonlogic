@@ -149,9 +149,15 @@ func parseValues(values, data any) any {
 		return apply(values, data)
 	}
 
-	parsed := make([]any, 0)
+	inputSlice := values.([]any)
+	length := len(inputSlice)
+	if length == 0 {
+		return inputSlice
+	}
 
-	for _, value := range values.([]any) {
+	parsed := make([]any, 0, length)
+
+	for _, value := range inputSlice {
 		if typing.IsMap(value) {
 			parsed = append(parsed, apply(value, data))
 		} else {
@@ -181,40 +187,14 @@ func getValuesWithoutParsing(values, data any) any {
 func apply(rules, data any) any {
 	ruleMap := rules.(map[string]any)
 
-	// A map with more than 1 key counts as a primitive
-	// end recursion
+	// A map with more than 1 key counts as a primitive so it's time to end recursion
 	if len(ruleMap) > 1 {
 		return ruleMap
 	}
 
 	for operator, values := range ruleMap {
-		if operator == "filter" {
-			return filter(values, data)
-		}
-
-		if operator == "map" {
-			return _map(values, data)
-		}
-
-		if operator == "reduce" {
-			return reduce(values, data)
-		}
-
-		if operator == "all" {
-			return all(values, data)
-		}
-
-		if operator == "none" {
-			return none(values, data)
-		}
-
-		if operator == "some" {
-			return some(values, data)
-		}
-
 		return operation(operator, values, data)
 	}
 
-	// an empty-map rule should return an empty-map
 	return make(map[string]any)
 }

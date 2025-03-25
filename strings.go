@@ -1,13 +1,13 @@
 package jsonlogic
 
 import (
-	"bytes"
 	"strings"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
-func substr(values any) any {
+func substr(values, data any) any {
+	values = parseValues(values, data)
 	parsed := values.([]any)
 
 	runes := []rune(typing.ToString(parsed[0]))
@@ -43,13 +43,25 @@ func substr(values any) any {
 	return string(runes[from:to])
 }
 
-func concat(values any) any {
+func concat(values, data any) any {
+	values = parseValues(values, data)
 	if typing.IsString(values) {
 		return values
 	}
 
-	var s bytes.Buffer
-	for _, text := range values.([]any) {
+	inputSlice := values.([]any)
+
+	if len(inputSlice) == 0 {
+		return ""
+	}
+
+	if len(inputSlice) == 1 {
+		return typing.ToString(inputSlice[0])
+	}
+
+	var s strings.Builder
+
+	for _, text := range inputSlice {
 		s.WriteString(typing.ToString(text))
 	}
 
