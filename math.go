@@ -6,34 +6,60 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
-func mod(a any, b any) any {
+func mod(values, data any) any {
+	_values := parseValues(values, data).([]any)
+
+	a, b := _values[0], _values[1]
+
 	_a := typing.ToNumber(a)
 	_b := typing.ToNumber(b)
 
 	return math.Mod(_a, _b)
 }
 
-func abs(a any) any {
-	_a := typing.ToNumber(a)
+func abs(values, data any) any {
+	values = parseValues(values, data)
+	if typing.IsSlice(values) {
+		return math.Abs(typing.ToNumber(values.([]any)[0]))
+	}
 
-	return math.Abs(_a)
+	return math.Abs(typing.ToNumber(values))
 }
 
-func sum(values any) any {
-	sum := float64(0)
+func sum(values, data any) any {
+	values = parseValues(values, data)
+	if !typing.IsSlice(values) {
+		return typing.ToNumber(values)
+	}
 
-	for _, n := range values.([]any) {
+	inputSlice := values.([]any)
+	sliceLen := len(inputSlice)
+
+	if sliceLen == 0 {
+		return float64(0)
+	}
+
+	if sliceLen == 1 {
+		return typing.ToNumber(inputSlice[0])
+	}
+
+	sum := float64(0)
+	for _, n := range inputSlice {
 		sum += typing.ToNumber(n)
 	}
 
 	return sum
 }
 
-func minus(values any) any {
-	_values := values.([]any)
+func minus(values, data any) any {
+	_values := parseValues(values, data).([]any)
 
 	if len(_values) == 0 {
 		return 0
+	}
+
+	if len(_values) == 1 {
+		return -1 * typing.ToNumber(_values[0])
 	}
 
 	sum := typing.ToNumber(_values[0])
@@ -44,7 +70,9 @@ func minus(values any) any {
 	return sum
 }
 
-func mult(values any) any {
+func mult(values, data any) any {
+	values = parseValues(values, data)
+
 	sum := float64(1)
 
 	for _, n := range values.([]any) {
@@ -54,8 +82,8 @@ func mult(values any) any {
 	return sum
 }
 
-func div(values any) any {
-	_values := values.([]any)
+func div(values, data any) any {
+	_values := parseValues(values, data).([]any)
 
 	if len(_values) == 0 {
 		return 0
@@ -69,17 +97,18 @@ func div(values any) any {
 	return sum
 }
 
-func max(values any) any {
-	converted := values.([]any)
-	size := len(converted)
+func max(values, data any) any {
+	values = parseValues(values, data)
+	parsed := values.([]any)
+	size := len(parsed)
 	if size == 0 {
 		return nil
 	}
 
-	bigger := typing.ToNumber(converted[0])
+	bigger := typing.ToNumber(parsed[0])
 
 	for i := 1; i < size; i++ {
-		_n := typing.ToNumber(converted[i])
+		_n := typing.ToNumber(parsed[i])
 		if _n > bigger {
 			bigger = _n
 		}
@@ -88,17 +117,18 @@ func max(values any) any {
 	return bigger
 }
 
-func min(values any) any {
-	converted := values.([]any)
-	size := len(converted)
+func min(values, data any) any {
+	values = parseValues(values, data)
+	parsed := values.([]any)
+	size := len(parsed)
 	if size == 0 {
 		return nil
 	}
 
-	smallest := typing.ToNumber(converted[0])
+	smallest := typing.ToNumber(parsed[0])
 
 	for i := 1; i < size; i++ {
-		_n := typing.ToNumber(converted[i])
+		_n := typing.ToNumber(parsed[i])
 		if smallest > _n {
 			smallest = _n
 		}

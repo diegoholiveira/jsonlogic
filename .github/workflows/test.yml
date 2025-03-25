@@ -5,18 +5,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23']
+        go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24']
     name: Running with Go ${{ matrix.go }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Run the tests
       run: go test -coverprofile=coverage.txt -covermode=count ./...
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v5
       with:
         files: coverage.txt

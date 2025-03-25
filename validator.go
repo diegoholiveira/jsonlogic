@@ -7,45 +7,6 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
-var operators = map[string]bool{
-	"==":           true,
-	"===":          true,
-	"!=":           true,
-	"!==":          true,
-	">":            true,
-	">=":           true,
-	"<":            true,
-	"<=":           true,
-	"!":            true,
-	"or":           true,
-	"and":          true,
-	"?:":           true,
-	"in":           true,
-	"cat":          true,
-	"%":            true,
-	"abs":          true,
-	"max":          true,
-	"min":          true,
-	"+":            true,
-	"-":            true,
-	"*":            true,
-	"/":            true,
-	"substr":       true,
-	"merge":        true,
-	"if":           true,
-	"!!":           true,
-	"missing":      true,
-	"missing_some": true,
-	"some":         true,
-	"filter":       true,
-	"map":          true,
-	"reduce":       true,
-	"all":          true,
-	"none":         true,
-	"set":          true,
-	"var":          true,
-}
-
 // IsValid reads a JSON Logic rule from io.Reader and validates it
 func IsValid(rule io.Reader) bool {
 	var _rule any
@@ -98,7 +59,7 @@ func ValidateJsonLogic(rules any) bool {
 func isOperator(op string) bool {
 	_, isOperator := operators[op]
 
-	if !isOperator && customOperators[op] != nil {
+	if !isOperator && operators[op] != nil {
 		return true
 	}
 

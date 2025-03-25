@@ -31,16 +31,26 @@ func extractSubject(parsed []any, data any) any {
 
 func filter(values, data any) any {
 	parsed := values.([]any)
-	subject := extractSubject(parsed, data)
-	result := make([]any, 0)
 
+	subject := extractSubject(parsed, data)
 	if subject == nil {
-		return result
+		return []any{}
 	}
+
+	subjectSlice := subject.([]any)
+	subjectLen := len(subjectSlice)
+
+	if subjectLen == 0 {
+		return []any{}
+	}
+
+	// Pre-allocate result with capacity that's reasonable for filtering
+	// Assuming at least half might pass the filter (heuristic)
+	result := make([]any, 0, subjectLen/2)
 
 	logic := solveVars(parsed[1], data)
 
-	for _, value := range subject.([]any) {
+	for _, value := range subjectSlice {
 		v := parseValues(logic, value)
 
 		if typing.IsTrue(v) {
@@ -53,16 +63,24 @@ func filter(values, data any) any {
 
 func _map(values, data any) any {
 	parsed := values.([]any)
-	subject := extractSubject(parsed, data)
-	result := make([]any, 0)
 
+	subject := extractSubject(parsed, data)
 	if subject == nil {
-		return result
+		return []any{}
 	}
+
+	subjectSlice := subject.([]any)
+	subjectLen := len(subjectSlice)
+
+	if subjectLen == 0 {
+		return []any{}
+	}
+
+	result := make([]any, 0, subjectLen)
 
 	logic := parsed[1]
 
-	for _, value := range subject.([]any) {
+	for _, value := range subjectSlice {
 		v := parseValues(logic, value)
 		result = append(result, v)
 	}
@@ -72,11 +90,6 @@ func _map(values, data any) any {
 
 func reduce(values, data any) any {
 	parsed := values.([]any)
-	subject := extractSubject(parsed, data)
-
-	if subject == nil {
-		return float64(0)
-	}
 
 	var (
 		accumulator any
@@ -111,6 +124,11 @@ func reduce(values, data any) any {
 		"valueType":   valueType,
 	}
 
+	subject := extractSubject(parsed, data)
+	if subject == nil {
+		return float64(0)
+	}
+
 	for _, value := range subject.([]any) {
 		if value == nil {
 			continue
@@ -133,37 +151,46 @@ func reduce(values, data any) any {
 	return context["accumulator"]
 }
 
-func _in(value any, values any) bool {
-	if value == nil || values == nil {
-		return false
-	}
-
-	if typing.IsString(values) {
-		return strings.Contains(values.(string), value.(string))
-	}
-
+func _in(values, data any) any {
+	values = parseValues(values, data)
 	if !typing.IsSlice(values) {
 		return false
 	}
 
-	for _, element := range values.([]any) {
+	parsed := values.([]any)
+
+	a := parsed[0]
+	var b any
+	if len(parsed) > 1 {
+		b = parsed[1]
+	}
+
+	if typing.IsString(b) {
+		return strings.Contains(b.(string), a.(string))
+	}
+
+	if !typing.IsSlice(b) {
+		return false
+	}
+
+	for _, element := range b.([]any) {
 		if typing.IsSlice(element) {
-			if _inRange(value, element) {
+			if _inRange(a, element.([]any)) {
 				return true
 			}
 
 			continue
 		}
 
-		if typing.IsNumber(value) {
-			if typing.ToNumber(element) == value {
+		if typing.IsNumber(a) {
+			if typing.ToNumber(element) == a {
 				return true
 			}
 
 			continue
 		}
 
-		if element == value {
+		if element == a {
 			return true
 		}
 	}
@@ -171,25 +198,47 @@ func _in(value any, values any) bool {
 	return false
 }
 
-func merge(values any, level int8) any {
-	result := make([]any, 0)
-
-	if typing.IsPrimitive(values) || level > 1 {
-		return append(result, values)
+func merge(values, data any) any {
+	values = parseValues(values, data)
+	if typing.IsPrimitive(values) {
+		return []any{values}
 	}
 
-	if typing.IsSlice(values) {
-		for _, value := range values.([]any) {
-			_values := merge(value, level+1).([]any)
+	if !typing.IsSlice(values) {
+		return []any{}
+	}
 
-			result = append(result, _values...)
+	inputSlice := values.([]any)
+	sliceLen := len(inputSlice)
+	if sliceLen == 0 {
+		return inputSlice
+	}
+
+	totalCapacity := 0
+	for _, value := range inputSlice {
+		if typing.IsSlice(value) {
+			totalCapacity += len(value.([]any))
+		} else {
+			totalCapacity++
 		}
+	}
+
+	result := make([]any, 0, totalCapacity)
+
+	for _, value := range inputSlice {
+		if !typing.IsSlice(value) {
+			result = append(result, value)
+			continue
+		}
+
+		result = append(result, value.([]any)...)
 	}
 
 	return result
 }
 
 func missing(values, data any) any {
+	values = parseValues(values, data)
 	if typing.IsString(values) {
 		values = []any{values}
 	}
@@ -208,6 +257,7 @@ func missing(values, data any) any {
 }
 
 func missingSome(values, data any) any {
+	values = parseValues(values, data)
 	parsed := values.([]any)
 	number := int(typing.ToNumber(parsed[0]))
 	vars := parsed[1]
@@ -234,8 +284,8 @@ func missingSome(values, data any) any {
 
 func all(values, data any) any {
 	parsed := values.([]any)
-	subject := extractSubject(parsed, data)
 
+	subject := extractSubject(parsed, data)
 	if !typing.IsTrue(subject) {
 		return false
 	}
@@ -254,6 +304,7 @@ func all(values, data any) any {
 
 func none(values, data any) any {
 	parsed := values.([]any)
+
 	subject := extractSubject(parsed, data)
 
 	if !typing.IsTrue(subject) {
@@ -296,4 +347,15 @@ func some(values, data any) any {
 	}
 
 	return false
+}
+
+func _inRange(value any, values []any) bool {
+	i := values[0]
+	j := values[1]
+
+	if typing.IsNumber(value) {
+		return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
+	}
+
+	return typing.ToString(value) >= typing.ToString(i) && typing.ToString(j) >= typing.ToString(value)
 }

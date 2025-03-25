@@ -7,6 +7,101 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
+func hardEquals(values, data any) any {
+	values = parseValues(values, data)
+	if !typing.IsSlice(values) {
+		return false
+	}
+
+	parsed := values.([]any)
+	if len(parsed) < 2 {
+		return false
+	}
+
+	a, b := parsed[0], parsed[1]
+
+	if a == nil || b == nil {
+		return a == b
+	}
+
+	ra := reflect.ValueOf(a).Kind()
+	rb := reflect.ValueOf(b).Kind()
+
+	if ra != rb {
+		return false
+	}
+
+	return equals(a, b)
+}
+
+func isLessThan(values, data any) any {
+	parsed := parseValues(values, data).([]any)
+
+	a := parsed[0]
+	b := parsed[1]
+
+	if len(parsed) == 3 {
+		c := parsed[2]
+
+		return less(a, b) && less(b, c)
+	}
+
+	return less(a, b)
+}
+
+func isLessOrEqualThan(values, data any) any {
+	parsed := parseValues(values, data).([]any)
+
+	a := parsed[0]
+	b := parsed[1]
+
+	if len(parsed) == 3 {
+		c := parsed[2]
+
+		return (less(a, b) || equals(a, b)) && (less(b, c) || equals(b, c))
+	}
+
+	return less(a, b) || equals(a, b)
+}
+
+func isGreaterThan(values, data any) any {
+	parsed := parseValues(values, data).([]any)
+	a := parsed[0]
+	b := parsed[1]
+
+	if len(parsed) == 3 {
+		c := parsed[2]
+
+		return less(c, b) && less(b, a)
+	}
+
+	return less(b, a)
+}
+
+func isGreaterOrEqualThan(values, data any) any {
+	parsed := parseValues(values, data).([]any)
+
+	a := parsed[0]
+	b := parsed[1]
+
+	if len(parsed) == 3 {
+		c := parsed[2]
+
+		return (less(c, b) || equals(c, b)) && (less(b, a) || equals(b, a))
+	}
+
+	return less(b, a) || equals(b, a)
+}
+
+func isEqual(values, data any) any {
+	parsed := parseValues(values, data).([]any)
+
+	a := parsed[0]
+	b := parsed[1]
+
+	return equals(a, b)
+}
+
 // less reference javascript implementation
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than#description
 func less(a, b any) bool {
@@ -18,17 +113,6 @@ func less(a, b any) bool {
 
 	// Otherwise the values are compared as numeric values.
 	return javascript.ToNumber(b) > javascript.ToNumber(a)
-}
-
-func hardEquals(a, b any) bool {
-	ra := reflect.ValueOf(a).Kind()
-	rb := reflect.ValueOf(b).Kind()
-
-	if ra != rb {
-		return false
-	}
-
-	return equals(a, b)
 }
 
 func equals(a, b any) bool {
@@ -43,37 +127,4 @@ func equals(a, b any) bool {
 	}
 
 	return javascript.ToNumber(a) == javascript.ToNumber(b)
-}
-
-func between(operator string, values []any, data any) any {
-	a := parseValues(values[0], data)
-	b := parseValues(values[1], data)
-	c := parseValues(values[2], data)
-
-	if operator == "<" {
-		return less(a, b) && less(b, c)
-	}
-
-	if operator == "<=" {
-		return (less(a, b) || equals(a, b)) && (less(b, c) || equals(b, c))
-	}
-
-	if operator == ">=" {
-		return (less(c, b) || equals(c, b)) && (less(b, a) || equals(b, a))
-	}
-
-	return less(c, b) && less(b, a)
-}
-
-func _inRange(value any, values any) bool {
-	v := values.([]any)
-
-	i := v[0]
-	j := v[1]
-
-	if typing.IsNumber(value) {
-		return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
-	}
-
-	return typing.ToString(value) >= typing.ToString(i) && typing.ToString(j) >= typing.ToString(value)
 }

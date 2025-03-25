@@ -53,26 +53,27 @@ func solveVars(values, data any) any {
 	return values
 }
 
-func getVar(value, data any) any {
-	if value == nil {
+func getVar(values, data any) any {
+	values = parseValues(values, data)
+	if values == nil {
 		if !typing.IsPrimitive(data) {
 			return nil
 		}
 		return data
 	}
 
-	if typing.IsString(value) && typing.ToString(value) == "" {
+	if typing.IsString(values) && typing.ToString(values) == "" {
 		return data
 	}
 
-	if typing.IsNumber(value) {
-		value = typing.ToString(value)
+	if typing.IsNumber(values) {
+		values = typing.ToString(values)
 	}
 
 	var _default any
 
-	if typing.IsSlice(value) { // syntax sugar
-		v := value.([]any)
+	if typing.IsSlice(values) { // syntax sugar
+		v := values.([]any)
 
 		if len(v) == 0 {
 			return data
@@ -82,14 +83,14 @@ func getVar(value, data any) any {
 			_default = v[1]
 		}
 
-		value = v[0].(string)
+		values = v[0].(string)
 	}
 
 	if data == nil {
 		return _default
 	}
 
-	parts := strings.Split(value.(string), ".")
+	parts := strings.Split(values.(string), ".")
 
 	var _value any = data
 
@@ -144,8 +145,10 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	return []byte(resultEscaped), nil
 }
 
-func setProperty(value, data any) any {
-	_value := value.([]any)
+func setProperty(values, data any) any {
+	values = parseValues(values, data).([]any)
+
+	_value := values.([]any)
 
 	object := _value[0]
 
