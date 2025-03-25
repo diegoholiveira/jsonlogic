@@ -69,10 +69,6 @@ func evaluateClause(clause any, data any) any {
 }
 
 func conditional(values, data any) any {
-	if typing.IsPrimitive(values) {
-		return values
-	}
-
 	values = getValuesWithoutParsing(values, data)
 
 	clauses := values.([]any)
@@ -86,10 +82,6 @@ func conditional(values, data any) any {
 	// Evaluate each if/then pair
 	for i := 0; i < length-1; i = i + 2 {
 		condition := parseValues(clauses[i], data)
-
-		if typing.IsMap(condition) {
-			condition = getVar(condition, data)
-		}
 
 		// If the condition is true, evaluate and return the then clause
 		if typing.IsTrue(condition) {

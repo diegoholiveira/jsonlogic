@@ -21,11 +21,6 @@ func solveVars(values, data any) any {
 					continue
 				}
 
-				if typing.IsEmptySlice(value) {
-					logic["var"] = ""
-					continue
-				}
-
 				val := getVar(value, data)
 				if val != nil {
 					return val
@@ -104,9 +99,6 @@ func getVar(values, data any) any {
 		} else if typing.IsSlice(_value) {
 			pos := int(typing.ToNumber(part))
 			container := _value.([]any)
-			if pos >= len(container) {
-				return _default
-			}
 			_value = container[pos]
 		} else {
 			return _default
@@ -129,7 +121,6 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	}
 
 	resultJson, err := json.Marshal(result)
-
 	if err != nil {
 		return nil, err
 	}

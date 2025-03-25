@@ -173,14 +173,6 @@ func parseValues(values, data any) any {
 // of JSONLogic.
 // Used in lazy evaluation of "AND", "OR", and "IF" operators
 func getValuesWithoutParsing(values, data any) any {
-	if values == nil || typing.IsPrimitive(values) {
-		return values
-	}
-
-	if typing.IsMap(values) {
-		return apply(values, data)
-	}
-
 	return values.([]any)
 }
 
