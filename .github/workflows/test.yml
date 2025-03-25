@@ -12,6 +12,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
+        cache: false
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Run the tests
