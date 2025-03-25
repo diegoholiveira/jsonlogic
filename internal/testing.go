@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"log"
@@ -15,22 +14,12 @@ type (
 		Rule     any
 		Data     any
 		Expected any
+		Scenario string
+		Index    int
 	}
 
 	Tests []Test
 )
-
-func convertInterfaceToReader(i any) io.Reader {
-	var result bytes.Buffer
-
-	encoder := json.NewEncoder(&result)
-	err := encoder.Encode(i)
-	if err != nil {
-		panic(err)
-	}
-
-	return &result
-}
 
 // This gets the tests.json file that we've proposed become the new official one in
 // https://github.com/jwadhams/json-logic/pull/48 but that hasn't merged yet.
@@ -78,8 +67,12 @@ func getScenariosFromFile(buffer []byte) Tests {
 			make(map[string]any),
 			make(map[string]any)))
 
+	scenarioName := ""
+	testIndex := 0
 	for _, scenario := range scenarios {
 		if reflect.ValueOf(scenario).Kind() == reflect.String {
+			scenarioName = scenario.(string)
+			testIndex = 0
 			continue
 		}
 
@@ -87,7 +80,10 @@ func getScenariosFromFile(buffer []byte) Tests {
 			Rule:     scenario.([]any)[0],
 			Data:     scenario.([]any)[1],
 			Expected: scenario.([]any)[2],
+			Scenario: scenarioName,
+			Index:    testIndex,
 		})
+		testIndex++
 	}
 
 	return tests
