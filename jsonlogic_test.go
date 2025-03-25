@@ -21,8 +21,8 @@ func TestRulesFromJsonLogic(t *testing.T) {
 
 	for suiteName, tests := range suites {
 		t.Run(suiteName, func(t *testing.T) {
-			for i, test := range tests {
-				t.Run(fmt.Sprintf("Scenario_%d", i), func(t *testing.T) {
+			for _, test := range tests {
+				t.Run(fmt.Sprintf("%s_%d", test.Scenario, test.Index), func(t *testing.T) {
 					result, err := jsonlogic.ApplyInterface(test.Rule, test.Data)
 					if err != nil {
 						t.Fatal(err)
