@@ -3,6 +3,7 @@ package benchmark
 import (
 	"bytes"
 	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -50,11 +51,32 @@ var TestCases = []struct {
 	},
 }
 
+func performWarmupRuns() {
+	runtime.GC()
+
+	for _, tc := range TestCases {
+		for i := 0; i < 10; i++ {
+			logic := strings.NewReader(tc.logic)
+			data := strings.NewReader(tc.data)
+			var result bytes.Buffer
+			_ = jsonlogic.Apply(logic, data, &result)
+		}
+	}
+
+	runtime.GC()
+}
+
 func BenchmarkJSONLogic(b *testing.B) {
+	performWarmupRuns()
+
 	for _, tc := range TestCases {
 		b.Run(tc.name, func(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
+
+			b.StopTimer()
+			runtime.GC()
+			b.StartTimer()
 
 			for i := 0; i < b.N; i++ {
 				logic := strings.NewReader(tc.logic)

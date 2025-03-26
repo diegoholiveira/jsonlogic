@@ -86,7 +86,7 @@ def run_benchmark(directory: str, is_published: bool, version: str) -> Dict[str,
 
     print(f"{Fore.YELLOW}Running benchmark for {version_name} version...{Style.RESET_ALL}")
     try:
-        result = subprocess.run(["go", "test", "-bench=.", "-benchmem", "-count=5"],
+        result = subprocess.run(["go", "test", "-bench=.", "-benchmem", "-count=10"],
                                cwd=directory, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         print(f"{Fore.RED}Error running benchmark: {e}{Style.RESET_ALL}")
