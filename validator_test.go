@@ -36,6 +36,10 @@ func TestJSONLogicValidator(t *testing.T) {
 			IsValid: true,
 			Rule:    strings.NewReader(`10`),
 		},
+		"primitive map is a valid rule": {
+			IsValid: true,
+			Rule:    strings.NewReader(`{"if": [{">=": [{ "var": "amount" }, 10] }, { "var": "amount" }, { "output": true, "result": "too low" } ]}`),
+		},
 		"set must be valid": {
 			IsValid: true,
 			Rule: strings.NewReader(`{
