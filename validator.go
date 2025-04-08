@@ -26,7 +26,14 @@ func ValidateJsonLogic(rules any) bool {
 	}
 
 	if typing.IsMap(rules) {
-		for operator, value := range rules.(map[string]any) {
+		rulesMap := rules.(map[string]any)
+
+		// A map with more than 1 key counts as a primitive so it's time to end recursion
+		if len(rulesMap) > 1 {
+			return true
+		}
+
+		for operator, value := range rulesMap {
 			if !isOperator(operator) {
 				return false
 			}
