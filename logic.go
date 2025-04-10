@@ -99,7 +99,8 @@ func conditional(values, data any) any {
 
 func negative(values, data any) any {
 	values = parseValues(values, data)
-	if typing.IsSlice(values) {
+	// If the slice is not empty, there is an argument to negate
+	if typing.IsSlice(values) && len(values.([]any)) > 0 {
 		return !typing.IsTrue(values.([]any)[0])
 	}
 	return !typing.IsTrue(values)
