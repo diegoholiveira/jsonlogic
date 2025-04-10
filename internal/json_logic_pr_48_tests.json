@@ -195,7 +195,10 @@
     [{"if":[ -1, "apple", "banana"]}, null, "apple"],
 
     "Truthy and falsy definitions matter in Boolean operations",
+    [{"and" : [ { "!": [ ] }, { "!": [ [] ] }, { "!": { "missing": "foo" } } ]}, {"foo": "bar"}, true],
+    [{"!" : []}, {}, true],
     [{"!" : [ [] ]}, {}, true],
+    [{"!!" : []}, {}, false],
     [{"!!" : [ [] ]}, {}, false],
     [{"and" : [ [], true ]}, {}, [] ],
     [{"or" : [ [], true ]}, {}, true ],
