@@ -2,6 +2,7 @@ package jsonlogic
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
@@ -18,9 +19,13 @@ func (e ErrInvalidOperator) Error() string {
 
 // operators holds custom operators
 var operators = make(map[string]OperatorFn)
+var operatorsWriteLock = &sync.Mutex{}
 
 // AddOperator allows for custom operators to be used
 func AddOperator(key string, cb OperatorFn) {
+	operatorsWriteLock.Lock()
+	defer operatorsWriteLock.Unlock()
+
 	operators[key] = func(values, data any) any {
 		return cb(parseValues(values, data), data)
 	}
@@ -38,6 +43,9 @@ func operation(operator string, values, data any) any {
 }
 
 func init() {
+	operatorsWriteLock.Lock()
+	defer operatorsWriteLock.Unlock()
+
 	operators["and"] = _and
 	operators["or"] = _or
 	operators["filter"] = filter
