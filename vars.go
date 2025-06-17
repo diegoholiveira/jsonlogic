@@ -36,9 +36,10 @@ func solveVars(values, data any) any {
 	}
 
 	if typing.IsSlice(values) {
-		logic := []any{}
+		inputSlice := values.([]any)
+		logic := make([]any, 0, len(inputSlice))
 
-		for _, value := range values.([]any) {
+		for _, value := range inputSlice {
 			logic = append(logic, solveVars(value, data))
 		}
 

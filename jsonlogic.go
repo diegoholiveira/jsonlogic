@@ -106,9 +106,10 @@ func ApplyInterface(rule, data any) (output any, err error) {
 	}
 
 	if typing.IsSlice(rule) {
-		var parsed []any
+		inputSlice := rule.([]any)
+		parsed := make([]any, 0, len(inputSlice))
 
-		for _, value := range rule.([]any) {
+		for _, value := range inputSlice {
 			parsed = append(parsed, parseValues(value, data))
 		}
 
