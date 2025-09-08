@@ -5,7 +5,7 @@ import (
 )
 
 func _and(values, data any) any {
-	values = getValuesWithoutParsing(values, data)
+	values = values.([]any)
 
 	var v float64
 
@@ -46,7 +46,7 @@ func _and(values, data any) any {
 }
 
 func _or(values, data any) any {
-	values = getValuesWithoutParsing(values, data)
+	values = values.([]any)
 
 	for _, value := range values.([]any) {
 		parsed := parseValues(value, data)
@@ -69,7 +69,7 @@ func evaluateClause(clause any, data any) any {
 }
 
 func conditional(values, data any) any {
-	values = getValuesWithoutParsing(values, data)
+	values = values.([]any)
 
 	clauses := values.([]any)
 

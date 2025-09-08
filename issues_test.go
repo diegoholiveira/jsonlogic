@@ -361,3 +361,50 @@ func TestIssue110(t *testing.T) {
 	expected := `["111","333"]`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue125_InOperatorWithVarsInSlice(t *testing.T) {
+	// This test demonstrates the issue: vars within slices are not resolved
+	rule := strings.NewReader(`{"in": [{"var": "needle"}, [{"var": "item1"}, {"var": "item2"}]]}`)
+	data := strings.NewReader(`{"needle":"foo", "item1":"bar", "item2":"foo"}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be true because "foo" should be found in the resolved array ["bar", "foo"]
+	// Currently fails because it compares "foo" against unresolved [{"var": "item1"}, {"var": "item2"}]
+	expected := `true`
+	assert.JSONEq(t, expected, result.String())
+}
+
+func TestIssue125_CustomOperatorWithVarsInSlice(t *testing.T) {
+	// Add a custom operator that processes slice elements
+	jsonlogic.AddOperator("contains_any", func(values, data any) any {
+		parsed := values.([]any)
+		needle := parsed[0]
+		haystack := parsed[1].([]any)
+		
+		for _, item := range haystack {
+			if item == needle {
+				return true
+			}
+		}
+		return false
+	})
+
+	rule := strings.NewReader(`{"contains_any": [{"var": "needle"}, [{"var": "item1"}, {"var": "item2"}]]}`)
+	data := strings.NewReader(`{"needle":"foo", "item1":"bar", "item2":"foo"}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(rule, data, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should be true because "foo" should be found in the resolved array ["bar", "foo"]
+	// Currently fails because the custom operator receives unresolved [{"var": "item1"}, {"var": "item2"}]
+	expected := `true`
+	assert.JSONEq(t, expected, result.String())
+}
