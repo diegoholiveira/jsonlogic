@@ -7,6 +7,8 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
+// ErrReduceDataType represents an error when an unsupported data type is used in reduce operations.
+// It contains the data type name that caused the error.
 type ErrReduceDataType struct {
 	dataType string
 }

@@ -7,8 +7,12 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
+// OperatorFn defines the signature for custom operator functions.
+// It takes values and data as input and returns a result.
 type OperatorFn func(values, data any) (result any)
 
+// ErrInvalidOperator represents an error when an unsupported operator is used.
+// It contains the operator name that caused the error.
 type ErrInvalidOperator struct {
 	operator string
 }
@@ -19,9 +23,17 @@ func (e ErrInvalidOperator) Error() string {
 
 // operators holds custom operators
 var operators = make(map[string]OperatorFn)
+
 var operatorsLock = &sync.RWMutex{}
 
-// AddOperator allows for custom operators to be used
+// AddOperator registers a custom operator with the given key and function.
+// The operator function will be called with parsed values and the original data context.
+//
+// Parameters:
+//   - key: the operator name to register (e.g., "custom_op")
+//   - cb: the function to execute when the operator is encountered
+//
+// Concurrency: This function is safe for concurrent use as it properly locks the operators map.
 func AddOperator(key string, cb OperatorFn) {
 	operatorsLock.Lock()
 	defer operatorsLock.Unlock()

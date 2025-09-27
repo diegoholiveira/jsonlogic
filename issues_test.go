@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	jsonlogic "github.com/diegoholiveira/jsonlogic/v3"
 )
 
 func TestIssue50(t *testing.T) {
@@ -198,7 +198,6 @@ func TestJsonLogicWithSolvedVars(t *testing.T) {
 	data := json.RawMessage(`{"foo": 34359738368, "bar": 10, "is_foo": false, "is_bar": true}`)
 
 	output, err := jsonlogic.GetJsonLogicWithSolvedVars(rule, data)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +254,6 @@ func TestIssue79(t *testing.T) {
 	var result bytes.Buffer
 
 	err := jsonlogic.Apply(rule, data, &result)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +383,7 @@ func TestIssue125_CustomOperatorWithVarsInSlice(t *testing.T) {
 		parsed := values.([]any)
 		needle := parsed[0]
 		haystack := parsed[1].([]any)
-		
+
 		for _, item := range haystack {
 			if item == needle {
 				return true
