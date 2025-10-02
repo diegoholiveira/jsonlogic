@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/diegoholiveira/jsonlogic/v3"
+	jsonlogic "github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/diegoholiveira/jsonlogic/v3/internal"
 )
 

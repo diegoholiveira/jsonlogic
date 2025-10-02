@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/barkimedes/go-deepcopy"
+	deepcopy "github.com/barkimedes/go-deepcopy"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
@@ -129,7 +129,6 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	// we need to use Unquote due to unicode characters (example \u003e= need to be >=)
 	// used for prettier json.RawMessage
 	resultEscaped, err := strconv.Unquote(strings.Replace(strconv.Quote(string(resultJson)), `\\u`, `\u`, -1))
-
 	if err != nil {
 		return nil, err
 	}

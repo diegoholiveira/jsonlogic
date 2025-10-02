@@ -1,3 +1,25 @@
+// Package jsonlogic provides a Go implementation of JSONLogic rules engine.
+// JSONLogic is a way to write rules that involve logic (boolean and mathematical operations),
+// consistently in JSON. It's designed to be a lightweight, portable way to share logic
+// between front-end and back-end systems.
+//
+// The package supports all standard JSONLogic operators and allows for custom operator registration.
+// Rules can be applied to data using various input/output formats including io.Reader/Writer,
+// json.RawMessage, and native Go interfaces.
+//
+// Basic usage:
+//
+//	rule := strings.NewReader(`{"==":[{"var":"name"}, "John"]}`)
+//	data := strings.NewReader(`{"name":"John"}`)
+//	var result strings.Builder
+//
+//	err := jsonlogic.Apply(rule, data, &result)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	// result.String() will be "true"
+//
+// For more examples and documentation, see: https://jsonlogic.com
 package jsonlogic
 
 import (
@@ -119,6 +141,18 @@ func ApplyInterface(rule, data any) (output any, err error) {
 	return rule, err
 }
 
+// GetJsonLogicWithSolvedVars processes a JSON Logic rule by resolving variables with actual data values.
+// It returns the rule with variables substituted but maintains the JSON Logic structure.
+//
+// Parameters:
+//   - rule: json.RawMessage containing the JSON Logic rule
+//   - data: json.RawMessage containing the data context for variable resolution
+//
+// Returns:
+//   - []byte: the processed rule with resolved variables as JSON bytes
+//   - error: error if unmarshaling or processing fails
+//
+// This is useful for debugging or when you need to see the rule with variables resolved.
 func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
 	if data == nil {
 		data = json.RawMessage("{}")
