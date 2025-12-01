@@ -4,12 +4,6 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
-func init() {
-	AddOperator("contains_all", containsAll)
-	AddOperator("contains_any", containsAny)
-	AddOperator("contains_none", containsNone)
-}
-
 // containsAll checks if all elements in the second array exist in the first array.
 // Returns true if every element of the required array is found in the search array.
 //

@@ -96,4 +96,9 @@ func init() {
 	operators[">="] = isGreaterOrEqualThan
 	operators["=="] = isEqual
 	operators["!="] = func(v, d any) any { return !isEqual(v, d).(bool) }
+
+	/* CUSTOM OPERATORS */
+	operators["contains_all"] = func(v, d any) any { return containsAll(parseValues(v, d), d) }
+	operators["contains_any"] = func(v, d any) any { return containsAny(parseValues(v, d), d) }
+	operators["contains_none"] = func(v, d any) any { return containsNone(parseValues(v, d), d) }
 }
