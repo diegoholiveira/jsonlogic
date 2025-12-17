@@ -164,6 +164,16 @@ func main() {
 }
 ```
 
+## Custom Operators (Non-standard)
+
+> ⚠️ **Warning**: These operators are not part of the official JsonLogic specification and may be deprecated in future versions.
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `contains_all` | Returns `true` if **all** elements in the second array exist in the first array | `{"contains_all": [["a","b","c"], ["a","b"]]}` → `true` |
+| `contains_any` | Returns `true` if **any** element in the second array exists in the first array | `{"contains_any": [["a","b"], ["x","a"]]}` → `true` |
+| `contains_none` | Returns `true` if **no** elements in the second array exist in the first array | `{"contains_none": [["a","b"], ["x","y"]]}` → `true` |
+
 # License
 
 This project is licensed under the MIT License - see [LICENSE](./LICENSE) for details.
