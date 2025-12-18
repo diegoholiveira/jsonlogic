@@ -319,14 +319,10 @@ func some(values, data any) any {
 		return false
 	}
 
+	logic := solveVars(parsed[1], data)
 	for _, value := range subject.([]any) {
-		v := apply(
-			solveVars(
-				solveVars(parsed[1], data),
-				value,
-			),
-			value,
-		)
+		conditions := solveVars(logic, value)
+		v := apply(conditions, value)
 
 		if typing.IsTrue(v) {
 			return true
