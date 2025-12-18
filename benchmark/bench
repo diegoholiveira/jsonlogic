@@ -1,15 +1,69 @@
 #!/usr/bin/env bash
+set -e
 
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-if [ $# -eq 0 ]; then
-	echo -e "${RED}Error: Missing version argument${NC}"
-	echo -e "Usage: $0 <version>"
-	echo -e "Example: $0 v3.7.5"
+# Check if benchstat is installed
+if ! command -v benchstat &>/dev/null; then
+	echo -e "${RED}Error: benchstat is not installed${NC}"
+	echo "Install it with: go install golang.org/x/perf/cmd/benchstat@latest"
 	exit 1
 fi
 
-PUBLISHED_VERSION="$1"
+# Validate argument
+if [ $# -eq 0 ]; then
+	echo -e "${RED}Error: Missing version argument${NC}"
+	echo "Usage: $0 <version>"
+	echo "Example: $0 v3.7.5"
+	exit 1
+fi
 
-uv run --with colorama bench.py "${PUBLISHED_VERSION}"
+TARGET_REF="$1"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Temporary worktree directory
+WORKTREE_DIR=$(mktemp -d)
+OLD_BENCH="$SCRIPT_DIR/old.txt"
+NEW_BENCH="$SCRIPT_DIR/new.txt"
+
+# Cleanup function
+cleanup() {
+	echo -e "${BLUE}Cleaning up...${NC}"
+	git -C "$PROJECT_ROOT" worktree remove "$WORKTREE_DIR" --force 2>/dev/null || true
+	rm -rf "$WORKTREE_DIR"
+}
+trap cleanup EXIT
+
+echo -e "${GREEN}JSONLogic Benchmark: $TARGET_REF vs current${NC}"
+echo
+
+# Benchmark filter (default to comprehensive suite for fast comparisons)
+BENCH_FILTER="${2:-BenchmarkComprehensive$}"
+
+# Create worktree for target ref
+echo -e "${BLUE}Setting up worktree for $TARGET_REF...${NC}"
+git -C "$PROJECT_ROOT" worktree add "$WORKTREE_DIR" "$TARGET_REF" --quiet
+
+# Copy current benchmark code to ensure fair comparison
+echo -e "${BLUE}Copying current benchmark code to $TARGET_REF worktree...${NC}"
+cp "$PROJECT_ROOT/benchmark/benchmark_test.go" "$WORKTREE_DIR/benchmark/benchmark_test.go"
+
+# Run benchmarks for target ref
+echo -e "${BLUE}Running benchmarks for $TARGET_REF...${NC}"
+cd "$WORKTREE_DIR/benchmark"
+go test -bench="$BENCH_FILTER" -benchmem -count=10 >"$OLD_BENCH" 2>&1
+
+# Run benchmarks for current code
+echo -e "${BLUE}Running benchmarks for current code...${NC}"
+cd "$PROJECT_ROOT/benchmark"
+go test -bench="$BENCH_FILTER" -benchmem -count=10 >"$NEW_BENCH" 2>&1
+
+# Show comparison
+echo
+echo -e "${GREEN}Results:${NC}"
+benchstat "$OLD_BENCH" "$NEW_BENCH"
