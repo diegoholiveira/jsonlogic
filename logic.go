@@ -5,57 +5,31 @@ import (
 )
 
 func _and(values, data any) any {
-	values = values.([]any)
-
-	var v float64
-
-	isBoolExpression := true
-
-	for _, value := range values.([]any) {
-		value = parseValues(value, data)
-		if typing.IsSlice(value) {
-			return value
-		}
-
-		if typing.IsBool(value) && !value.(bool) {
-			return false
-		}
-
-		if typing.IsString(value) && typing.ToString(value) == "" {
-			return value
-		}
-
-		if !typing.IsNumber(value) {
-			continue
-		}
-
-		isBoolExpression = false
-
-		_value := typing.ToNumber(value)
-
-		if _value > v {
-			v = _value
+	args := values.([]any)
+	var last any
+	for _, value := range args {
+		parsed := parseValues(value, data)
+		last = parsed
+		if !typing.IsTrue(parsed) {
+			return parsed
 		}
 	}
 
-	if isBoolExpression {
-		return true
-	}
-
-	return v
+	return last
 }
 
 func _or(values, data any) any {
-	values = values.([]any)
-
-	for _, value := range values.([]any) {
+	args := values.([]any)
+	var last any
+	for _, value := range args {
 		parsed := parseValues(value, data)
+		last = parsed
 		if typing.IsTrue(parsed) {
 			return parsed
 		}
 	}
 
-	return false
+	return last
 }
 
 func evaluateClause(clause any, data any) any {
