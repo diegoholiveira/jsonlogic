@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	deepcopy "github.com/barkimedes/go-deepcopy"
-
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
@@ -136,6 +134,28 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	return []byte(resultEscaped), nil
 }
 
+// deepCopyMap returns a deep copy of a value produced by encoding/json:
+// map[string]any, []any, or a primitive. It only handles the types that
+// json.Unmarshal produces, which is all we need here.
+func deepCopyMap(v any) any {
+	switch val := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(val))
+		for k, v2 := range val {
+			out[k] = deepCopyMap(v2)
+		}
+		return out
+	case []any:
+		out := make([]any, len(val))
+		for i, v2 := range val {
+			out[i] = deepCopyMap(v2)
+		}
+		return out
+	default:
+		return val
+	}
+}
+
 func setProperty(values, data any) any {
 	values = parseValues(values, data).([]any)
 
@@ -148,12 +168,7 @@ func setProperty(values, data any) any {
 	}
 
 	property := _value[1].(string)
-	modified, err := deepcopy.Anything(object)
-	if err != nil {
-		panic(err)
-	}
-
-	_modified := modified.(map[string]any)
+	_modified := deepCopyMap(object).(map[string]any)
 	_modified[property] = parseValues(_value[2], data)
 
 	return any(_modified)
