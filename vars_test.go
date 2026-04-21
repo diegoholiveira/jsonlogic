@@ -106,3 +106,19 @@ func TestGetVarWithOutOfBoundsArrayIndexReturnsDefault(t *testing.T) {
 	assert.NoError(t, err)
 	assert.JSONEq(t, `"fallback"`, string(output))
 }
+
+func TestSetPropertyWithMissingValueArgument(t *testing.T) {
+	rule := json.RawMessage(`{"set": [{"a": 1, "b": 2}, "c"]}`)
+
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"a":1,"b":2}`, string(output))
+}
+
+func TestSetPropertyWithOnlyObjectArgument(t *testing.T) {
+	rule := json.RawMessage(`{"set": [{"a": 1, "b": 2}]}`)
+
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"a":1,"b":2}`, string(output))
+}

@@ -33,6 +33,9 @@ func extractSubject(parsed []any, data any) any {
 
 func filter(values, data any) any {
 	parsed := values.([]any)
+	if len(parsed) < 2 {
+		return []any{}
+	}
 
 	subject := extractSubject(parsed, data)
 	if subject == nil {
@@ -61,6 +64,9 @@ func filter(values, data any) any {
 
 func _map(values, data any) any {
 	parsed := values.([]any)
+	if len(parsed) < 2 {
+		return []any{}
+	}
 
 	subject := extractSubject(parsed, data)
 	if subject == nil {
@@ -84,6 +90,9 @@ func _map(values, data any) any {
 
 func reduce(values, data any) any {
 	parsed := values.([]any)
+	if len(parsed) < 3 {
+		return float64(0)
+	}
 
 	var (
 		accumulator any

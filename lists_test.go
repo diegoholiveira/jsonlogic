@@ -77,3 +77,36 @@ func TestReduceStringValues(t *testing.T) {
 	assert.Nil(t, err)
 	assert.JSONEq(t, `"ba"`, result.String())
 }
+
+func TestFilterWithMissingLogicArgument(t *testing.T) {
+	// filter needs [array, logic]; omitting the logic argument must not panic.
+	rule := strings.NewReader(`{"filter": [[1,2,3]]}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `[]`, result.String())
+}
+
+func TestMapWithMissingLogicArgument(t *testing.T) {
+	// map needs [array, logic]; omitting the logic argument must not panic.
+	rule := strings.NewReader(`{"map": [[1,2,3]]}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `[]`, result.String())
+}
+
+func TestReduceWithMissingInitialValue(t *testing.T) {
+	// reduce needs [array, logic, initial]; omitting initial value must not panic.
+	rule := strings.NewReader(`{"reduce": [
+		[1,2,3],
+		{"+":[{"var":"current"},{"var":"accumulator"}]}
+	]}`)
+
+	var result bytes.Buffer
+	err := jsonlogic.Apply(rule, nil, &result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `0`, result.String())
+}

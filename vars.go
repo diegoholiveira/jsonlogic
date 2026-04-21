@@ -164,6 +164,13 @@ func setProperty(values, data any) any {
 
 	_value := values.([]any)
 
+	if len(_value) < 3 {
+		if len(_value) == 0 {
+			return nil
+		}
+		return _value[0]
+	}
+
 	object := _value[0]
 
 	if !typing.IsMap(object) {

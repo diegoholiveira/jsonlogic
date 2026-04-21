@@ -67,6 +67,41 @@ func TestHardEqualsWithNilInParams(t *testing.T) {
 	assert.JSONEq(t, string(expected), string(output))
 }
 
+func TestLessThanWithSingleArgument(t *testing.T) {
+	rule := json.RawMessage(`{"<": [1]}`)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `false`, string(output))
+}
+
+func TestLessOrEqualThanWithSingleArgument(t *testing.T) {
+	rule := json.RawMessage(`{"<=": [1]}`)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `false`, string(output))
+}
+
+func TestGreaterThanWithSingleArgument(t *testing.T) {
+	rule := json.RawMessage(`{">": [1]}`)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `false`, string(output))
+}
+
+func TestGreaterOrEqualThanWithSingleArgument(t *testing.T) {
+	rule := json.RawMessage(`{">=": [1]}`)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `false`, string(output))
+}
+
+func TestEqualWithSingleArgument(t *testing.T) {
+	rule := json.RawMessage(`{"==": [1]}`)
+	output, err := jsonlogic.ApplyRaw(rule, nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `false`, string(output))
+}
+
 func TestHardEqualsWithDifferentTypes(t *testing.T) {
 	var rule json.RawMessage = json.RawMessage(`{
 		"===": ["42", 42]
