@@ -88,3 +88,21 @@ func TestSolveVarsBackToJsonLogicWithUnicodeChars(t *testing.T) {
 	expected := `{">=":[20,10]}`
 	assert.JSONEq(t, expected, string(output))
 }
+
+func TestGetVarWithOutOfBoundsArrayIndex(t *testing.T) {
+	rule := json.RawMessage(`{"var": "items.999"}`)
+	data := json.RawMessage(`{"items": [1, 2, 3]}`)
+
+	output, err := jsonlogic.ApplyRaw(rule, data)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `null`, string(output))
+}
+
+func TestGetVarWithOutOfBoundsArrayIndexReturnsDefault(t *testing.T) {
+	rule := json.RawMessage(`{"var": ["items.999", "fallback"]}`)
+	data := json.RawMessage(`{"items": [1, 2, 3]}`)
+
+	output, err := jsonlogic.ApplyRaw(rule, data)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `"fallback"`, string(output))
+}

@@ -98,6 +98,9 @@ func getVar(values, data any) any {
 		} else if typing.IsSlice(_value) {
 			pos := int(typing.ToNumber(part))
 			container := _value.([]any)
+			if pos < 0 || pos >= len(container) {
+				return _default
+			}
 			_value = container[pos]
 		} else {
 			return _default
