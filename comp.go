@@ -36,6 +36,9 @@ func hardEquals(values, data any) any {
 
 func isLessThan(values, data any) any {
 	parsed := parseValues(values, data).([]any)
+	if len(parsed) < 2 {
+		return false
+	}
 
 	a := parsed[0]
 	b := parsed[1]
@@ -51,6 +54,9 @@ func isLessThan(values, data any) any {
 
 func isLessOrEqualThan(values, data any) any {
 	parsed := parseValues(values, data).([]any)
+	if len(parsed) < 2 {
+		return false
+	}
 
 	a := parsed[0]
 	b := parsed[1]
@@ -66,6 +72,9 @@ func isLessOrEqualThan(values, data any) any {
 
 func isGreaterThan(values, data any) any {
 	parsed := parseValues(values, data).([]any)
+	if len(parsed) < 2 {
+		return false
+	}
 	a := parsed[0]
 	b := parsed[1]
 
@@ -80,6 +89,9 @@ func isGreaterThan(values, data any) any {
 
 func isGreaterOrEqualThan(values, data any) any {
 	parsed := parseValues(values, data).([]any)
+	if len(parsed) < 2 {
+		return false
+	}
 
 	a := parsed[0]
 	b := parsed[1]
@@ -95,6 +107,9 @@ func isGreaterOrEqualThan(values, data any) any {
 
 func isEqual(values, data any) any {
 	parsed := parseValues(values, data).([]any)
+	if len(parsed) < 2 {
+		return false
+	}
 
 	a := parsed[0]
 	b := parsed[1]
