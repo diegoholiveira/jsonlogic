@@ -406,3 +406,95 @@ func TestIssue125_CustomOperatorWithVarsInSlice(t *testing.T) {
 	expected := `true`
 	assert.JSONEq(t, expected, result.String())
 }
+
+func TestIssue135(t *testing.T) {
+	cases := []struct {
+		name     string
+		rule     string
+		expected string
+	}{
+		{
+			name:     "or returns last operand when all are falsy",
+			rule:     `{"or":[null,0]}`,
+			expected: `0`,
+		},
+		{
+			name:     "and returns last operand when all are truthy",
+			rule:     `{"and":[1,"result"]}`,
+			expected: `"result"`,
+		},
+		{
+			name:     "and returns last truthy operand, not max",
+			rule:     `{"and":[3,1]}`,
+			expected: `1`,
+		},
+		{
+			name:     "and example from jsonlogic.com docs",
+			rule:     `{"and":[true,"a",3]}`,
+			expected: `3`,
+		},
+		{
+			name:     "and returns first falsy operand (empty string)",
+			rule:     `{"and":[true,"",3]}`,
+			expected: `""`,
+		},
+		{
+			name:     "or short-circuits on first truthy operand",
+			rule:     `{"or":[1,0]}`,
+			expected: `1`,
+		},
+		{
+			name:     "and with non-empty slice continues past it",
+			rule:     `{"and":[[1,2,3],true]}`,
+			expected: `true`,
+		},
+		{
+			name:     "and with empty slice returns it",
+			rule:     `{"and":[[],true]}`,
+			expected: `[]`,
+		},
+		{
+			name:     "or returns null when all operands are null",
+			rule:     `{"or":[null,null]}`,
+			expected: `null`,
+		},
+		{
+			name:     "or returns empty array as last falsy operand",
+			rule:     `{"or":[false,[]]}`,
+			expected: `[]`,
+		},
+		{
+			name:     "and with empty operand list returns null",
+			rule:     `{"and":[]}`,
+			expected: `null`,
+		},
+		{
+			name:     "or with empty operand list returns null",
+			rule:     `{"or":[]}`,
+			expected: `null`,
+		},
+		{
+			name:     "or with single falsy operand returns it",
+			rule:     `{"or":[0]}`,
+			expected: `0`,
+		},
+		{
+			name:     "and with single falsy operand returns it",
+			rule:     `{"and":[0]}`,
+			expected: `0`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var result bytes.Buffer
+			err := jsonlogic.Apply(strings.NewReader(tc.rule), strings.NewReader(`{}`), &result)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// `or` should return the first truthy operand or the last operand;
+			// `and` should return the first falsy operand or the last operand.
+			assert.JSONEq(t, tc.expected, result.String())
+		})
+	}
+}
