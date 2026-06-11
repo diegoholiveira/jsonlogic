@@ -89,64 +89,6 @@ func IsSlice(obj any) bool {
 	return is(obj, reflect.Slice)
 }
 
-// IsEmptySlice checks if the provided value is a slice and all its elements are falsy.
-// Returns false if the value is not a slice or if all elements in the slice are falsy.
-// A falsy value is: false, 0, "", empty array, or empty map.
-//
-// Example:
-//
-//	IsEmptySlice([]any{})             // Returns: true
-//	IsEmptySlice([]any{0, "", false}) // Returns: true
-//	IsEmptySlice([]any{1, 2, 3})      // Returns: false
-//	IsEmptySlice("test")              // Returns: false
-func IsEmptySlice(obj any) bool {
-	if !IsSlice(obj) {
-		return false
-	}
-
-	for _, v := range obj.([]any) {
-		if IsTrue(v) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// IsTrue checks if the provided value is considered truthy in JavaScript logic.
-// For booleans: true is truthy
-// For numbers: non-zero is truthy
-// For strings: non-empty string is truthy
-// For slices/maps: non-empty slice/map is truthy
-// Returns false for nil or any other type.
-//
-// Example:
-//
-//	IsTrue(true)                      // Returns: true
-//	IsTrue(42)                        // Returns: true
-//	IsTrue("test")                    // Returns: true
-//	IsTrue([]any{1, 2, 3})            // Returns: true
-//	IsTrue(false)                     // Returns: false
-//	IsTrue(0)                         // Returns: false
-//	IsTrue("")                        // Returns: false
-//	IsTrue([]any{})                   // Returns: false
-//	IsTrue(nil)                       // Returns: false
-func IsTrue(obj any) bool {
-	if IsBool(obj) {
-		return obj.(bool)
-	}
-
-	if IsNumber(obj) {
-		return ToNumber(obj) != 0
-	}
-
-	if IsString(obj) || IsSlice(obj) || IsMap(obj) {
-		return reflect.ValueOf(obj).Len() > 0
-	}
-
-	return false
-}
-
 // ToNumber converts the provided value to a float64.
 // If the value is a string, it attempts to parse it as a float64.
 // If the value is already a float64, it returns it as is.

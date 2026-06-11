@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
@@ -54,7 +55,7 @@ func filter(values, data any) any {
 	for _, value := range subjectSlice {
 		v := parseValues(logic, value)
 
-		if typing.IsTrue(v) {
+		if javascript.IsTrue(v) {
 			result = append(result, value)
 		}
 	}
@@ -106,7 +107,7 @@ func reduce(values, data any) any {
 		}
 
 		if typing.IsBool(initialValue) {
-			accumulator = typing.IsTrue(initialValue)
+			accumulator = javascript.IsTrue(initialValue)
 			valueType = "bool"
 		} else if typing.IsNumber(initialValue) {
 			accumulator = typing.ToNumber(initialValue)
@@ -143,7 +144,7 @@ func reduce(values, data any) any {
 
 		switch context["valueType"] {
 		case "bool":
-			context["accumulator"] = typing.IsTrue(v)
+			context["accumulator"] = javascript.IsTrue(v)
 		case "number":
 			context["accumulator"] = typing.ToNumber(v)
 		case "string":
@@ -282,7 +283,7 @@ func all(values, data any) any {
 	parsed := values.([]any)
 
 	subject := extractSubject(parsed, data)
-	if !typing.IsTrue(subject) {
+	if !javascript.IsTrue(subject) {
 		return false
 	}
 
@@ -290,7 +291,7 @@ func all(values, data any) any {
 		conditions := solveVars(parsed[1], value)
 		v := apply(conditions, value)
 
-		if !typing.IsTrue(v) {
+		if !javascript.IsTrue(v) {
 			return false
 		}
 	}
@@ -303,7 +304,7 @@ func none(values, data any) any {
 
 	subject := extractSubject(parsed, data)
 
-	if !typing.IsTrue(subject) {
+	if !javascript.IsTrue(subject) {
 		return true
 	}
 
@@ -312,7 +313,7 @@ func none(values, data any) any {
 	for _, value := range subject.([]any) {
 		v := apply(conditions, value)
 
-		if typing.IsTrue(v) {
+		if javascript.IsTrue(v) {
 			return false
 		}
 	}
@@ -324,7 +325,7 @@ func some(values, data any) any {
 	parsed := values.([]any)
 	subject := extractSubject(parsed, data)
 
-	if !typing.IsTrue(subject) {
+	if !javascript.IsTrue(subject) {
 		return false
 	}
 
@@ -333,7 +334,7 @@ func some(values, data any) any {
 		conditions := solveVars(logic, value)
 		v := apply(conditions, value)
 
-		if typing.IsTrue(v) {
+		if javascript.IsTrue(v) {
 			return true
 		}
 	}

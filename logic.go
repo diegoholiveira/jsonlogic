@@ -1,6 +1,7 @@
 package jsonlogic
 
 import (
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
@@ -10,7 +11,7 @@ func _and(values, data any) any {
 	var last any
 	for _, value := range values.([]any) {
 		last = parseValues(value, data)
-		if !typing.IsTrue(last) {
+		if !javascript.IsTrue(last) {
 			return last
 		}
 	}
@@ -24,7 +25,7 @@ func _or(values, data any) any {
 	var last any
 	for _, value := range values.([]any) {
 		last = parseValues(value, data)
-		if typing.IsTrue(last) {
+		if javascript.IsTrue(last) {
 			return last
 		}
 	}
@@ -58,7 +59,7 @@ func conditional(values, data any) any {
 		condition := parseValues(clauses[i], data)
 
 		// If the condition is true, evaluate and return the then clause
-		if typing.IsTrue(condition) {
+		if javascript.IsTrue(condition) {
 			return evaluateClause(clauses[i+1], data)
 		}
 	}
@@ -75,7 +76,7 @@ func negative(values, data any) any {
 	values = parseValues(values, data)
 	// If the slice is not empty, there is an argument to negate
 	if typing.IsSlice(values) && len(values.([]any)) > 0 {
-		return !typing.IsTrue(values.([]any)[0])
+		return !javascript.IsTrue(values.([]any)[0])
 	}
-	return !typing.IsTrue(values)
+	return !javascript.IsTrue(values)
 }
