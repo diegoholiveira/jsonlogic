@@ -66,11 +66,6 @@ func TestToNumber(t *testing.T) {
 			isNaN: true,
 		},
 		{
-			name:     "int input",
-			input:    42,
-			expected: 42,
-		},
-		{
 			name:     "float64 input",
 			input:    3.14,
 			expected: 3.14,

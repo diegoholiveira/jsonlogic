@@ -36,22 +36,17 @@ func IsString(obj any) bool {
 	return is(obj, reflect.String)
 }
 
-// IsNumber checks if the provided value is a numeric type (int or float64).
+// IsNumber checks if the provided value is a numeric type (float64).
 // Returns false for any other type including nil.
 //
 // Example:
 //
-//	IsNumber(42)       // Returns: true
 //	IsNumber(3.14)     // Returns: true
 //	IsNumber("42")     // Returns: false
 //	IsNumber(nil)      // Returns: false
 func IsNumber(obj any) bool {
-	switch obj.(type) {
-	case int, float64:
-		return true
-	default:
-		return false
-	}
+	_, ok := obj.(float64)
+	return ok
 }
 
 // IsPrimitive checks if the provided value is a primitive type (boolean, string, or number).
@@ -154,13 +149,10 @@ func IsTrue(obj any) bool {
 
 // ToNumber converts the provided value to a float64.
 // If the value is a string, it attempts to parse it as a float64.
-// If the value is an int, it converts it to float64.
 // If the value is already a float64, it returns it as is.
-// For all other types, it attempts a type assertion to float64.
 //
 // Example:
 //
-//	ToNumber(42)                 // Returns: 42.0
 //	ToNumber(3.14)               // Returns: 3.14
 //	ToNumber("42")               // Returns: 42.0
 //	ToNumber("3.14")             // Returns: 3.14
@@ -168,16 +160,9 @@ func IsTrue(obj any) bool {
 func ToNumber(value any) float64 {
 	if IsString(value) {
 		w, _ := strconv.ParseFloat(value.(string), 64)
-
 		return w
 	}
-
-	switch value := value.(type) {
-	case int:
-		return float64(value)
-	default:
-		return value.(float64)
-	}
+	return value.(float64)
 }
 
 // ToString converts the provided value to a string.
@@ -187,23 +172,15 @@ func ToNumber(value any) float64 {
 //
 // Example:
 //
-//	ToString(42)        // Returns: "42"
 //	ToString(3.14)      // Returns: "3.14"
 //	ToString("test")    // Returns: "test"
 //	ToString(nil)       // Returns: ""
 func ToString(value any) string {
 	if IsNumber(value) {
-		switch value := value.(type) {
-		case int:
-			return strconv.FormatInt(int64(value), 10)
-		default:
-			return strconv.FormatFloat(value.(float64), 'f', -1, 64)
-		}
+		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
 	}
-
 	if value == nil {
 		return ""
 	}
-
 	return value.(string)
 }

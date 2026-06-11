@@ -3,7 +3,6 @@ package javascript
 
 import (
 	"math"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -29,23 +28,19 @@ func At(values []any, index int) any {
 //
 // Examples:
 //
-//	ToNumber(42)                             // Returns: 42.0
-//	ToNumber("3.14")                         // Returns: 3.14
-//	ToNumber(true)                           // Returns: 1.0
-//	ToNumber(false)                          // Returns: 0.0
-//	ToNumber([]int{1, 2, 3})                 // Returns: 3.0 (length of slice)
-//	ToNumber(map[string]int{"a": 1, "b": 2}) // Returns: 2.0 (length of map)
-//	ToNumber(nil)                            // Returns: 0.0
-//
-// Note: For unsupported types, it returns 0.0
+//	ToNumber(3.14)   // Returns: 3.14
+//	ToNumber("3.14") // Returns: 3.14
+//	ToNumber(true)   // Returns: 1.0
+//	ToNumber(false)  // Returns: 0.0
+//	ToNumber(nil)    // Returns: 0.0
 func ToNumber(v any) float64 {
 	switch value := v.(type) {
 	case nil:
 		return 0
 	case UndefinedType:
 		return math.NaN()
-	case float32, float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return reflect.ValueOf(value).Convert(reflect.TypeOf(float64(0))).Float()
+	case float64:
+		return value
 	case bool: // Boolean values true and false are converted to 1 and 0 respectively.
 		if value {
 			return 1
