@@ -3,7 +3,7 @@ package benchmark
 import (
 	"bytes"
 	"fmt"
-	"runtime"
+	"io"
 	"strings"
 	"testing"
 
@@ -136,36 +136,24 @@ var TestCases = []struct {
 	},
 }
 
-func performWarmupRuns() {
-	runtime.GC()
-
-	for _, tc := range TestCases {
-		for i := 0; i < 10; i++ {
-			logic := strings.NewReader(tc.logic)
-			data := strings.NewReader(tc.data)
-			var result bytes.Buffer
-			_ = jsonlogic.Apply(logic, data, &result)
-		}
-	}
-
-	runtime.GC()
-}
-
-// Helper function to reduce duplication in benchmarks
 func runBenchmark(b *testing.B, logic, data string) {
-	// Pre-convert to bytes to avoid string overhead in loop
 	logicBytes := []byte(logic)
 	dataBytes := []byte(data)
 
+	logicReader := bytes.NewReader(logicBytes)
+	dataReader := bytes.NewReader(dataBytes)
+	var result bytes.Buffer
+	result.Grow(256)
+
+	b.SetBytes(int64(len(logicBytes) + len(dataBytes)))
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		logicReader := bytes.NewReader(logicBytes)
-		dataReader := bytes.NewReader(dataBytes)
-		var result bytes.Buffer
-		err := jsonlogic.Apply(logicReader, dataReader, &result)
-		if err != nil {
+		logicReader.Seek(0, io.SeekStart)
+		dataReader.Seek(0, io.SeekStart)
+		result.Reset()
+		if err := jsonlogic.Apply(logicReader, dataReader, &result); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -305,8 +293,6 @@ func BenchmarkComprehensive(b *testing.B) {
 // Use this for comprehensive testing of individual operators.
 // For version comparisons, use BenchmarkComprehensive instead.
 func BenchmarkDetailed(b *testing.B) {
-	performWarmupRuns()
-
 	for _, tc := range TestCases {
 		b.Run(tc.name, func(b *testing.B) {
 			runBenchmark(b, tc.logic, tc.data)
@@ -377,15 +363,17 @@ func BenchmarkArrayOperationsScaling(b *testing.B) {
 	}
 
 	generateIntArray := func(size int) string {
-		result := "["
+		var sb strings.Builder
+		sb.Grow(size * 4)
+		sb.WriteByte('[')
 		for i := 0; i < size; i++ {
 			if i > 0 {
-				result += ","
+				sb.WriteByte(',')
 			}
-			result += fmt.Sprintf("%d", i+1)
+			fmt.Fprintf(&sb, "%d", i+1)
 		}
-		result += "]"
-		return result
+		sb.WriteByte(']')
+		return sb.String()
 	}
 
 	// Map operation scaling
@@ -564,6 +552,59 @@ func BenchmarkCustomOperators(b *testing.B) {
 			"contains_none",
 			`{"contains_none": [{"var": "flags"}, ["banned", "suspended"]]}`,
 			`{"flags": ["active", "verified", "premium"]}`,
+		},
+	}
+
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			runBenchmark(b, tc.logic, tc.data)
+		})
+	}
+}
+
+// BenchmarkWorstCase targets paths where short-circuit evaluation cannot help:
+// every branch must be evaluated before a result is produced.
+func BenchmarkWorstCase(b *testing.B) {
+	cases := []struct {
+		name  string
+		logic string
+		data  string
+	}{
+		{
+			// all five conditions are true — no early exit
+			name:  "and_all_true",
+			logic: `{"and": [{">=": [{"var": "a"}, 1]}, {">=": [{"var": "b"}, 1]}, {">=": [{"var": "c"}, 1]}, {">=": [{"var": "d"}, 1]}, {">=": [{"var": "e"}, 1]}]}`,
+			data:  `{"a": 10, "b": 20, "c": 30, "d": 40, "e": 50}`,
+		},
+		{
+			// all five conditions are false — must evaluate all before returning false
+			name:  "or_all_false",
+			logic: `{"or": [{"<": [{"var": "a"}, 0]}, {"<": [{"var": "b"}, 0]}, {"<": [{"var": "c"}, 0]}, {"<": [{"var": "d"}, 0]}, {"<": [{"var": "e"}, 0]}]}`,
+			data:  `{"a": 10, "b": 20, "c": 30, "d": 40, "e": 50}`,
+		},
+		{
+			// none of the 10 numbers match — full array scan required
+			name:  "some_no_match",
+			logic: `{"some": [{"var": "numbers"}, {"<": [{"var": ""}, 0]}]}`,
+			data:  `{"numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}`,
+		},
+		{
+			// last element fails — scans almost the entire array
+			name:  "all_last_fails",
+			logic: `{"all": [{"var": "numbers"}, {"<": [{"var": ""}, 10]}]}`,
+			data:  `{"numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}`,
+		},
+		{
+			// four if conditions are all false — last (else) branch is taken
+			name: "if_last_branch",
+			logic: `{"if": [
+				{"==": [{"var": "status"}, "a"]}, "branch_a",
+				{"==": [{"var": "status"}, "b"]}, "branch_b",
+				{"==": [{"var": "status"}, "c"]}, "branch_c",
+				{"==": [{"var": "status"}, "d"]}, "branch_d",
+				"default"
+			]}`,
+			data: `{"status": "z"}`,
 		},
 	}
 

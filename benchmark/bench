@@ -3,6 +3,7 @@ set -e
 
 # Colors for output
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
@@ -56,14 +57,30 @@ cp "$PROJECT_ROOT/benchmark/benchmark_test.go" "$WORKTREE_DIR/benchmark/benchmar
 # Run benchmarks for target ref
 echo -e "${BLUE}Running benchmarks for $TARGET_REF...${NC}"
 cd "$WORKTREE_DIR/benchmark"
-go test -bench="$BENCH_FILTER" -benchmem -count=10 >"$OLD_BENCH" 2>&1
+go test -bench="$BENCH_FILTER" -benchmem -count=20 >"$OLD_BENCH" 2>&1
 
 # Run benchmarks for current code
 echo -e "${BLUE}Running benchmarks for current code...${NC}"
 cd "$PROJECT_ROOT/benchmark"
-go test -bench="$BENCH_FILTER" -benchmem -count=10 >"$NEW_BENCH" 2>&1
+go test -bench="$BENCH_FILTER" -benchmem -count=20 >"$NEW_BENCH" 2>&1
 
 # Show comparison
 echo
 echo -e "${GREEN}Results:${NC}"
-benchstat "$OLD_BENCH" "$NEW_BENCH"
+STAT_OUTPUT=$(benchstat "$OLD_BENCH" "$NEW_BENCH")
+echo "$STAT_OUTPUT"
+
+# Summarise
+REGRESSIONS=$(echo "$STAT_OUTPUT" | grep -cE '[[:space:]]\+[0-9]+\.[0-9]+%' || true)
+IMPROVEMENTS=$(echo "$STAT_OUTPUT" | grep -cE '[[:space:]]-[0-9]+\.[0-9]+%' || true)
+
+echo
+if [ "$REGRESSIONS" -gt 0 ] && [ "$IMPROVEMENTS" -gt 0 ]; then
+	echo -e "${YELLOW}Mixed results: ${IMPROVEMENTS} improvement(s), ${REGRESSIONS} regression(s)${NC}"
+elif [ "$REGRESSIONS" -gt 0 ]; then
+	echo -e "${RED}Regression detected: ${REGRESSIONS} benchmark(s) got slower${NC}"
+elif [ "$IMPROVEMENTS" -gt 0 ]; then
+	echo -e "${GREEN}Improvement detected: ${IMPROVEMENTS} benchmark(s) got faster${NC}"
+else
+	echo -e "${BLUE}No significant changes detected${NC}"
+fi
