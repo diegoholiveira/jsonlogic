@@ -100,54 +100,6 @@ func TestIsPrimitive(t *testing.T) {
 	}
 }
 
-func TestIsMap(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    any
-		expected bool
-	}{
-		{"empty map", map[string]any{}, true},
-		{"non-empty map", map[string]any{"key": "value"}, true},
-		{"nil value", nil, false},
-		{"boolean value", true, false},
-		{"int value", 1, false},
-		{"float value", 1.5, false},
-		{"string value", "hello", false},
-		{"slice value", []any{}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := IsMap(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestIsSlice(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    any
-		expected bool
-	}{
-		{"empty slice", []any{}, true},
-		{"non-empty slice", []any{1, 2, 3}, true},
-		{"nil value", nil, false},
-		{"boolean value", true, false},
-		{"int value", 1, false},
-		{"float value", 1.5, false},
-		{"string value", "hello", false},
-		{"map value", map[string]any{}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := IsSlice(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestToNumber(t *testing.T) {
 	tests := []struct {
 		name     string

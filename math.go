@@ -19,32 +19,34 @@ func mod(values, data any) any {
 
 func abs(values, data any) any {
 	values = parseValues(values, data)
-	if typing.IsSlice(values) {
-		return math.Abs(typing.ToNumber(values.([]any)[0]))
+	if s, ok := values.([]any); ok {
+		if len(s) == 0 {
+			return float64(0)
+		}
+		return math.Abs(typing.ToNumber(s[0]))
 	}
-
 	return math.Abs(typing.ToNumber(values))
 }
 
 func sum(values, data any) any {
 	values = parseValues(values, data)
-	if !typing.IsSlice(values) {
+	s, ok := values.([]any)
+	if !ok {
 		return typing.ToNumber(values)
 	}
 
-	inputSlice := values.([]any)
-	sliceLen := len(inputSlice)
+	sliceLen := len(s)
 
 	if sliceLen == 0 {
 		return float64(0)
 	}
 
 	if sliceLen == 1 {
-		return typing.ToNumber(inputSlice[0])
+		return typing.ToNumber(s[0])
 	}
 
 	sum := float64(0)
-	for _, n := range inputSlice {
+	for _, n := range s {
 		sum += typing.ToNumber(n)
 	}
 
@@ -72,13 +74,14 @@ func minus(values, data any) any {
 
 func mult(values, data any) any {
 	values = parseValues(values, data)
-
+	s := values.([]any)
+	if len(s) == 0 {
+		return float64(1)
+	}
 	sum := float64(1)
-
-	for _, n := range values.([]any) {
+	for _, n := range s {
 		sum *= typing.ToNumber(n)
 	}
-
 	return sum
 }
 

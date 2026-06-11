@@ -63,32 +63,6 @@ func IsPrimitive(obj any) bool {
 	return IsBool(obj) || IsString(obj) || IsNumber(obj)
 }
 
-// IsMap checks if the provided value is a map type.
-// Returns false if the value is nil.
-//
-// Example:
-//
-//	IsMap(map[string]int{"a": 1})  // Returns: true
-//	IsMap(map[string]any{})        // Returns: true
-//	IsMap([]int{1, 2, 3})          // Returns: false
-//	IsMap(nil)                     // Returns: false
-func IsMap(obj any) bool {
-	return is(obj, reflect.Map)
-}
-
-// IsSlice checks if the provided value is a slice type.
-// Returns false if the value is nil.
-//
-// Example:
-//
-//	IsSlice([]int{1, 2, 3})  // Returns: true
-//	IsSlice([]any{})         // Returns: true
-//	IsSlice("test")          // Returns: false
-//	IsSlice(nil)             // Returns: false
-func IsSlice(obj any) bool {
-	return is(obj, reflect.Slice)
-}
-
 // ToNumber converts the provided value to a float64.
 // If the value is a string, it attempts to parse it as a float64.
 // If the value is already a float64, it returns it as is.

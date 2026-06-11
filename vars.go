@@ -9,10 +9,13 @@ import (
 )
 
 func solveVars(values, data any) any {
-	if typing.IsMap(values) {
+	if m, ok := values.(map[string]any); ok {
+		if len(m) == 0 {
+			return m
+		}
 		logic := map[string]any{}
 
-		for key, value := range values.(map[string]any) {
+		for key, value := range m {
 			if key == "var" {
 				if typing.IsString(value) && (value == "" || strings.HasPrefix(value.(string), ".")) {
 					logic["var"] = value
@@ -33,11 +36,13 @@ func solveVars(values, data any) any {
 		return any(logic)
 	}
 
-	if typing.IsSlice(values) {
-		inputSlice := values.([]any)
-		logic := make([]any, 0, len(inputSlice))
+	if s, ok := values.([]any); ok {
+		if len(s) == 0 {
+			return s
+		}
+		logic := make([]any, 0, len(s))
 
-		for _, value := range inputSlice {
+		for _, value := range s {
 			logic = append(logic, solveVars(value, data))
 		}
 
@@ -66,9 +71,7 @@ func getVar(values, data any) any {
 
 	var _default any
 
-	if typing.IsSlice(values) { // syntax sugar
-		v := values.([]any)
-
+	if v, ok := values.([]any); ok { // syntax sugar
 		if len(v) == 0 {
 			return data
 		}
@@ -93,15 +96,14 @@ func getVar(values, data any) any {
 			continue
 		}
 
-		if typing.IsMap(_value) {
-			_value = _value.(map[string]any)[part]
-		} else if typing.IsSlice(_value) {
+		if mm, ok := _value.(map[string]any); ok {
+			_value = mm[part]
+		} else if sv, ok := _value.([]any); ok {
 			pos := int(typing.ToNumber(part))
-			container := _value.([]any)
-			if pos < 0 || pos >= len(container) {
+			if pos < 0 || pos >= len(sv) {
 				return _default
 			}
-			_value = container[pos]
+			_value = sv[pos]
 		} else {
 			return _default
 		}
@@ -173,7 +175,7 @@ func setProperty(values, data any) any {
 
 	object := _value[0]
 
-	if !typing.IsMap(object) {
+	if _, ok := object.(map[string]any); !ok {
 		return object
 	}
 
