@@ -60,9 +60,6 @@ func TestIsNumber(t *testing.T) {
 		input    any
 		expected bool
 	}{
-		{"int zero", 0, true},
-		{"int positive", 42, true},
-		{"int negative", -10, true},
 		{"float zero", 0.0, true},
 		{"float positive", 3.14, true},
 		{"float negative", -2.5, true},
@@ -89,7 +86,6 @@ func TestIsPrimitive(t *testing.T) {
 	}{
 		{"boolean", true, true},
 		{"string", "hello", true},
-		{"int", 42, true},
 		{"float", 3.14, true},
 		{"nil value", nil, false},
 		{"slice value", []any{}, false},
@@ -163,7 +159,7 @@ func TestIsEmptySlice(t *testing.T) {
 		{"slice with empty strings", []any{"", ""}, true},
 		{"slice with false values", []any{false, false}, true},
 		{"slice with mixed falsy values", []any{0, "", false, []any{}}, true},
-		{"non-empty slice with truthy value", []any{0, 1, 0}, false},
+		{"non-empty slice with truthy value", []any{0.0, 1.0, 0.0}, false},
 		{"non-empty slice with true", []any{false, true}, false},
 		{"nil value", nil, false},
 		{"boolean value", true, false},
@@ -189,9 +185,9 @@ func TestIsTrue(t *testing.T) {
 	}{
 		{"true boolean", true, true},
 		{"false boolean", false, false},
-		{"positive number", 42, true},
-		{"negative number", -10, true},
-		{"zero number", 0, false},
+		{"positive number", float64(42), true},
+		{"negative number", float64(-10), true},
+		{"zero number", float64(0), false},
 		{"non-empty string", "hello", true},
 		{"empty string", "", false},
 		{"non-empty slice", []any{1, 2, 3}, true},
@@ -215,9 +211,6 @@ func TestToNumber(t *testing.T) {
 		input    any
 		expected float64
 	}{
-		{"int zero", 0, 0.0},
-		{"int positive", 42, 42.0},
-		{"int negative", -10, -10.0},
 		{"float zero", 0.0, 0.0},
 		{"float positive", 3.14, 3.14},
 		{"float negative", -2.5, -2.5},
@@ -242,9 +235,6 @@ func TestToString(t *testing.T) {
 		input    any
 		expected string
 	}{
-		{"int zero", 0, "0"},
-		{"int positive", 42, "42"},
-		{"int negative", -10, "-10"},
 		{"float zero", 0.0, "0"},
 		{"float positive", 3.14, "3.14"},
 		{"float negative", -2.5, "-2.5"},

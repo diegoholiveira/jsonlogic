@@ -407,6 +407,37 @@ func TestDataWithDefaultValueWithApplyInterface(t *testing.T) {
 	assert.Equal(t, expected, output.(float64))
 }
 
+func TestApplyInterfaceRejectsUnsupportedTypes(t *testing.T) {
+	tests := []struct {
+		name string
+		rule any
+		data any
+	}{
+		{
+			name: "int in rule value",
+			rule: map[string]any{"+": []any{int(1), float64(2)}},
+			data: nil,
+		},
+		{
+			name: "int32 in data",
+			rule: map[string]any{"var": "x"},
+			data: map[string]any{"x": int32(3)},
+		},
+		{
+			name: "float32 in rule",
+			rule: map[string]any{"+": []any{float32(1.5), float64(2)}},
+			data: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := jsonlogic.ApplyInterface(tt.rule, tt.data)
+			assert.Error(t, err)
+		})
+	}
+}
+
 func TestMissingOperators(t *testing.T) {
 	rule := map[string]any{
 		"sum": []any{

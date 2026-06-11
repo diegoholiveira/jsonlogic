@@ -24,6 +24,7 @@ package jsonlogic
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 
@@ -61,7 +62,7 @@ func Apply(rule, data io.Reader, result io.Writer) error {
 		return err
 	}
 
-	output, err := ApplyInterface(_rule, _data)
+	output, err := applyInterfaceUnguarded(_rule, _data)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 		return nil, err
 	}
 
-	result, err := ApplyInterface(_rule, _data)
+	result, err := applyInterfaceUnguarded(_rule, _data)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,9 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 }
 
 // ApplyInterface applies a transformation rule to input data using interface type assertions.
-// It processes the input data according to the provided rule and returns the transformed result.
+// Both rule and data must contain only JSON-compatible types: bool, float64, string, nil,
+// map[string]any, and []any. Passing other numeric types (int, int32, float32, etc.) will
+// return an error. Use Apply or ApplyRaw if you are working with raw JSON input.
 //
 // Parameters:
 //   - rule: interface{} representing the transformation rule to be applied
@@ -114,8 +117,18 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 //
 // Returns:
 //   - output: interface{} containing the transformed data
-//   - err: error if the transformation fails or if type assertions are invalid
-func ApplyInterface(rule, data any) (output any, err error) {
+//   - err: error if unsupported types are detected or if the transformation fails
+func ApplyInterface(rule, data any) (any, error) {
+	if err := scanForUnsupportedTypes(rule); err != nil {
+		return nil, err
+	}
+	if err := scanForUnsupportedTypes(data); err != nil {
+		return nil, err
+	}
+	return applyInterfaceUnguarded(rule, data)
+}
+
+func applyInterfaceUnguarded(rule, data any) (output any, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
@@ -139,6 +152,29 @@ func ApplyInterface(rule, data any) (output any, err error) {
 	}
 
 	return rule, err
+}
+
+func scanForUnsupportedTypes(v any) error {
+	switch val := v.(type) {
+	case nil, bool, float64, string:
+		return nil
+	case map[string]any:
+		for _, mv := range val {
+			if err := scanForUnsupportedTypes(mv); err != nil {
+				return err
+			}
+		}
+		return nil
+	case []any:
+		for _, sv := range val {
+			if err := scanForUnsupportedTypes(sv); err != nil {
+				return err
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("jsonlogic: unsupported type %T; only JSON-compatible types are allowed (bool, float64, string, nil, map[string]any, []any)", val)
+	}
 }
 
 // GetJsonLogicWithSolvedVars processes a JSON Logic rule by resolving variables with actual data values.
