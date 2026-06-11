@@ -154,9 +154,7 @@ func reduce(values, data any) any {
 }
 
 func _in(values, data any) any {
-	values = parseValues(values, data)
-
-	parsed := values.([]any)
+	parsed := parseValues(values, data).([]any)
 
 	a := parsed[0]
 	var b any
@@ -245,7 +243,7 @@ func missing(values, data any) any {
 		return []any{}
 	}
 
-	missing := make([]any, 0)
+	missing := make([]any, 0, len(s))
 
 	for _, _var := range s {
 		_value := getVar(_var, data)
@@ -259,8 +257,7 @@ func missing(values, data any) any {
 }
 
 func missingSome(values, data any) any {
-	values = parseValues(values, data)
-	parsed := values.([]any)
+	parsed := parseValues(values, data).([]any)
 	number := int(toNumber(parsed[0]))
 
 	vars, ok := parsed[1].([]any)
@@ -268,24 +265,22 @@ func missingSome(values, data any) any {
 		return []any{}
 	}
 
-	missing := make([]any, 0)
-	found := make([]any, 0)
+	missing := make([]any, 0, len(vars))
+	foundCount := 0
 
 	for _, _var := range vars {
-		_value := getVar(_var, data)
-
-		if _value == nil {
+		if getVar(_var, data) == nil {
 			missing = append(missing, _var)
 		} else {
-			found = append(found, _var)
+			foundCount++
 		}
 	}
 
-	if number > len(found) {
+	if number > foundCount {
 		return missing
 	}
 
-	return make([]any, 0)
+	return []any{}
 }
 
 func all(values, data any) any {
@@ -354,6 +349,7 @@ func some(values, data any) any {
 func _inRange(value any, values []any) bool {
 	i := values[0]
 	j := values[1]
+	v := toNumber(value)
 
-	return toNumber(value) >= toNumber(i) && toNumber(j) >= toNumber(value)
+	return v >= toNumber(i) && toNumber(j) >= v
 }
