@@ -148,63 +148,6 @@ func TestIsSlice(t *testing.T) {
 	}
 }
 
-func TestIsEmptySlice(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    any
-		expected bool
-	}{
-		{"empty slice", []any{}, true},
-		{"slice with zeros", []any{0, 0, 0}, true},
-		{"slice with empty strings", []any{"", ""}, true},
-		{"slice with false values", []any{false, false}, true},
-		{"slice with mixed falsy values", []any{0, "", false, []any{}}, true},
-		{"non-empty slice with truthy value", []any{0.0, 1.0, 0.0}, false},
-		{"non-empty slice with true", []any{false, true}, false},
-		{"nil value", nil, false},
-		{"boolean value", true, false},
-		{"int value", 1, false},
-		{"float value", 1.5, false},
-		{"string value", "hello", false},
-		{"map value", map[string]any{}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := IsEmptySlice(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestIsTrue(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    any
-		expected bool
-	}{
-		{"true boolean", true, true},
-		{"false boolean", false, false},
-		{"positive number", float64(42), true},
-		{"negative number", float64(-10), true},
-		{"zero number", float64(0), false},
-		{"non-empty string", "hello", true},
-		{"empty string", "", false},
-		{"non-empty slice", []any{1, 2, 3}, true},
-		{"empty slice", []any{}, false},
-		{"non-empty map", map[string]any{"key": "value"}, true},
-		{"empty map", map[string]any{}, false},
-		{"nil value", nil, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := IsTrue(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestToNumber(t *testing.T) {
 	tests := []struct {
 		name     string

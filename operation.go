@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 )
 
 // OperatorFn defines the signature for custom operator functions.
@@ -87,7 +87,7 @@ func init() {
 	operators["%"] = mod
 	operators["abs"] = abs
 	operators["!"] = negative
-	operators["!!"] = func(v, d any) any { return !typing.IsTrue(negative(v, d)) }
+	operators["!!"] = func(v, d any) any { return !javascript.IsTrue(negative(v, d)) }
 	operators["==="] = hardEquals
 	operators["!=="] = func(v, d any) any { return !hardEquals(v, d).(bool) }
 	operators["<"] = isLessThan
