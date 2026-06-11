@@ -136,15 +136,14 @@ func applyInterfaceUnguarded(rule, data any) (output any, err error) {
 		}
 	}()
 
-	if typing.IsMap(rule) {
-		return apply(rule, data), err
+	if m, ok := rule.(map[string]any); ok {
+		return apply(m, data), err
 	}
 
-	if typing.IsSlice(rule) {
-		inputSlice := rule.([]any)
-		parsed := make([]any, 0, len(inputSlice))
+	if s, ok := rule.([]any); ok {
+		parsed := make([]any, 0, len(s))
 
-		for _, value := range inputSlice {
+		for _, value := range s {
 			parsed = append(parsed, parseValues(value, data))
 		}
 
@@ -216,8 +215,8 @@ func parseValues(values, data any) any {
 		return values
 	}
 
-	if typing.IsMap(values) {
-		return apply(values, data)
+	if m, ok := values.(map[string]any); ok {
+		return apply(m, data)
 	}
 
 	inputSlice := values.([]any)
@@ -229,8 +228,8 @@ func parseValues(values, data any) any {
 	parsed := make([]any, 0, length)
 
 	for _, value := range inputSlice {
-		if typing.IsMap(value) {
-			parsed = append(parsed, apply(value, data))
+		if m, ok := value.(map[string]any); ok {
+			parsed = append(parsed, apply(m, data))
 		} else {
 			parsed = append(parsed, parseValues(value, data))
 		}

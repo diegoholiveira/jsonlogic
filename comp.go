@@ -9,11 +9,11 @@ import (
 
 func hardEquals(values, data any) any {
 	values = parseValues(values, data)
-	if !typing.IsSlice(values) {
+	parsed, ok := values.([]any)
+	if !ok {
 		return false
 	}
 
-	parsed := values.([]any)
 	if len(parsed) < 2 {
 		return false
 	}

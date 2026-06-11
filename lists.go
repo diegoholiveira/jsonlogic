@@ -21,12 +21,10 @@ func (e ErrReduceDataType) Error() string {
 func extractSubject(parsed []any, data any) any {
 	var subject any
 
-	if typing.IsSlice(parsed[0]) {
-		subject = parsed[0]
-	}
-
-	if typing.IsMap(parsed[0]) {
-		subject = apply(parsed[0], data)
+	if s, ok := parsed[0].([]any); ok {
+		subject = s
+	} else if m, ok := parsed[0].(map[string]any); ok {
+		subject = apply(m, data)
 	}
 
 	return subject
@@ -102,8 +100,8 @@ func reduce(values, data any) any {
 
 	{
 		initialValue := parsed[2]
-		if typing.IsMap(initialValue) {
-			initialValue = apply(initialValue, data)
+		if m, ok := initialValue.(map[string]any); ok {
+			initialValue = apply(m, data)
 		}
 
 		if typing.IsBool(initialValue) {
@@ -166,17 +164,18 @@ func _in(values, data any) any {
 		b = parsed[1]
 	}
 
-	if typing.IsString(b) {
-		return strings.Contains(b.(string), a.(string))
+	if bs, ok := b.(string); ok {
+		return strings.Contains(bs, a.(string))
 	}
 
-	if !typing.IsSlice(b) {
+	bSlice, ok := b.([]any)
+	if !ok {
 		return false
 	}
 
-	for _, element := range b.([]any) {
-		if typing.IsSlice(element) {
-			if _inRange(a, element.([]any)) {
+	for _, element := range bSlice {
+		if es, ok := element.([]any); ok {
+			if _inRange(a, es) {
 				return true
 			}
 
@@ -213,8 +212,8 @@ func merge(values, data any) any {
 
 	totalCapacity := 0
 	for _, value := range inputSlice {
-		if typing.IsSlice(value) {
-			totalCapacity += len(value.([]any))
+		if sv, ok := value.([]any); ok {
+			totalCapacity += len(sv)
 		} else {
 			totalCapacity++
 		}
@@ -223,12 +222,13 @@ func merge(values, data any) any {
 	result := make([]any, 0, totalCapacity)
 
 	for _, value := range inputSlice {
-		if !typing.IsSlice(value) {
+		sv, ok := value.([]any)
+		if !ok {
 			result = append(result, value)
 			continue
 		}
 
-		result = append(result, value.([]any)...)
+		result = append(result, sv...)
 	}
 
 	return result
@@ -240,9 +240,14 @@ func missing(values, data any) any {
 		values = []any{values}
 	}
 
+	s := values.([]any)
+	if len(s) == 0 {
+		return []any{}
+	}
+
 	missing := make([]any, 0)
 
-	for _, _var := range values.([]any) {
+	for _, _var := range s {
 		_value := getVar(_var, data)
 
 		if _value == nil {
@@ -257,12 +262,16 @@ func missingSome(values, data any) any {
 	values = parseValues(values, data)
 	parsed := values.([]any)
 	number := int(typing.ToNumber(parsed[0]))
-	vars := parsed[1]
+
+	vars, ok := parsed[1].([]any)
+	if !ok || len(vars) == 0 {
+		return []any{}
+	}
 
 	missing := make([]any, 0)
 	found := make([]any, 0)
 
-	for _, _var := range vars.([]any) {
+	for _, _var := range vars {
 		_value := getVar(_var, data)
 
 		if _value == nil {

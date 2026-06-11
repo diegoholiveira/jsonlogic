@@ -44,9 +44,7 @@ func ValidateJsonLogic(rules any) bool {
 		return true
 	}
 
-	if typing.IsMap(rules) {
-		rulesMap := rules.(map[string]any)
-
+	if rulesMap, ok := rules.(map[string]any); ok {
 		// A map with more than 1 key counts as a primitive so it's time to end recursion
 		if len(rulesMap) > 1 {
 			return true
@@ -61,9 +59,11 @@ func ValidateJsonLogic(rules any) bool {
 		}
 	}
 
-	if typing.IsSlice(rules) {
-		for _, value := range rules.([]any) {
-			if typing.IsSlice(value) || typing.IsMap(value) {
+	if rulesSlice, ok := rules.([]any); ok {
+		for _, value := range rulesSlice {
+			_, isSlice := value.([]any)
+			_, isMap := value.(map[string]any)
+			if isSlice || isMap {
 				if ValidateJsonLogic(value) {
 					continue
 				}
@@ -90,11 +90,12 @@ func isOperator(op string) bool {
 }
 
 func isVar(value any) bool {
-	if !typing.IsMap(value) {
+	m, ok := value.(map[string]any)
+	if !ok {
 		return false
 	}
 
-	_var, ok := value.(map[string]any)["var"]
+	_var, ok := m["var"]
 	if !ok {
 		return false
 	}
