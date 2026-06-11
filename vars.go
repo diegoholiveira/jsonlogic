@@ -97,7 +97,11 @@ func getVar(values, data any) any {
 		if mm, ok := _value.(map[string]any); ok {
 			_value = mm[part]
 		} else if sv, ok := _value.([]any); ok {
-			pos := int(toNumber(part))
+			f, err := strconv.ParseFloat(part, 64)
+			if err != nil {
+				return _default
+			}
+			pos := int(f)
 			if pos < 0 || pos >= len(sv) {
 				return _default
 			}

@@ -291,8 +291,9 @@ func all(values, data any) any {
 		return false
 	}
 
+	conditions := solveVars(parsed[1], data)
+
 	for _, value := range subject.([]any) {
-		conditions := solveVars(parsed[1], value)
 		v := apply(conditions, value)
 
 		if !javascript.IsTrue(v) {
@@ -333,9 +334,8 @@ func some(values, data any) any {
 		return false
 	}
 
-	logic := solveVars(parsed[1], data)
+	conditions := solveVars(parsed[1], data)
 	for _, value := range subject.([]any) {
-		conditions := solveVars(logic, value)
 		v := apply(conditions, value)
 
 		if javascript.IsTrue(v) {
