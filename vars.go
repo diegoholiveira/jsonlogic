@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
-
 )
 
 func solveVars(values, data any) any {
@@ -138,21 +137,25 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 	return []byte(resultEscaped), nil
 }
 
-// deepCopyMap returns a deep copy of a value produced by encoding/json:
-// map[string]any, []any, or a primitive. It only handles the types that
-// json.Unmarshal produces, which is all we need here.
-func deepCopyMap(v any) any {
+// deepCopyMap returns a recursively deep-copied map[string]any.
+func deepCopyMap(v map[string]any) map[string]any {
+	out := make(map[string]any, len(v))
+	for k, v2 := range v {
+		out[k] = deepCopyAny(v2)
+	}
+	return out
+}
+
+// deepCopyAny is the recursive helper for deepCopyMap.
+// It handles map[string]any, []any, and primitive values, the only types produced by encoding/json.
+func deepCopyAny(v any) any {
 	switch val := v.(type) {
 	case map[string]any:
-		out := make(map[string]any, len(val))
-		for k, v2 := range val {
-			out[k] = deepCopyMap(v2)
-		}
-		return out
+		return deepCopyMap(val)
 	case []any:
 		out := make([]any, len(val))
 		for i, v2 := range val {
-			out[i] = deepCopyMap(v2)
+			out[i] = deepCopyAny(v2)
 		}
 		return out
 	default:
@@ -173,15 +176,18 @@ func setProperty(values, data any) any {
 		return parsed[0]
 	}
 
-	object := parsed[0]
-
-	if _, ok := object.(map[string]any); !ok {
-		return object
+	object, ok := parsed[0].(map[string]any)
+	if !ok {
+		return parsed[0]
 	}
 
-	property := parsed[1].(string)
-	_modified := deepCopyMap(object).(map[string]any)
-	_modified[property] = parseValues(parsed[2], data)
+	property, ok := parsed[1].(string)
+	if !ok {
+		return parsed[0]
+	}
 
-	return _modified
+	modified := deepCopyMap(object)
+	modified[property] = parseValues(parsed[2], data)
+
+	return modified
 }
