@@ -1,18 +1,14 @@
 package jsonlogic
 
-import (
-	"strings"
-
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
-)
+import "strings"
 
 func substr(values, data any) any {
 	values = parseValues(values, data)
 	parsed := values.([]any)
 
-	runes := []rune(typing.ToString(parsed[0]))
+	runes := []rune(toString(parsed[0]))
 
-	from := int(typing.ToNumber(parsed[1]))
+	from := int(toNumber(parsed[1]))
 	length := len(runes)
 
 	if from < 0 {
@@ -25,7 +21,7 @@ func substr(values, data any) any {
 	}
 
 	if len(parsed) == 3 {
-		length = int(typing.ToNumber(parsed[2]))
+		length = int(toNumber(parsed[2]))
 	}
 
 	var to int
@@ -45,7 +41,7 @@ func substr(values, data any) any {
 
 func concat(values, data any) any {
 	values = parseValues(values, data)
-	if typing.IsString(values) {
+	if _, ok := values.(string); ok {
 		return values
 	}
 
@@ -56,13 +52,13 @@ func concat(values, data any) any {
 	}
 
 	if len(inputSlice) == 1 {
-		return typing.ToString(inputSlice[0])
+		return toString(inputSlice[0])
 	}
 
 	var s strings.Builder
 
 	for _, text := range inputSlice {
-		s.WriteString(typing.ToString(text))
+		s.WriteString(toString(text))
 	}
 
 	return strings.TrimSpace(s.String())

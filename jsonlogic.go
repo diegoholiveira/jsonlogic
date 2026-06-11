@@ -28,7 +28,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 // Apply reads a rule and data from `io.Reader`, applies the rule to the data
@@ -211,7 +210,7 @@ func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
 }
 
 func parseValues(values, data any) any {
-	if values == nil || typing.IsPrimitive(values) {
+	if values == nil || isPrimitive(values) {
 		return values
 	}
 

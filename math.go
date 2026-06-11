@@ -1,16 +1,12 @@
 package jsonlogic
 
-import (
-	"math"
-
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
-)
+import "math"
 
 func mod(values, data any) any {
 	parsed := parseValues(values, data).([]any)
 
-	a := typing.ToNumber(parsed[0])
-	b := typing.ToNumber(parsed[1])
+	a := toNumber(parsed[0])
+	b := toNumber(parsed[1])
 
 	return math.Mod(a, b)
 }
@@ -19,27 +15,27 @@ func abs(values, data any) any {
 	parsed := parseValues(values, data)
 	parsedAsSlice, ok := parsed.([]any)
 	if !ok {
-		return math.Abs(typing.ToNumber(parsed))
+		return math.Abs(toNumber(parsed))
 	}
 
 	if len(parsedAsSlice) == 0 {
 		return float64(0)
 	}
 
-	return math.Abs(typing.ToNumber(parsedAsSlice[0]))
+	return math.Abs(toNumber(parsedAsSlice[0]))
 }
 
 func sum(values, data any) any {
 	parsed := parseValues(values, data)
 	parsedAsSlice, ok := parsed.([]any)
 	if !ok {
-		return typing.ToNumber(parsed)
+		return toNumber(parsed)
 	}
 
 	sum := float64(0)
 
 	for _, n := range parsedAsSlice {
-		sum += typing.ToNumber(n)
+		sum += toNumber(n)
 	}
 
 	return sum
@@ -52,13 +48,13 @@ func minus(values, data any) any {
 	}
 
 	if len(parsed) == 1 {
-		return -1 * typing.ToNumber(parsed[0])
+		return -1 * toNumber(parsed[0])
 	}
 
-	sum := typing.ToNumber(parsed[0])
+	sum := toNumber(parsed[0])
 
 	for i := 1; len(parsed) > i; i++ {
-		sum -= typing.ToNumber(parsed[i])
+		sum -= toNumber(parsed[i])
 	}
 
 	return sum
@@ -73,7 +69,7 @@ func mult(values, data any) any {
 	sum := float64(1)
 
 	for _, n := range parsed {
-		sum *= typing.ToNumber(n)
+		sum *= toNumber(n)
 	}
 
 	return sum
@@ -85,10 +81,10 @@ func div(values, data any) any {
 		return 0
 	}
 
-	sum := typing.ToNumber(parsed[0])
+	sum := toNumber(parsed[0])
 
 	for i := 1; len(parsed) > i; i++ {
-		sum = sum / typing.ToNumber(parsed[i])
+		sum = sum / toNumber(parsed[i])
 	}
 
 	return sum
@@ -105,10 +101,10 @@ func max(values, data any) any {
 		return nil
 	}
 
-	bigger := typing.ToNumber(parsed[0])
+	bigger := toNumber(parsed[0])
 
 	for i := 1; i < size; i++ {
-		if n := typing.ToNumber(parsed[i]); n > bigger {
+		if n := toNumber(parsed[i]); n > bigger {
 			bigger = n
 		}
 	}
@@ -127,10 +123,10 @@ func min(values, data any) any {
 		return nil
 	}
 
-	smallest := typing.ToNumber(parsed[0])
+	smallest := toNumber(parsed[0])
 
 	for i := 1; i < size; i++ {
-		if n := typing.ToNumber(parsed[i]); smallest > n {
+		if n := toNumber(parsed[i]); smallest > n {
 			smallest = n
 		}
 	}

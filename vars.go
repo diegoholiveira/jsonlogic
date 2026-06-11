@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 func solveVars(values, data any) any {
@@ -17,7 +16,7 @@ func solveVars(values, data any) any {
 
 		for key, value := range m {
 			if key == "var" {
-				if typing.IsString(value) && (value == "" || strings.HasPrefix(value.(string), ".")) {
+				if s, ok := value.(string); ok && (s == "" || strings.HasPrefix(s, ".")) {
 					logic["var"] = value
 					continue
 				}
@@ -55,18 +54,18 @@ func solveVars(values, data any) any {
 func getVar(values, data any) any {
 	values = parseValues(values, data)
 	if values == nil {
-		if !typing.IsPrimitive(data) {
+		if !isPrimitive(data) {
 			return nil
 		}
 		return data
 	}
 
-	if typing.IsString(values) && typing.ToString(values) == "" {
+	if s, ok := values.(string); ok && s == "" {
 		return data
 	}
 
-	if typing.IsNumber(values) {
-		values = typing.ToString(values)
+	if _, ok := values.(float64); ok {
+		values = toString(values)
 	}
 
 	var _default any
@@ -99,7 +98,7 @@ func getVar(values, data any) any {
 		if mm, ok := _value.(map[string]any); ok {
 			_value = mm[part]
 		} else if sv, ok := _value.([]any); ok {
-			pos := int(typing.ToNumber(part))
+			pos := int(toNumber(part))
 			if pos < 0 || pos >= len(sv) {
 				return _default
 			}
