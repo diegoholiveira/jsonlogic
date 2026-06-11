@@ -131,7 +131,7 @@ func solveVarsBackToJsonLogic(rule, data any) (json.RawMessage, error) {
 
 	// we need to use Unquote due to unicode characters (example \u003e= need to be >=)
 	// used for prettier json.RawMessage
-	resultEscaped, err := strconv.Unquote(strings.Replace(strconv.Quote(string(resultJson)), `\\u`, `\u`, -1))
+	resultEscaped, err := strconv.Unquote(strings.ReplaceAll(strconv.Quote(string(resultJson)), `\\u`, `\u`))
 	if err != nil {
 		return nil, err
 	}
@@ -162,26 +162,27 @@ func deepCopyMap(v any) any {
 }
 
 func setProperty(values, data any) any {
-	values = parseValues(values, data).([]any)
-
-	_value := values.([]any)
-
-	if len(_value) < 3 {
-		if len(_value) == 0 {
-			return nil
-		}
-		return _value[0]
+	parsed, ok := parseValues(values, data).([]any)
+	if !ok {
+		return nil
 	}
 
-	object := _value[0]
+	if len(parsed) < 3 {
+		if len(parsed) == 0 {
+			return nil
+		}
+		return parsed[0]
+	}
+
+	object := parsed[0]
 
 	if _, ok := object.(map[string]any); !ok {
 		return object
 	}
 
-	property := _value[1].(string)
+	property := parsed[1].(string)
 	_modified := deepCopyMap(object).(map[string]any)
-	_modified[property] = parseValues(_value[2], data)
+	_modified[property] = parseValues(parsed[2], data)
 
-	return any(_modified)
+	return _modified
 }
