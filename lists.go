@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 // ErrReduceDataType represents an error when an unsupported data type is used in reduce operations.
@@ -104,16 +103,17 @@ func reduce(values, data any) any {
 			initialValue = apply(m, data)
 		}
 
-		if typing.IsBool(initialValue) {
-			accumulator = javascript.IsTrue(initialValue)
+		switch v := initialValue.(type) {
+		case bool:
+			accumulator = javascript.IsTrue(v)
 			valueType = "bool"
-		} else if typing.IsNumber(initialValue) {
-			accumulator = typing.ToNumber(initialValue)
+		case float64:
+			accumulator = v
 			valueType = "number"
-		} else if typing.IsString(initialValue) {
-			accumulator = typing.ToString(initialValue)
+		case string:
+			accumulator = v
 			valueType = "string"
-		} else {
+		default:
 			panic(ErrReduceDataType{
 				dataType: fmt.Sprintf("%T", parsed[2]),
 			})
@@ -144,9 +144,9 @@ func reduce(values, data any) any {
 		case "bool":
 			context["accumulator"] = javascript.IsTrue(v)
 		case "number":
-			context["accumulator"] = typing.ToNumber(v)
+			context["accumulator"] = toNumber(v)
 		case "string":
-			context["accumulator"] = typing.ToString(v)
+			context["accumulator"] = toString(v)
 		}
 	}
 
@@ -182,8 +182,8 @@ func _in(values, data any) any {
 			continue
 		}
 
-		if typing.IsNumber(a) {
-			if typing.ToNumber(element) == a {
+		if _, ok := a.(float64); ok {
+			if toNumber(element) == a {
 				return true
 			}
 
@@ -200,7 +200,7 @@ func _in(values, data any) any {
 
 func merge(values, data any) any {
 	values = parseValues(values, data)
-	if typing.IsPrimitive(values) {
+	if isPrimitive(values) {
 		return []any{values}
 	}
 
@@ -236,7 +236,7 @@ func merge(values, data any) any {
 
 func missing(values, data any) any {
 	values = parseValues(values, data)
-	if typing.IsString(values) {
+	if _, ok := values.(string); ok {
 		values = []any{values}
 	}
 
@@ -261,7 +261,7 @@ func missing(values, data any) any {
 func missingSome(values, data any) any {
 	values = parseValues(values, data)
 	parsed := values.([]any)
-	number := int(typing.ToNumber(parsed[0]))
+	number := int(toNumber(parsed[0]))
 
 	vars, ok := parsed[1].([]any)
 	if !ok || len(vars) == 0 {
@@ -355,5 +355,5 @@ func _inRange(value any, values []any) bool {
 	i := values[0]
 	j := values[1]
 
-	return typing.ToNumber(value) >= typing.ToNumber(i) && typing.ToNumber(j) >= typing.ToNumber(value)
+	return toNumber(value) >= toNumber(i) && toNumber(j) >= toNumber(value)
 }

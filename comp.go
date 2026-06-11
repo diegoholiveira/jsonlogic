@@ -1,11 +1,6 @@
 package jsonlogic
 
-import (
-	"reflect"
-
-	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
-)
+import "github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 
 func hardEquals(values, data any) any {
 	values = parseValues(values, data)
@@ -24,10 +19,7 @@ func hardEquals(values, data any) any {
 		return a == b
 	}
 
-	ra := reflect.ValueOf(a).Kind()
-	rb := reflect.ValueOf(b).Kind()
-
-	if ra != rb {
+	if !sameType(a, b) {
 		return false
 	}
 
@@ -122,8 +114,10 @@ func isEqual(values, data any) any {
 func less(a, b any) bool {
 	// If both values are strings, they are compared as strings,
 	// based on the values of the Unicode code points they contain.
-	if typing.IsString(a) && typing.IsString(b) {
-		return typing.ToString(b) > typing.ToString(a)
+	aStr, aOk := a.(string)
+	bStr, bOk := b.(string)
+	if aOk && bOk {
+		return bStr > aStr
 	}
 
 	// Otherwise the values are compared as numeric values.
@@ -137,7 +131,9 @@ func equals(a, b any) bool {
 		return a == b
 	}
 
-	if typing.IsString(a) && typing.IsString(b) {
+	_, aOk := a.(string)
+	_, bOk := b.(string)
+	if aOk && bOk {
 		return a == b
 	}
 

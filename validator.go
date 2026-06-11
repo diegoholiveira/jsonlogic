@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
 )
 
 // IsValid reads a JSON Logic rule from io.Reader and validates its syntax.
@@ -71,7 +70,7 @@ func ValidateJsonLogic(rules any) bool {
 				return false
 			}
 
-			if isVar(value) || typing.IsPrimitive(value) {
+			if isVar(value) || isPrimitive(value) {
 				continue
 			}
 		}
@@ -79,7 +78,7 @@ func ValidateJsonLogic(rules any) bool {
 		return true
 	}
 
-	return typing.IsPrimitive(rules)
+	return isPrimitive(rules)
 }
 
 func isOperator(op string) bool {
@@ -100,5 +99,7 @@ func isVar(value any) bool {
 		return false
 	}
 
-	return typing.IsString(_var) || typing.IsNumber(_var) || _var == nil
+	_, isStr := _var.(string)
+	_, isNum := _var.(float64)
+	return isStr || isNum || _var == nil
 }

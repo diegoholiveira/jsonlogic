@@ -1,8 +1,5 @@
 package jsonlogic
 
-import (
-	"github.com/diegoholiveira/jsonlogic/v3/internal/typing"
-)
 
 // containsAll checks if all elements in the second array exist in the first array.
 // Returns true if every element of the required array is found in the search array.
@@ -136,13 +133,16 @@ func isEqualValue(a, b any) bool {
 	}
 
 	// Handle number comparison with type coercion
-	if typing.IsNumber(a) && typing.IsNumber(b) {
-		return typing.ToNumber(a) == typing.ToNumber(b)
+	aNum, aIsNum := a.(float64)
+	bNum, bIsNum := b.(float64)
+	if aIsNum && bIsNum {
+		return aNum == bNum
 	}
 
-	// Handle string comparison
-	if typing.IsString(a) && typing.IsString(b) {
-		return a.(string) == b.(string)
+	aStr, aIsStr := a.(string)
+	bStr, bIsStr := b.(string)
+	if aIsStr && bIsStr {
+		return aStr == bStr
 	}
 
 	return false
