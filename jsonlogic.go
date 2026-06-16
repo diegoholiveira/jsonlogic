@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
 )
 
 // Apply reads a rule and data from `io.Reader`, applies the rule to the data
@@ -131,7 +130,14 @@ func applyInterfaceUnguarded(rule, data any) (output any, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
-			err = e.(error)
+			if asErr, ok := e.(error); ok {
+				err = asErr
+			} else {
+				// Guard against panic values that don't implement error
+				// (e.g. a custom operator doing panic("boom")). Asserting
+				// e.(error) directly would itself panic and escape.
+				err = fmt.Errorf("jsonlogic: %v", e)
+			}
 		}
 	}()
 
