@@ -6,9 +6,39 @@ import (
 	"strings"
 )
 
+// literal wraps a value bound from data by bindVars; evaluating it returns the
+// value unchanged.
+type literal struct {
+	value any
+}
+
+// unwrapLiteral returns the value held by a literal, or v unchanged.
+func unwrapLiteral(v any) any {
+	if l, ok := v.(literal); ok {
+		return l.value
+	}
+	return v
+}
+
+// solveVars substitutes resolved vars into the rule for display. Use bindVars
+// for logic that will be evaluated.
 func solveVars(values, data any) any {
+	return resolveVars(values, data, false)
+}
+
+// bindVars substitutes outer-scope vars into logic that will be evaluated
+// against another scope, wrapping non-primitive values in literal.
+func bindVars(values, data any) any {
+	return resolveVars(values, data, true)
+}
+
+func resolveVars(values, data any, bind bool) any {
 	if m, ok := values.(map[string]any); ok {
 		if len(m) == 0 {
+			return m
+		}
+		// apply treats multi-key maps as values.
+		if bind && len(m) > 1 {
 			return m
 		}
 		logic := map[string]any{}
@@ -22,12 +52,15 @@ func solveVars(values, data any) any {
 
 				val := getVar(value, data)
 				if val != nil {
+					if bind && !isPrimitive(val) {
+						return literal{value: val}
+					}
 					return val
 				}
 
 				logic["var"] = value
 			} else {
-				logic[key] = solveVars(value, data)
+				logic[key] = resolveVars(value, data, bind)
 			}
 		}
 
@@ -41,7 +74,7 @@ func solveVars(values, data any) any {
 		logic := make([]any, 0, len(s))
 
 		for _, value := range s {
-			logic = append(logic, solveVars(value, data))
+			logic = append(logic, resolveVars(value, data, bind))
 		}
 
 		return logic
@@ -51,7 +84,11 @@ func solveVars(values, data any) any {
 }
 
 func getVar(values, data any) any {
-	values = parseValues(values, data)
+	return lookupVar(parseValues(values, data), data)
+}
+
+// lookupVar resolves an already-evaluated var path against data.
+func lookupVar(values, data any) any {
 	if values == nil {
 		if !isPrimitive(data) {
 			return nil
@@ -191,7 +228,7 @@ func setProperty(values, data any) any {
 	}
 
 	modified := deepCopyMap(object)
-	modified[property] = parseValues(parsed[2], data)
+	modified[property] = parsed[2]
 
 	return modified
 }
