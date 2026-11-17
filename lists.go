@@ -20,7 +20,7 @@ func (e ErrReduceDataType) Error() string {
 func extractSubject(parsed []any, data any) any {
 	var subject any
 
-	if s, ok := parsed[0].([]any); ok {
+	if s, ok := unwrapLiteral(parsed[0]).([]any); ok {
 		subject = s
 	} else if m, ok := parsed[0].(map[string]any); ok {
 		subject = apply(m, data)
@@ -47,7 +47,7 @@ func filter(values, data any) any {
 	// Assuming at least half might pass the filter (heuristic)
 	result := make([]any, 0, subjectLen/2)
 
-	logic := solveVars(parsed[1], data)
+	logic := bindVars(parsed[1], data)
 
 	for _, value := range subjectSlice {
 		v := parseValues(logic, value)
@@ -98,10 +98,10 @@ func reduce(values, data any) any {
 	)
 
 	{
-		initialValue := parsed[2]
-		if m, ok := initialValue.(map[string]any); ok {
-			initialValue = apply(m, data)
-		}
+		// Evaluate the initial value exactly once. parseValues returns a
+		// bound literal verbatim; unwrapping it here and then applying the
+		// result would execute data as logic.
+		initialValue := parseValues(parsed[2], data)
 
 		switch v := initialValue.(type) {
 		case bool:
@@ -115,7 +115,7 @@ func reduce(values, data any) any {
 			valueType = "string"
 		default:
 			panic(ErrReduceDataType{
-				dataType: fmt.Sprintf("%T", parsed[2]),
+				dataType: fmt.Sprintf("%T", unwrapLiteral(parsed[2])),
 			})
 		}
 	}
@@ -246,7 +246,7 @@ func missing(values, data any) any {
 	missing := make([]any, 0, len(s))
 
 	for _, _var := range s {
-		_value := getVar(_var, data)
+		_value := lookupVar(_var, data)
 
 		if _value == nil {
 			missing = append(missing, _var)
@@ -269,7 +269,7 @@ func missingSome(values, data any) any {
 	foundCount := 0
 
 	for _, _var := range vars {
-		if getVar(_var, data) == nil {
+		if lookupVar(_var, data) == nil {
 			missing = append(missing, _var)
 		} else {
 			foundCount++
@@ -291,7 +291,7 @@ func all(values, data any) any {
 		return false
 	}
 
-	conditions := solveVars(parsed[1], data)
+	conditions := bindVars(parsed[1], data)
 
 	for _, value := range subject.([]any) {
 		v := apply(conditions, value)
@@ -313,7 +313,7 @@ func none(values, data any) any {
 		return true
 	}
 
-	conditions := solveVars(parsed[1], data)
+	conditions := bindVars(parsed[1], data)
 
 	for _, value := range subject.([]any) {
 		v := apply(conditions, value)
@@ -334,7 +334,7 @@ func some(values, data any) any {
 		return false
 	}
 
-	conditions := solveVars(parsed[1], data)
+	conditions := bindVars(parsed[1], data)
 	for _, value := range subject.([]any) {
 		v := apply(conditions, value)
 

@@ -220,6 +220,10 @@ func parseValues(values, data any) any {
 		return values
 	}
 
+	if l, ok := values.(literal); ok {
+		return l.value
+	}
+
 	if m, ok := values.(map[string]any); ok {
 		return apply(m, data)
 	}
@@ -244,6 +248,10 @@ func parseValues(values, data any) any {
 }
 
 func apply(rules, data any) any {
+	if l, ok := rules.(literal); ok {
+		return l.value
+	}
+
 	ruleMap := rules.(map[string]any)
 
 	// A map with more than 1 key counts as a primitive so it's time to end recursion

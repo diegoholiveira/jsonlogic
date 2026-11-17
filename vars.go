@@ -6,9 +6,46 @@ import (
 	"strings"
 )
 
+// literal marks a value that was resolved from data while binding outer-scope
+// vars into nested logic (see bindVars). Evaluation returns the wrapped value
+// verbatim and never descends into it, so data can never be executed as logic.
+// It is unexported and cannot be produced by JSON decoding, so input cannot
+// forge it.
+type literal struct {
+	value any
+}
+
+// unwrapLiteral returns the value held by a literal, or v unchanged.
+func unwrapLiteral(v any) any {
+	if l, ok := v.(literal); ok {
+		return l.value
+	}
+	return v
+}
+
+// solveVars substitutes resolved vars into the rule. Its result is meant for
+// display (GetJsonLogicWithSolvedVars) and must NOT be evaluated; use
+// bindVars for logic that is going to be evaluated.
 func solveVars(values, data any) any {
+	return resolveVars(values, data, false)
+}
+
+// bindVars substitutes vars resolvable in the outer data into logic that is
+// about to be evaluated against a different scope (e.g. the per-item scope of
+// filter/all/some/none). Substituted maps and slices are wrapped in literal so
+// that they are treated as data, not as logic.
+func bindVars(values, data any) any {
+	return resolveVars(values, data, true)
+}
+
+func resolveVars(values, data any, bind bool) any {
 	if m, ok := values.(map[string]any); ok {
 		if len(m) == 0 {
+			return m
+		}
+		// apply treats a map with more than one key as a literal value, so
+		// when binding for evaluation leave it untouched.
+		if bind && len(m) > 1 {
 			return m
 		}
 		logic := map[string]any{}
@@ -22,12 +59,15 @@ func solveVars(values, data any) any {
 
 				val := getVar(value, data)
 				if val != nil {
+					if bind && !isPrimitive(val) {
+						return literal{value: val}
+					}
 					return val
 				}
 
 				logic["var"] = value
 			} else {
-				logic[key] = solveVars(value, data)
+				logic[key] = resolveVars(value, data, bind)
 			}
 		}
 
@@ -41,7 +81,7 @@ func solveVars(values, data any) any {
 		logic := make([]any, 0, len(s))
 
 		for _, value := range s {
-			logic = append(logic, solveVars(value, data))
+			logic = append(logic, resolveVars(value, data, bind))
 		}
 
 		return logic
@@ -51,7 +91,13 @@ func solveVars(values, data any) any {
 }
 
 func getVar(values, data any) any {
-	values = parseValues(values, data)
+	return lookupVar(parseValues(values, data), data)
+}
+
+// lookupVar resolves an already-evaluated var path against data. Callers that
+// hold evaluated values (e.g. missing, missing_some) must use this instead of
+// getVar so those values are not evaluated a second time.
+func lookupVar(values, data any) any {
 	if values == nil {
 		if !isPrimitive(data) {
 			return nil
@@ -190,8 +236,10 @@ func setProperty(values, data any) any {
 		return parsed[0]
 	}
 
+	// parsed[2] is already evaluated; evaluating it again would execute
+	// values taken from data as logic.
 	modified := deepCopyMap(object)
-	modified[property] = parseValues(parsed[2], data)
+	modified[property] = parsed[2]
 
 	return modified
 }
