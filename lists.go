@@ -98,9 +98,6 @@ func reduce(values, data any) any {
 	)
 
 	{
-		// Evaluate the initial value exactly once. parseValues returns a
-		// bound literal verbatim; unwrapping it here and then applying the
-		// result would execute data as logic.
 		initialValue := parseValues(parsed[2], data)
 
 		switch v := initialValue.(type) {

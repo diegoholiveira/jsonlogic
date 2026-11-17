@@ -2,6 +2,7 @@ package jsonlogic_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -138,4 +139,64 @@ func TestAllSeesOuterDataVarWithRelativeElementVar(t *testing.T) {
 	err := jsonlogic.Apply(rule, data, &result)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `true`, result.String())
+}
+
+func TestArrayOperatorsCompareItemsWithOuterValues(t *testing.T) {
+	data := json.RawMessage(`{
+		"items": ["ab", "c"],
+		"target": {"cat": ["a", "b"]},
+		"list": [{"cat": ["a", "b"]}, "c"]
+	}`)
+
+	cases := []struct {
+		name     string
+		rule     string
+		expected string
+	}{
+		{"filter equals object", `{"filter": [{"var": "items"}, {"==": [{"var": ""}, {"var": "target"}]}]}`, `[]`},
+		{"filter in array", `{"filter": [{"var": "items"}, {"in": [{"var": ""}, {"var": "list"}]}]}`, `["c"]`},
+		{"some in array", `{"some": [["ab"], {"in": [{"var": ""}, {"var": "list"}]}]}`, `false`},
+		{"all in array", `{"all": [{"var": "items"}, {"in": [{"var": ""}, {"var": "list"}]}]}`, `false`},
+		{"none in array", `{"none": [["ab"], {"in": [{"var": ""}, {"var": "list"}]}]}`, `true`},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := jsonlogic.ApplyRaw(json.RawMessage(tc.rule), data)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tc.expected, string(output))
+		})
+	}
+}
+
+func TestReduceInitialValueFromOuterData(t *testing.T) {
+	rule := json.RawMessage(`{"filter": [[1, 2, 3], {">": [
+		{"reduce": [[1, 2], {"+": [{"var": "current"}, {"var": "accumulator"}]}, {"var": "base"}]},
+		{"var": ""}
+	]}]}`)
+	data := json.RawMessage(`{"base": 0}`)
+
+	output, err := jsonlogic.ApplyRaw(rule, data)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `[1, 2]`, string(output))
+}
+
+func TestReduceRejectsNonScalarInitialValueFromData(t *testing.T) {
+	data := json.RawMessage(`{"init": {"+": [1, 2]}}`)
+	reduce := `{"reduce": [[1], {"var": "current"}, {"var": "init"}]}`
+
+	cases := map[string]string{
+		"reduce": reduce,
+		"filter": `{"filter": [[1], ` + reduce + `]}`,
+		"some":   `{"some": [[1], ` + reduce + `]}`,
+		"all":    `{"all": [[1], ` + reduce + `]}`,
+		"none":   `{"none": [[1], ` + reduce + `]}`,
+	}
+
+	for name, rule := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, err := jsonlogic.ApplyRaw(json.RawMessage(rule), data)
+			assert.Error(t, err)
+		})
+	}
 }

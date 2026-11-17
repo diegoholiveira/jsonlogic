@@ -34,10 +34,8 @@ func _or(values, data any) any {
 	return last
 }
 
-// conditional implements "if" and "?:". Clauses are evaluated lazily and
-// exactly once: the result of the selected clause is returned as-is and never
-// evaluated again, because it may be a value taken from data (e.g. via "var")
-// and re-applying it would execute data as logic.
+// conditional implements "if" and "?:". Only the selected clause is
+// evaluated, and only once.
 func conditional(values, data any) any {
 	values = values.([]any)
 

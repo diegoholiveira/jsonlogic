@@ -122,3 +122,48 @@ func TestSetPropertyWithOnlyObjectArgument(t *testing.T) {
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"a":1,"b":2}`, string(output))
 }
+
+func TestSetPropertyWithValueFromData(t *testing.T) {
+	data := json.RawMessage(`{"obj": {"cat": ["a", "b"]}, "arr": [{"cat": ["a", "b"]}, [1, 2]]}`)
+
+	cases := []struct {
+		name     string
+		rule     string
+		expected string
+	}{
+		{"object", `{"set": [{}, "k", {"var": "obj"}]}`, `{"k": {"cat": ["a", "b"]}}`},
+		{"array", `{"set": [{}, "k", {"var": "arr"}]}`, `{"k": [{"cat": ["a", "b"]}, [1, 2]]}`},
+		{"rule", `{"set": [{}, "k", {"cat": ["a", "b"]}]}`, `{"k": "ab"}`},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := jsonlogic.ApplyRaw(json.RawMessage(tc.rule), data)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tc.expected, string(output))
+		})
+	}
+}
+
+func TestMissingWithKeysFromData(t *testing.T) {
+	data := json.RawMessage(`{"keys": ["a", "b"], "key": "a", "a": 1}`)
+
+	cases := []struct {
+		name     string
+		rule     string
+		expected string
+	}{
+		{"missing var list", `{"missing": {"var": "keys"}}`, `["b"]`},
+		{"missing var key", `{"missing": [{"var": "key"}, "b"]}`, `["b"]`},
+		{"missing_some satisfied", `{"missing_some": [1, {"var": "keys"}]}`, `[]`},
+		{"missing_some unsatisfied", `{"missing_some": [2, [{"var": "key"}, "b", "c"]]}`, `["b", "c"]`},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := jsonlogic.ApplyRaw(json.RawMessage(tc.rule), data)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tc.expected, string(output))
+		})
+	}
+}

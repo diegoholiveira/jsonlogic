@@ -6,11 +6,8 @@ import (
 	"strings"
 )
 
-// literal marks a value that was resolved from data while binding outer-scope
-// vars into nested logic (see bindVars). Evaluation returns the wrapped value
-// verbatim and never descends into it, so data can never be executed as logic.
-// It is unexported and cannot be produced by JSON decoding, so input cannot
-// forge it.
+// literal wraps a value bound from data by bindVars; evaluating it returns the
+// value unchanged.
 type literal struct {
 	value any
 }
@@ -23,17 +20,14 @@ func unwrapLiteral(v any) any {
 	return v
 }
 
-// solveVars substitutes resolved vars into the rule. Its result is meant for
-// display (GetJsonLogicWithSolvedVars) and must NOT be evaluated; use
-// bindVars for logic that is going to be evaluated.
+// solveVars substitutes resolved vars into the rule for display. Use bindVars
+// for logic that will be evaluated.
 func solveVars(values, data any) any {
 	return resolveVars(values, data, false)
 }
 
-// bindVars substitutes vars resolvable in the outer data into logic that is
-// about to be evaluated against a different scope (e.g. the per-item scope of
-// filter/all/some/none). Substituted maps and slices are wrapped in literal so
-// that they are treated as data, not as logic.
+// bindVars substitutes outer-scope vars into logic that will be evaluated
+// against another scope, wrapping non-primitive values in literal.
 func bindVars(values, data any) any {
 	return resolveVars(values, data, true)
 }
@@ -43,8 +37,7 @@ func resolveVars(values, data any, bind bool) any {
 		if len(m) == 0 {
 			return m
 		}
-		// apply treats a map with more than one key as a literal value, so
-		// when binding for evaluation leave it untouched.
+		// apply treats multi-key maps as values.
 		if bind && len(m) > 1 {
 			return m
 		}
@@ -94,9 +87,7 @@ func getVar(values, data any) any {
 	return lookupVar(parseValues(values, data), data)
 }
 
-// lookupVar resolves an already-evaluated var path against data. Callers that
-// hold evaluated values (e.g. missing, missing_some) must use this instead of
-// getVar so those values are not evaluated a second time.
+// lookupVar resolves an already-evaluated var path against data.
 func lookupVar(values, data any) any {
 	if values == nil {
 		if !isPrimitive(data) {
@@ -236,8 +227,6 @@ func setProperty(values, data any) any {
 		return parsed[0]
 	}
 
-	// parsed[2] is already evaluated; evaluating it again would execute
-	// values taken from data as logic.
 	modified := deepCopyMap(object)
 	modified[property] = parsed[2]
 
