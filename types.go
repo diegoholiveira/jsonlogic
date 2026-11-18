@@ -1,13 +1,13 @@
 package jsonlogic
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
+)
 
 func toNumber(value any) float64 {
-	if s, ok := value.(string); ok {
-		w, _ := strconv.ParseFloat(s, 64)
-		return w
-	}
-	return value.(float64)
+	return javascript.ToNumber(value)
 }
 
 func toString(value any) string {
