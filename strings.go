@@ -7,33 +7,34 @@ func substr(values, data any) any {
 	parsed := values.([]any)
 
 	runes := []rune(toString(parsed[0]))
-
-	from := int(toNumber(parsed[1]))
 	length := len(runes)
 
+	// Same as String.prototype.substr in json-logic-js: a negative start
+	// counts from the end (clamped to 0) and a start past the end gives "".
+	from := int(toNumber(parsed[1]))
 	if from < 0 {
-		from = length + from
+		from += length
+		if from < 0 {
+			from = 0
+		}
+	}
+	if from > length {
+		from = length
 	}
 
-	if from < 0 || from > length {
-		// case from is still negative, we must stop right now and return the original string
-		return string(runes)
-	}
-
+	to := length
 	if len(parsed) == 3 {
-		length = int(toNumber(parsed[2]))
+		n := int(toNumber(parsed[2]))
+		if n < 0 {
+			// a negative length drops that many characters from the end
+			to = length + n
+		} else if n < length-from {
+			to = from + n
+		}
 	}
 
-	var to int
-	if length < 0 {
-		length = len(runes) + length
-		to = length
-	} else {
-		to = from + length
-	}
-
-	if to > len(runes) {
-		to = len(runes)
+	if to <= from {
+		return ""
 	}
 
 	return string(runes[from:to])
@@ -61,5 +62,5 @@ func concat(values, data any) any {
 		s.WriteString(toString(text))
 	}
 
-	return strings.TrimSpace(s.String())
+	return s.String()
 }
