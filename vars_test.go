@@ -167,3 +167,26 @@ func TestMissingWithKeysFromData(t *testing.T) {
 		})
 	}
 }
+
+func TestMissingTreatsEmptyStringAsMissing(t *testing.T) {
+	// json-logic-js: keys set to null or "" are missing.
+	data := json.RawMessage(`{"a": 1, "b": "", "c": null, "d": 0, "e": false, "f": []}`)
+
+	cases := []struct {
+		name     string
+		rule     string
+		expected string
+	}{
+		{"missing", `{"missing": ["a", "b", "c", "d", "e", "f", "g"]}`, `["b", "c", "g"]`},
+		{"missing_some satisfied", `{"missing_some": [1, ["a", "b"]]}`, `[]`},
+		{"missing_some unsatisfied", `{"missing_some": [2, ["a", "b", "c"]]}`, `["b", "c"]`},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := jsonlogic.ApplyRaw(json.RawMessage(tc.rule), data)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tc.expected, string(output))
+		})
+	}
+}

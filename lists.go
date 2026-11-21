@@ -243,14 +243,18 @@ func missing(values, data any) any {
 	missing := make([]any, 0, len(s))
 
 	for _, _var := range s {
-		_value := lookupVar(_var, data)
-
-		if _value == nil {
+		if isMissing(lookupVar(_var, data)) {
 			missing = append(missing, _var)
 		}
 	}
 
 	return missing
+}
+
+// isMissing reports whether a value counts as missing: like json-logic-js,
+// both null and the empty string do.
+func isMissing(value any) bool {
+	return value == nil || value == ""
 }
 
 func missingSome(values, data any) any {
@@ -266,7 +270,7 @@ func missingSome(values, data any) any {
 	foundCount := 0
 
 	for _, _var := range vars {
-		if lookupVar(_var, data) == nil {
+		if isMissing(lookupVar(_var, data)) {
 			missing = append(missing, _var)
 		} else {
 			foundCount++

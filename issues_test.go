@@ -77,7 +77,7 @@ func TestIssue52_example2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `"jsonlogic"`
+	expected := `""`
 	assert.JSONEq(t, expected, result.String())
 }
 
