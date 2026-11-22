@@ -164,6 +164,18 @@ func main() {
 }
 ```
 
+If you apply the same rule many times, prepare it once. `Prepare` checks the rule's types up front, so each `Apply` only checks the data. A prepared rule is safe to share across goroutines:
+
+```go
+rule, err := jsonlogic.Prepare(map[string]any{"==": []any{map[string]any{"var": "foo"}, "bar"}})
+if err != nil {
+	fmt.Println(err)
+}
+
+result, err := rule.Apply(map[string]any{"foo": "bar"})
+fmt.Println(result) // true
+```
+
 ## Custom Operators (Non-standard)
 
 > ⚠️ **Warning**: These operators are not part of the official JsonLogic specification and may be deprecated in future versions.
