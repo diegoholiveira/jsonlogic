@@ -269,6 +269,7 @@ func apply(rules, data any) any {
 // Rule is a JSONLogic rule whose types were checked once by Prepare, so it can be applied many times without rescanning.
 type Rule struct {
 	logic any
+	check check
 }
 
 // Prepare checks the rule for unsupported types and copies it, so later changes to the input do not affect the Rule.
@@ -276,13 +277,17 @@ func Prepare(rule any) (*Rule, error) {
 	if err := scanForUnsupportedTypes(rule); err != nil {
 		return nil, err
 	}
-	return &Rule{logic: deepCopyAny(rule)}, nil
+	logic := deepCopyAny(rule)
+	return &Rule{logic: logic, check: compile(logic)}, nil
 }
 
 // Apply works like ApplyInterface but only checks data, since the rule was checked by Prepare.
 func (r *Rule) Apply(data any) (any, error) {
 	if err := scanForUnsupportedTypes(data); err != nil {
 		return nil, err
+	}
+	if match, ok := r.check.run(data); ok {
+		return match, nil
 	}
 	return applyInterfaceUnguarded(r.logic, data)
 }

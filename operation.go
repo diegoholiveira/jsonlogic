@@ -38,6 +38,7 @@ func AddOperator(key string, cb OperatorFn) {
 	operatorsLock.Lock()
 	defer operatorsLock.Unlock()
 
+	disableCompiledChecksFor(key)
 	operators[key] = func(values, data any) any {
 		return cb(parseValues(values, data), data)
 	}
