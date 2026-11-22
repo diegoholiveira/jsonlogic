@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	jsonlogic "github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/diegoholiveira/jsonlogic/v3/internal"
@@ -434,6 +436,12 @@ func TestApplyInterfaceRejectsUnsupportedTypes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := jsonlogic.ApplyInterface(tt.rule, tt.data)
 			assert.Error(t, err)
+
+			prepared, err := jsonlogic.Prepare(tt.rule)
+			if err == nil {
+				_, err = prepared.Apply(tt.data)
+			}
+			assert.Error(t, err)
 		})
 	}
 }
@@ -699,4 +707,69 @@ func TestDivWithEmptyList(t *testing.T) {
 	}
 
 	assert.JSONEq(t, `0`, result.String())
+}
+
+func TestRuleApplyMatchesApplyInterface(t *testing.T) {
+	tests := []struct {
+		name string
+		rule string
+		data string
+	}{
+		{name: "equal", rule: `{"==":[{"var":"a"},"x"]}`, data: `{"a":"x"}`},
+		{name: "and", rule: `{"and":[{"<":[{"var":"temp"},110]},{"==":[{"var":"pie.filling"},"apple"]}]}`, data: `{"temp":100,"pie":{"filling":"apple"}}`},
+		{name: "in", rule: `{"in":[{"var":"dsp"},["1","2","25"]]}`, data: `{"dsp":"25"}`},
+		{name: "map", rule: `{"map":[{"var":"integers"},{"*":[{"var":""},2]}]}`, data: `{"integers":[1,2,3]}`},
+		{name: "array rule", rule: `[{"var":"a"},1]`, data: `{"a":"x"}`},
+		{name: "missing var", rule: `{"var":["b","default"]}`, data: `{"a":"x"}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rule, data any
+			require.NoError(t, json.Unmarshal([]byte(tt.rule), &rule))
+			require.NoError(t, json.Unmarshal([]byte(tt.data), &data))
+
+			want, wantErr := jsonlogic.ApplyInterface(rule, data)
+			prepared, err := jsonlogic.Prepare(rule)
+			require.NoError(t, err)
+			for i := 0; i < 2; i++ {
+				got, gotErr := prepared.Apply(data)
+				assert.Equal(t, wantErr, gotErr)
+				assert.Equal(t, want, got)
+			}
+		})
+	}
+}
+
+func TestPrepareCopiesTheRule(t *testing.T) {
+	rule := map[string]any{"==": []any{map[string]any{"var": "a"}, "x"}}
+	prepared, err := jsonlogic.Prepare(rule)
+	require.NoError(t, err)
+
+	rule["=="].([]any)[1] = int(1)
+
+	got, err := prepared.Apply(map[string]any{"a": "x"})
+	require.NoError(t, err)
+	assert.Equal(t, true, got)
+}
+
+func TestRuleApplyConcurrent(t *testing.T) {
+	prepared, err := jsonlogic.Prepare(map[string]any{"and": []any{
+		map[string]any{"==": []any{map[string]any{"var": "a"}, "x"}},
+		map[string]any{"in": []any{map[string]any{"var": "b"}, []any{"1", "2"}}},
+	}})
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 200; j++ {
+				got, err := prepared.Apply(map[string]any{"a": "x", "b": "2"})
+				assert.NoError(t, err)
+				assert.Equal(t, true, got)
+			}
+		}()
+	}
+	wg.Wait()
 }
