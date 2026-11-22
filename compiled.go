@@ -59,12 +59,8 @@ func compileLogical(isAnd bool, args any) check {
 	}
 	return func(data map[string]any) (bool, bool) {
 		for _, c := range checks {
-			match, ok := c(data)
-			if !ok {
-				return false, false
-			}
-			if match != isAnd {
-				return match, true
+			if match, ok := c(data); !ok || match != isAnd {
+				return match, ok
 			}
 		}
 		return isAnd, true
@@ -86,16 +82,9 @@ func compileNot(args any) check {
 }
 
 func compileEquals(negate bool, args any) check {
-	list, ok := args.([]any)
-	if !ok || len(list) != 2 {
-		return nil
-	}
-	name, ok := plainVar(list[0])
-	if !ok {
-		return nil
-	}
-	lit, ok := list[1].(string)
-	if !ok {
+	name, arg, ok := varAndArg(args)
+	lit, isString := arg.(string)
+	if !ok || !isString {
 		return nil
 	}
 	return func(data map[string]any) (bool, bool) {
@@ -105,16 +94,9 @@ func compileEquals(negate bool, args any) check {
 }
 
 func compileIn(args any) check {
-	list, ok := args.([]any)
-	if !ok || len(list) != 2 {
-		return nil
-	}
-	name, ok := plainVar(list[0])
-	if !ok {
-		return nil
-	}
-	values, ok := list[1].([]any)
-	if !ok {
+	name, arg, ok := varAndArg(args)
+	values, isList := arg.([]any)
+	if !ok || !isList {
 		return nil
 	}
 	set := make(map[string]struct{}, len(values))
@@ -132,14 +114,16 @@ func compileIn(args any) check {
 	}
 }
 
-func plainVar(v any) (string, bool) {
-	m, ok := v.(map[string]any)
-	if !ok || len(m) != 1 {
-		return "", false
+// varAndArg splits [{"var": name}, arg] where name is a top-level key.
+func varAndArg(args any) (string, any, bool) {
+	list, ok := args.([]any)
+	if !ok || len(list) != 2 {
+		return "", nil, false
 	}
-	name, ok := m["var"].(string)
-	if !ok || name == "" {
-		return "", false
+	v, ok := list[0].(map[string]any)
+	if !ok || len(v) != 1 {
+		return "", nil, false
 	}
-	return name, !strings.Contains(name, ".")
+	name, ok := v["var"].(string)
+	return name, list[1], ok && name != "" && !strings.Contains(name, ".")
 }
