@@ -165,14 +165,35 @@ func reduce(values, data any) any {
 	return context["accumulator"]
 }
 
-func _in(values, data any) any {
-	parsed := parseValues(values, data).([]any)
+// parseInOperands evaluates the operands of "in". A list of primitives evaluates to
+// itself, so it is used as is instead of being copied.
+func parseInOperands(values, data any) (a, b any) {
+	if pair, ok := values.([]any); ok && len(pair) == 2 {
+		a = parseValues(pair[0], data)
+		if list, ok := pair[1].([]any); ok && allPrimitive(list) {
+			return a, pair[1]
+		}
+		return a, parseValues(pair[1], data)
+	}
 
-	a := parsed[0]
-	var b any
+	parsed := parseValues(values, data).([]any)
 	if len(parsed) > 1 {
 		b = parsed[1]
 	}
+	return parsed[0], b
+}
+
+func allPrimitive(list []any) bool {
+	for _, item := range list {
+		if item != nil && !isPrimitive(item) {
+			return false
+		}
+	}
+	return true
+}
+
+func _in(values, data any) any {
+	a, b := parseInOperands(values, data)
 
 	if bs, ok := b.(string); ok {
 		return strings.Contains(bs, a.(string))
