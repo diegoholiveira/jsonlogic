@@ -10,7 +10,7 @@ import (
 )
 
 func TestSetProperty(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"set": [
 			{"a": 1, "b": 2},
 			"c",
@@ -18,7 +18,7 @@ func TestSetProperty(t *testing.T) {
 		]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage(`{"a":1,"b":2,"c":3}`)
+	expected := json.RawMessage(`{"a":1,"b":2,"c":3}`)
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -29,7 +29,7 @@ func TestSetProperty(t *testing.T) {
 }
 
 func TestSetPropertyWithNonMapInput(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"set": [
 			"not_a_map",
 			"property",
@@ -37,7 +37,7 @@ func TestSetPropertyWithNonMapInput(t *testing.T) {
 		]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage(`"not_a_map"`)
+	expected := json.RawMessage(`"not_a_map"`)
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {

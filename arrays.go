@@ -1,6 +1,5 @@
 package jsonlogic
 
-
 // containsAll checks if all elements in the second array exist in the first array.
 // Returns true if every element of the required array is found in the search array.
 //
@@ -8,7 +7,7 @@ package jsonlogic
 //
 //	{"contains_all": [["a", "b", "c"], ["a", "b"]]} // true
 //	{"contains_all": [["a", "b"], ["a", "b", "c"]]} // false
-func containsAll(values, data any) any {
+func containsAll(values any) any {
 	parsed, ok := values.([]any)
 	if !ok || len(parsed) != 2 {
 		return false
@@ -45,7 +44,7 @@ func containsAll(values, data any) any {
 //
 //	{"contains_any": [["a", "b", "c"], ["x", "b"]]} // true
 //	{"contains_any": [["a", "b", "c"], ["x", "y"]]} // false
-func containsAny(values, data any) any {
+func containsAny(values any) any {
 	parsed, ok := values.([]any)
 	if !ok || len(parsed) != 2 {
 		return false
@@ -77,7 +76,7 @@ func containsAny(values, data any) any {
 //
 //	{"contains_none": [["a", "b", "c"], ["x", "y"]]} // true
 //	{"contains_none": [["a", "b", "c"], ["x", "b"]]} // false
-func containsNone(values, data any) any {
+func containsNone(values any) any {
 	parsed, ok := values.([]any)
 	if !ok || len(parsed) != 2 {
 		return true

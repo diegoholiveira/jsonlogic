@@ -2,9 +2,7 @@ package internal
 
 import (
 	"encoding/json"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"reflect"
 )
@@ -32,21 +30,10 @@ func GetScenariosFromProposedOfficialTestSuite() Tests {
 	return getScenariosFromFile(buffer)
 }
 
-// GetScenariosFromOfficialTestSuite fetches test scenarios from the official JSON Logic test suite.
-// It makes an HTTP request to jsonlogic.com to retrieve the latest test cases.
+// GetScenariosFromOfficialTestSuite reads a copy of the official JSON Logic test suite,
+// published at https://jsonlogic.com/tests.json. To update it, download that file again.
 func GetScenariosFromOfficialTestSuite() Tests {
-	req, err := http.NewRequest("GET", "http://jsonlogic.com/tests.json", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer response.Body.Close()
-
-	buffer, err := io.ReadAll(response.Body)
+	buffer, err := os.ReadFile("internal/json_logic_tests.json")
 	if err != nil {
 		log.Fatal(err)
 	}

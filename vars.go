@@ -124,7 +124,7 @@ func lookupVar(values, data any) any {
 
 	parts := strings.Split(values.(string), ".")
 
-	var _value any = data
+	_value := data
 
 	for _, part := range parts {
 		if part == "" {

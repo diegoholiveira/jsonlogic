@@ -3,7 +3,6 @@ package jsonlogic
 import (
 	"encoding/json"
 	"io"
-
 )
 
 // IsValid reads a JSON Logic rule from io.Reader and validates its syntax.

@@ -10,14 +10,14 @@ import (
 )
 
 func TestSubOperation(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"-": [
 			0,
 			10
 		]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("-10")
+	expected := json.RawMessage("-10")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -28,11 +28,11 @@ func TestSubOperation(t *testing.T) {
 }
 
 func TestAbsOperationWithScalar(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"abs": -42
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("42")
+	expected := json.RawMessage("42")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -43,11 +43,11 @@ func TestAbsOperationWithScalar(t *testing.T) {
 }
 
 func TestAbsOperationWithArray(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"abs": [-42]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("42")
+	expected := json.RawMessage("42")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -58,11 +58,11 @@ func TestAbsOperationWithArray(t *testing.T) {
 }
 
 func TestSumOperationWithEmptyArray(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"+": []
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("0")
+	expected := json.RawMessage("0")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {

@@ -1,21 +1,45 @@
 name: Continuous Integration
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24']
+        go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24', '1.25', '1.26', '1.27']
     name: Running with Go ${{ matrix.go }}
     steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Install Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
       with:
         go-version: ${{ matrix.go }}
         cache: false
-    - name: Checkout code
-      uses: actions/checkout@v4
     - name: Run the tests
-      run: go test -race -coverprofile=coverage.out -covermode=atomic
+      run: go test -race -shuffle=on -coverprofile=coverage.out -covermode=atomic ./...
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Install Go
+      uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+      with:
+        go-version: '1.27'
+        cache: false
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+      with:
+        version: v2.15.0
+    - name: Check that go.mod and go.sum are tidy
+      run: go mod tidy -diff
