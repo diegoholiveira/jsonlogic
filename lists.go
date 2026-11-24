@@ -166,12 +166,17 @@ func reduce(values, data any) any {
 }
 
 // parseInOperands evaluates the operands of "in". A list of primitives evaluates to
-// itself, so it is used as is instead of being copied.
+// itself, so it is used as is instead of being copied. b may be a *stringSet.
 func parseInOperands(values, data any) (a, b any) {
 	if pair, ok := values.([]any); ok && len(pair) == 2 {
 		a = parseValues(pair[0], data)
-		if list, ok := pair[1].([]any); ok && allPrimitive(list) {
-			return a, pair[1]
+		switch list := pair[1].(type) {
+		case *stringSet:
+			return a, list
+		case []any:
+			if allPrimitive(list) {
+				return a, pair[1]
+			}
 		}
 		return a, parseValues(pair[1], data)
 	}
@@ -194,6 +199,13 @@ func allPrimitive(list []any) bool {
 
 func _in(values, data any) any {
 	a, b := parseInOperands(values, data)
+
+	if set, ok := b.(*stringSet); ok {
+		if s, ok := a.(string); ok {
+			return set.contains(s)
+		}
+		b = set.list
+	}
 
 	if bs, ok := b.(string); ok {
 		return strings.Contains(bs, a.(string))

@@ -31,6 +31,12 @@ func TestRulesFromJsonLogic(t *testing.T) {
 					}
 
 					assert.Equal(t, test.Expected, result, "Applying rule %v to data %v", toJSON(test.Rule), toJSON(test.Data))
+
+					prepared, err := jsonlogic.Prepare(test.Rule)
+					require.NoError(t, err)
+					result, err = prepared.Apply(test.Data)
+					require.NoError(t, err)
+					assert.Equal(t, test.Expected, result, "Applying prepared rule %v to data %v", toJSON(test.Rule), toJSON(test.Data))
 				})
 			}
 		})
