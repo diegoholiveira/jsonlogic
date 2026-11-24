@@ -142,6 +142,10 @@ func applyInterfaceUnguarded(rule, data any) (output any, err error) {
 		}
 	}()
 
+	if n, ok := rule.(*node); ok {
+		return operation(n.operator, n.values, data), err
+	}
+
 	if m, ok := rule.(map[string]any); ok {
 		return apply(m, data), err
 	}
@@ -217,16 +221,17 @@ func GetJsonLogicWithSolvedVars(rule, data json.RawMessage) ([]byte, error) {
 }
 
 func parseValues(values, data any) any {
-	if values == nil || isPrimitive(values) {
+	switch v := values.(type) {
+	case nil, bool, float64, string:
 		return values
-	}
-
-	if l, ok := values.(literal); ok {
-		return l.value
-	}
-
-	if m, ok := values.(map[string]any); ok {
-		return apply(m, data)
+	case *node:
+		return operation(v.operator, v.values, data)
+	case map[string]any:
+		return apply(v, data)
+	case literal:
+		return v.value
+	case *stringSet:
+		return parseValues(v.list, data)
 	}
 
 	inputSlice := values.([]any)
@@ -238,11 +243,7 @@ func parseValues(values, data any) any {
 	parsed := make([]any, 0, length)
 
 	for _, value := range inputSlice {
-		if m, ok := value.(map[string]any); ok {
-			parsed = append(parsed, apply(m, data))
-		} else {
-			parsed = append(parsed, parseValues(value, data))
-		}
+		parsed = append(parsed, parseValues(value, data))
 	}
 
 	return parsed
@@ -268,17 +269,23 @@ func apply(rules, data any) any {
 	return make(map[string]any)
 }
 
-// Rule is a JSONLogic rule whose types were checked once by Prepare, so it can be applied many times without rescanning.
+// Rule is a JSONLogic rule that Prepare checked and optimized once, so applying it many times is faster.
+// It is safe for concurrent use.
 type Rule struct {
 	logic any
 }
 
-// Prepare checks the rule for unsupported types and copies it, so later changes to the input do not affect the Rule.
+// Prepare checks the rule for unsupported types and copies it into a form that is faster to evaluate. Later changes to
+// the input do not affect the Rule.
+//
+// Preparing costs more than applying the rule once, so it pays off when the rule is applied more than a few times.
+// Lists of strings in "in" are indexed, which makes large ones much faster but uses extra memory. The arguments of
+// "filter", "map", "reduce", "all", "some", "none" and custom operators are not optimized.
 func Prepare(rule any) (*Rule, error) {
 	if err := scanForUnsupportedTypes(rule); err != nil {
 		return nil, err
 	}
-	return &Rule{logic: deepCopyAny(rule)}, nil
+	return &Rule{logic: optimize(deepCopyAny(rule))}, nil
 }
 
 // Apply works like ApplyInterface but only checks data, since the rule was checked by Prepare.

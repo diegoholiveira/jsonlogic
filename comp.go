@@ -2,18 +2,25 @@ package jsonlogic
 
 import "github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 
+// parsePair evaluates the operands of a list with exactly two items without
+// allocating a slice for them. ok is false for any other shape.
+func parsePair(values, data any) (a, b any, ok bool) {
+	pair, isSlice := values.([]any)
+	if !isSlice || len(pair) != 2 {
+		return nil, nil, false
+	}
+	return parseValues(pair[0], data), parseValues(pair[1], data), true
+}
+
 func hardEquals(values, data any) any {
-	values = parseValues(values, data)
-	parsed, ok := values.([]any)
+	a, b, ok := parsePair(values, data)
 	if !ok {
-		return false
+		parsed, isSlice := parseValues(values, data).([]any)
+		if !isSlice || len(parsed) < 2 {
+			return false
+		}
+		a, b = parsed[0], parsed[1]
 	}
-
-	if len(parsed) < 2 {
-		return false
-	}
-
-	a, b := parsed[0], parsed[1]
 
 	if a == nil || b == nil {
 		return a == b
@@ -98,13 +105,14 @@ func isGreaterOrEqualThan(values, data any) any {
 }
 
 func isEqual(values, data any) any {
-	parsed := parseValues(values, data).([]any)
-	if len(parsed) < 2 {
-		return false
+	a, b, ok := parsePair(values, data)
+	if !ok {
+		parsed := parseValues(values, data).([]any)
+		if len(parsed) < 2 {
+			return false
+		}
+		a, b = parsed[0], parsed[1]
 	}
-
-	a := parsed[0]
-	b := parsed[1]
 
 	return equals(a, b)
 }

@@ -122,11 +122,13 @@ func lookupVar(values, data any) any {
 		return _default
 	}
 
-	parts := strings.Split(values.(string), ".")
+	rest := values.(string)
 
 	_value := data
 
-	for _, part := range parts {
+	for more := true; more; {
+		var part string
+		part, rest, more = strings.Cut(rest, ".")
 		if part == "" {
 			continue
 		}

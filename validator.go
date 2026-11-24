@@ -81,10 +81,8 @@ func ValidateJsonLogic(rules any) bool {
 }
 
 func isOperator(op string) bool {
-	operatorsLock.RLock()
-	_, isOperator := operators[op]
-	operatorsLock.RUnlock()
-	return isOperator
+	_, found := lookupOperator(op)
+	return found
 }
 
 func isVar(value any) bool {
