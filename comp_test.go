@@ -10,11 +10,11 @@ import (
 )
 
 func TestHardEqualsWithNonSliceValues(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"===": 42
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("false")
+	expected := json.RawMessage("false")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -25,11 +25,11 @@ func TestHardEqualsWithNonSliceValues(t *testing.T) {
 }
 
 func TestHardEqualsWithSingleValueInSlice(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"===": [42]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("false")
+	expected := json.RawMessage("false")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -40,11 +40,11 @@ func TestHardEqualsWithSingleValueInSlice(t *testing.T) {
 }
 
 func TestHardEqualsWithNilInParams(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"===": [null, 42]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("false")
+	expected := json.RawMessage("false")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
@@ -103,11 +103,11 @@ func TestEqualWithSingleArgument(t *testing.T) {
 }
 
 func TestHardEqualsWithDifferentTypes(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"===": ["42", 42]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("false")
+	expected := json.RawMessage("false")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {

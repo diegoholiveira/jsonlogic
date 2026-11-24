@@ -379,7 +379,7 @@ func TestIssue125_InOperatorWithVarsInSlice(t *testing.T) {
 
 func TestIssue125_CustomOperatorWithVarsInSlice(t *testing.T) {
 	// Add a custom operator that processes slice elements
-	jsonlogic.AddOperator("contains_any", func(values, data any) any {
+	jsonlogic.AddOperator("issue125_contains", func(values, data any) any {
 		parsed := values.([]any)
 		needle := parsed[0]
 		haystack := parsed[1].([]any)
@@ -392,7 +392,7 @@ func TestIssue125_CustomOperatorWithVarsInSlice(t *testing.T) {
 		return false
 	})
 
-	rule := strings.NewReader(`{"contains_any": [{"var": "needle"}, [{"var": "item1"}, {"var": "item2"}]]}`)
+	rule := strings.NewReader(`{"issue125_contains": [{"var": "needle"}, [{"var": "item1"}, {"var": "item2"}]]}`)
 	data := strings.NewReader(`{"needle":"foo", "item1":"bar", "item2":"foo"}`)
 
 	var result bytes.Buffer

@@ -150,8 +150,12 @@ func runBenchmark(b *testing.B, logic, data string) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		logicReader.Seek(0, io.SeekStart)
-		dataReader.Seek(0, io.SeekStart)
+		if _, err := logicReader.Seek(0, io.SeekStart); err != nil {
+			b.Fatal(err)
+		}
+		if _, err := dataReader.Seek(0, io.SeekStart); err != nil {
+			b.Fatal(err)
+		}
 		result.Reset()
 		if err := jsonlogic.Apply(logicReader, dataReader, &result); err != nil {
 			b.Fatal(err)

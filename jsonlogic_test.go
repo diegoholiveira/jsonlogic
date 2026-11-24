@@ -375,14 +375,14 @@ func TestMergeArrayOfArrays(t *testing.T) {
 }
 
 func TestDataWithDefaultValueWithApplyRaw(t *testing.T) {
-	var rule json.RawMessage = json.RawMessage(`{
+	rule := json.RawMessage(`{
 		"+": [
 			1,
 			2
 		]
 	}`)
 
-	var expected json.RawMessage = json.RawMessage("3")
+	expected := json.RawMessage("3")
 
 	output, err := jsonlogic.ApplyRaw(rule, nil)
 	if err != nil {
