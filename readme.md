@@ -122,9 +122,9 @@ func main() {
 	jsonlogic.AddOperator("strlen", func(values, data any) any {
 		v, ok := values.(string)
 		if ok {
-			return len(v)
+			return float64(len(v)) // JSON numbers are float64
 		}
-		return 0
+		return float64(0)
 	})
 
 	logic := strings.NewReader(`{ "strlen": { "var": "foo" } }`)
@@ -137,6 +137,8 @@ func main() {
 	fmt.Println(result.String()) // the string length of "bar" is 3
 }
 ```
+
+A custom operator should return one of the [supported types](#supported-types) and must treat `values` and `data` as read-only. To change an object inside a rule, use the `set` operator, which works on a copy.
 
 If you want to get the JsonLogic used, with the variables replaced by their values:
 
@@ -160,7 +162,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(string(result)) // will output { "==":[false, true] }
+	fmt.Println(string(result)) // will output {"==":["false",true]}
 }
 ```
 
@@ -175,6 +177,25 @@ if err != nil {
 result, err := rule.Apply(map[string]any{"foo": "bar"})
 fmt.Println(result) // true
 ```
+
+## Supported types
+
+JsonLogic works on JSON values, so this library uses the same Go types that [`encoding/json`](https://pkg.go.dev/encoding/json#Unmarshal) uses to unmarshal JSON into an interface value:
+
+| JSON | Go |
+|------|----|
+| boolean | `bool` |
+| number | `float64` |
+| string | `string` |
+| array | `[]any` |
+| object | `map[string]any` |
+| null | `nil` |
+
+How this applies depends on where the value comes from:
+
+- **`Apply` and `ApplyRaw`** decode JSON, so rules and data always have these types.
+- **`ApplyInterface`, `Prepare` and a prepared rule's `Apply`** receive Go values and return an error if they find any other type, including `int`, structs and typed slices or maps such as `[]string`. Convert your values first, for example `float64(age)` instead of `age`.
+- **Custom operators** should return these types. As a convenience, the other Go integer and float types (`int`, `int64`, `uint8`, `float32`...) are converted to `float64`, including inside `[]any` and `map[string]any`. Integers beyond 2^53 may lose precision. Any other type is left unchanged, and the built-in operators may not handle it.
 
 ## Custom Operators (Non-standard)
 

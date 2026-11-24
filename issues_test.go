@@ -498,3 +498,120 @@ func TestIssue135(t *testing.T) {
 		})
 	}
 }
+
+func TestIssue153_CustomOperatorNumericTypes(t *testing.T) {
+	numbers := map[string]any{
+		"int": int(3), "int8": int8(3), "int16": int16(3), "int32": int32(3), "int64": int64(3),
+		"uint": uint(3), "uint8": uint8(3), "uint16": uint16(3), "uint32": uint32(3), "uint64": uint64(3),
+		"float32": float32(3), "float64": float64(3),
+	}
+
+	// OP is replaced by a call to the custom operator, which returns 3.
+	cases := []struct {
+		rule     string
+		expected any
+	}{
+		{`OP`, float64(3)},
+		{`{">":[OP,0]}`, true},
+		{`{"<":[OP,10]}`, true},
+		{`{">=":[OP,3]}`, true},
+		{`{"==":[OP,3]}`, true},
+		{`{"===":[OP,3]}`, true},
+		{`{"!==":[OP,3]}`, false},
+		{`{"+":[OP,1]}`, float64(4)},
+		{`{"-":[OP,1]}`, float64(2)},
+		{`{"*":[OP,2]}`, float64(6)},
+		{`{"/":[OP,2]}`, float64(1.5)},
+		{`{"%":[OP,2]}`, float64(1)},
+		{`{"max":[OP,1]}`, float64(3)},
+		{`{"min":[OP,5]}`, float64(3)},
+		{`{"abs":[OP]}`, float64(3)},
+		{`{"if":[OP,"yes","no"]}`, "yes"},
+		{`{"!":[OP]}`, false},
+		{`{"!!":[OP]}`, true},
+		{`{"and":[OP,"x"]}`, "x"},
+		{`{"or":[OP,"x"]}`, float64(3)},
+		{`{"in":[OP,[1,2,3]]}`, true},
+		{`{"in":[3,[OP]]}`, true},
+		{`{"cat":["a",OP]}`, "a3"},
+		{`{"substr":["abcdef",OP]}`, "def"},
+		{`{"merge":OP}`, []any{float64(3)}},
+		{`{"reduce":[[1,2],{"+":[{"var":"current"},{"var":"accumulator"}]},OP]}`, float64(6)},
+	}
+
+	for name, number := range numbers {
+		operator := "issue153_" + name
+		jsonlogic.AddOperator(operator, func(values, data any) any { return number })
+
+		for _, tt := range cases {
+			t.Run(name+" "+tt.rule, func(t *testing.T) {
+				var rule any
+				err := json.Unmarshal([]byte(strings.ReplaceAll(tt.rule, "OP", `{"`+operator+`":[]}`)), &rule)
+				assert.NoError(t, err)
+
+				output, err := jsonlogic.ApplyInterface(rule, nil)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, output)
+
+				prepared, err := jsonlogic.Prepare(rule)
+				assert.NoError(t, err)
+				output, err = prepared.Apply(nil)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, output)
+			})
+		}
+	}
+}
+
+func TestIssue153_CustomOperatorContainers(t *testing.T) {
+	list := []any{1, int64(2), 3}
+	object := map[string]any{"a": 1, "nested": []any{map[string]any{"b": uint8(2)}}, "s": "x", "n": nil}
+	jsonlogic.AddOperator("issue153_list", func(values, data any) any { return list })
+	jsonlogic.AddOperator("issue153_object", func(values, data any) any { return object })
+
+	cases := []struct {
+		rule     string
+		expected any
+	}{
+		{`{"issue153_list":[]}`, []any{float64(1), float64(2), float64(3)}},
+		{`{"map":[{"issue153_list":[]},{"+":[{"var":""},1]}]}`, []any{float64(2), float64(3), float64(4)}},
+		{`{"filter":[{"issue153_list":[]},{">":[{"var":""},1]}]}`, []any{float64(2), float64(3)}},
+		{`{"some":[{"issue153_list":[]},{">":[{"var":""},2]}]}`, true},
+		{`{"all":[{"issue153_list":[]},{">":[{"var":""},0]}]}`, true},
+		{`{"none":[{"issue153_list":[]},{">":[{"var":""},2]}]}`, false},
+		{`{"contains_all":[{"issue153_list":[]},[1,3]]}`, true},
+		{`{"issue153_object":[]}`, map[string]any{
+			"a":      float64(1),
+			"nested": []any{map[string]any{"b": float64(2)}},
+			"s":      "x",
+			"n":      nil,
+		}},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.rule, func(t *testing.T) {
+			var rule any
+			assert.NoError(t, json.Unmarshal([]byte(tt.rule), &rule))
+
+			output, err := jsonlogic.ApplyInterface(rule, nil)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, output)
+		})
+	}
+
+	// Values owned by the operator must not be modified.
+	assert.Equal(t, []any{1, int64(2), 3}, list)
+	assert.Equal(t, map[string]any{"a": 1, "nested": []any{map[string]any{"b": uint8(2)}}, "s": "x", "n": nil}, object)
+}
+
+func TestIssue153_CustomOperatorOtherTypesAreUnchanged(t *testing.T) {
+	type point struct{ X int }
+
+	for _, value := range []any{nil, true, "x", []int{1, 2}, point{X: 1}, json.Number("1")} {
+		jsonlogic.AddOperator("issue153_other", func(values, data any) any { return value })
+
+		output, err := jsonlogic.ApplyInterface(map[string]any{"issue153_other": []any{}}, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, value, output)
+	}
+}

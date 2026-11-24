@@ -9,6 +9,7 @@ import (
 
 // OperatorFn defines the signature for custom operator functions.
 // It takes values and data as input and returns a result.
+// See AddOperator for the types it should return.
 type OperatorFn func(values, data any) (result any)
 
 // ErrInvalidOperator represents an error when an unsupported operator is used.
@@ -33,13 +34,23 @@ var operatorsLock = &sync.RWMutex{}
 //   - key: the operator name to register (e.g., "custom_op")
 //   - cb: the function to execute when the operator is encountered
 //
+// The result should be one of the types encoding/json uses to unmarshal into an
+// interface value: bool, float64, string, []any, map[string]any or nil. As a
+// convenience, the other built-in Go integer and float types are converted to
+// float64, including inside []any and map[string]any. Integers beyond 2^53 may lose
+// precision. Any other type is left unchanged and built-in operators may not
+// handle it.
+//
+// The callback must treat values and data as read-only. Values written into them are
+// neither checked nor converted.
+//
 // Concurrency: This function is safe for concurrent use as it properly locks the operators map.
 func AddOperator(key string, cb OperatorFn) {
 	operatorsLock.Lock()
 	defer operatorsLock.Unlock()
 
 	operators[key] = func(values, data any) any {
-		return cb(parseValues(values, data), data)
+		return normalizeNumbers(cb(parseValues(values, data), data))
 	}
 }
 

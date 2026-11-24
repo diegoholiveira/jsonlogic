@@ -709,6 +709,26 @@ func TestDivWithEmptyList(t *testing.T) {
 	assert.JSONEq(t, `0`, result.String())
 }
 
+func TestEmptyMinusAndDivReturnFloat64(t *testing.T) {
+	for _, operator := range []string{"-", "/"} {
+		t.Run(operator, func(t *testing.T) {
+			empty := map[string]any{operator: []any{}}
+
+			output, err := jsonlogic.ApplyInterface(empty, nil)
+			assert.NoError(t, err)
+			assert.Equal(t, float64(0), output)
+
+			output, err = jsonlogic.ApplyInterface(map[string]any{"+": []any{empty, float64(1)}}, nil)
+			assert.NoError(t, err)
+			assert.Equal(t, float64(1), output)
+
+			output, err = jsonlogic.ApplyInterface(map[string]any{"===": []any{empty, float64(0)}}, nil)
+			assert.NoError(t, err)
+			assert.Equal(t, true, output)
+		})
+	}
+}
+
 func TestRuleApplyMatchesApplyInterface(t *testing.T) {
 	tests := []struct {
 		name string

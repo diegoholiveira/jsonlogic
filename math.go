@@ -44,7 +44,7 @@ func sum(values, data any) any {
 func minus(values, data any) any {
 	parsed, ok := parseValues(values, data).([]any)
 	if !ok || len(parsed) == 0 {
-		return 0
+		return float64(0)
 	}
 
 	if len(parsed) == 1 {
@@ -78,7 +78,7 @@ func mult(values, data any) any {
 func div(values, data any) any {
 	parsed, ok := parseValues(values, data).([]any)
 	if !ok || len(parsed) == 0 {
-		return 0
+		return float64(0)
 	}
 
 	sum := toNumber(parsed[0])

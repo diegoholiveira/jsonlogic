@@ -48,3 +48,69 @@ func sameType(a, b any) bool {
 	}
 	return false
 }
+
+// normalizeNumbers converts Go numeric values to float64, the type encoding/json
+// uses for numbers, including inside []any and map[string]any. Any other value is
+// returned unchanged. Containers are copied only when they hold a value to convert.
+func normalizeNumbers(value any) any {
+	normalized, _ := convertNumbers(value)
+	return normalized
+}
+
+// convertNumbers also reports whether anything was converted.
+func convertNumbers(value any) (any, bool) {
+	switch v := value.(type) {
+	case int:
+		return float64(v), true
+	case int8:
+		return float64(v), true
+	case int16:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case uint:
+		return float64(v), true
+	case uint8:
+		return float64(v), true
+	case uint16:
+		return float64(v), true
+	case uint32:
+		return float64(v), true
+	case uint64:
+		return float64(v), true
+	case float32:
+		return float64(v), true
+	case []any:
+		var out []any
+		for i, item := range v {
+			if converted, ok := convertNumbers(item); ok {
+				if out == nil {
+					out = append(out, v...)
+				}
+				out[i] = converted
+			}
+		}
+		if out != nil {
+			return out, true
+		}
+	case map[string]any:
+		var out map[string]any
+		for key, item := range v {
+			if converted, ok := convertNumbers(item); ok {
+				if out == nil {
+					out = make(map[string]any, len(v))
+					for k, original := range v {
+						out[k] = original
+					}
+				}
+				out[key] = converted
+			}
+		}
+		if out != nil {
+			return out, true
+		}
+	}
+	return value, false
+}
