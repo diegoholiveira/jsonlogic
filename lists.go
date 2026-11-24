@@ -18,15 +18,30 @@ func (e ErrReduceDataType) Error() string {
 }
 
 func extractSubject(parsed []any, data any) any {
-	var subject any
-
-	if s, ok := unwrapLiteral(parsed[0]).([]any); ok {
-		subject = s
-	} else if m, ok := parsed[0].(map[string]any); ok {
-		subject = apply(m, data)
+	switch v := parsed[0].(type) {
+	case literal:
+		// bound from data
+		if s, ok := v.value.([]any); ok {
+			return s
+		}
+	case []any:
+		return copyContainers(v)
+	case map[string]any:
+		return apply(v, data)
 	}
 
-	return subject
+	return nil
+}
+
+// copyContainers returns a list that belongs to the rule without sharing its objects
+// and lists, which may end up in the result.
+func copyContainers(list []any) []any {
+	for _, item := range list {
+		if item != nil && !isPrimitive(item) {
+			return deepCopyAny(list).([]any)
+		}
+	}
+	return list
 }
 
 func filter(values, data any) any {
