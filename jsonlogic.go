@@ -108,6 +108,7 @@ func ApplyRaw(rule, data json.RawMessage) (json.RawMessage, error) {
 // Both rule and data must contain only JSON-compatible types: bool, float64, string, nil,
 // map[string]any, and []any. Passing other numeric types (int, int32, float32, etc.) will
 // return an error. Use Apply or ApplyRaw if you are working with raw JSON input.
+// Modifying the output does not affect the rule, but the output may share memory with data.
 //
 // Parameters:
 //   - rule: interface{} representing the transformation rule to be applied
@@ -254,9 +255,10 @@ func apply(rules, data any) any {
 
 	ruleMap := rules.(map[string]any)
 
-	// A map with more than 1 key counts as a primitive so it's time to end recursion
+	// A map with more than 1 key counts as a primitive so it's time to end recursion.
+	// It may end up in the result, which must not share memory with the rule.
 	if len(ruleMap) > 1 {
-		return ruleMap
+		return deepCopyMap(ruleMap)
 	}
 
 	for operator, values := range ruleMap {
@@ -280,6 +282,7 @@ func Prepare(rule any) (*Rule, error) {
 }
 
 // Apply works like ApplyInterface but only checks data, since the rule was checked by Prepare.
+// Modifying the output does not affect the Rule, but the output may share memory with data.
 func (r *Rule) Apply(data any) (any, error) {
 	if err := scanForUnsupportedTypes(data); err != nil {
 		return nil, err
