@@ -3,6 +3,7 @@ package jsonlogic
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/diegoholiveira/jsonlogic/v3/internal/javascript"
 )
@@ -22,10 +23,17 @@ func (e ErrInvalidOperator) Error() string {
 	return fmt.Sprintf("The operator \"%s\" is not supported", e.operator)
 }
 
-// operators holds custom operators
-var operators = make(map[string]OperatorFn)
+// operators holds the registered operators as a map[string]OperatorFn. A stored map
+// is never modified, so evaluating a rule reads it without locking.
+var operators atomic.Value
 
-var operatorsLock = &sync.RWMutex{}
+// operatorsLock serializes writers, which replace the map with an updated copy.
+var operatorsLock sync.Mutex
+
+func lookupOperator(key string) (OperatorFn, bool) {
+	opFn, found := operators.Load().(map[string]OperatorFn)[key]
+	return opFn, found
+}
 
 // AddOperator registers a custom operator with the given key and function.
 // The operator function will be called with parsed values and the original data context.
@@ -44,21 +52,25 @@ var operatorsLock = &sync.RWMutex{}
 // The callback must treat values and data as read-only. Values written into them are
 // neither checked nor converted.
 //
-// Concurrency: This function is safe for concurrent use as it properly locks the operators map.
+// Concurrency: This function is safe for concurrent use. Each call copies the operators
+// map so that evaluating rules needs no lock.
 func AddOperator(key string, cb OperatorFn) {
 	operatorsLock.Lock()
 	defer operatorsLock.Unlock()
 
-	operators[key] = func(values, data any) any {
+	current := operators.Load().(map[string]OperatorFn)
+	updated := make(map[string]OperatorFn, len(current)+1)
+	for name, opFn := range current {
+		updated[name] = opFn
+	}
+	updated[key] = func(values, data any) any {
 		return normalizeNumbers(cb(parseValues(values, data), data))
 	}
+	operators.Store(updated)
 }
 
 func operation(operator string, values, data any) any {
-	operatorsLock.RLock()
-	opFn, found := operators[operator]
-	operatorsLock.RUnlock()
-	if found {
+	if opFn, found := lookupOperator(operator); found {
 		return opFn(values, data)
 	}
 
@@ -68,48 +80,49 @@ func operation(operator string, values, data any) any {
 }
 
 func init() {
-	operatorsLock.Lock()
-	defer operatorsLock.Unlock()
+	builtin := make(map[string]OperatorFn)
 
-	operators["and"] = _and
-	operators["or"] = _or
-	operators["filter"] = filter
-	operators["map"] = _map
-	operators["reduce"] = reduce
-	operators["all"] = all
-	operators["none"] = none
-	operators["some"] = some
-	operators["in"] = _in
-	operators["missing"] = missing
-	operators["missing_some"] = missingSome
-	operators["var"] = getVar
-	operators["set"] = setProperty
-	operators["cat"] = concat
-	operators["substr"] = substr
-	operators["merge"] = merge
-	operators["if"] = conditional
-	operators["?:"] = conditional
-	operators["max"] = max
-	operators["min"] = min
-	operators["+"] = sum
-	operators["-"] = minus
-	operators["*"] = mult
-	operators["/"] = div
-	operators["%"] = mod
-	operators["abs"] = abs
-	operators["!"] = negative
-	operators["!!"] = func(v, d any) any { return !javascript.IsTrue(negative(v, d)) }
-	operators["==="] = hardEquals
-	operators["!=="] = func(v, d any) any { return !hardEquals(v, d).(bool) }
-	operators["<"] = isLessThan
-	operators["<="] = isLessOrEqualThan
-	operators[">"] = isGreaterThan
-	operators[">="] = isGreaterOrEqualThan
-	operators["=="] = isEqual
-	operators["!="] = func(v, d any) any { return !isEqual(v, d).(bool) }
+	builtin["and"] = _and
+	builtin["or"] = _or
+	builtin["filter"] = filter
+	builtin["map"] = _map
+	builtin["reduce"] = reduce
+	builtin["all"] = all
+	builtin["none"] = none
+	builtin["some"] = some
+	builtin["in"] = _in
+	builtin["missing"] = missing
+	builtin["missing_some"] = missingSome
+	builtin["var"] = getVar
+	builtin["set"] = setProperty
+	builtin["cat"] = concat
+	builtin["substr"] = substr
+	builtin["merge"] = merge
+	builtin["if"] = conditional
+	builtin["?:"] = conditional
+	builtin["max"] = max
+	builtin["min"] = min
+	builtin["+"] = sum
+	builtin["-"] = minus
+	builtin["*"] = mult
+	builtin["/"] = div
+	builtin["%"] = mod
+	builtin["abs"] = abs
+	builtin["!"] = negative
+	builtin["!!"] = func(v, d any) any { return !javascript.IsTrue(negative(v, d)) }
+	builtin["==="] = hardEquals
+	builtin["!=="] = func(v, d any) any { return !hardEquals(v, d).(bool) }
+	builtin["<"] = isLessThan
+	builtin["<="] = isLessOrEqualThan
+	builtin[">"] = isGreaterThan
+	builtin[">="] = isGreaterOrEqualThan
+	builtin["=="] = isEqual
+	builtin["!="] = func(v, d any) any { return !isEqual(v, d).(bool) }
 
 	/* CUSTOM OPERATORS */
-	operators["contains_all"] = func(v, d any) any { return containsAll(parseValues(v, d)) }
-	operators["contains_any"] = func(v, d any) any { return containsAny(parseValues(v, d)) }
-	operators["contains_none"] = func(v, d any) any { return containsNone(parseValues(v, d)) }
+	builtin["contains_all"] = func(v, d any) any { return containsAll(parseValues(v, d)) }
+	builtin["contains_any"] = func(v, d any) any { return containsAny(parseValues(v, d)) }
+	builtin["contains_none"] = func(v, d any) any { return containsNone(parseValues(v, d)) }
+
+	operators.Store(builtin)
 }
