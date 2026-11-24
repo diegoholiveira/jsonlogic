@@ -188,6 +188,20 @@ Organized by operation type for focused testing:
 - Logic: and, or, !, if
 - Custom: contains_all, contains_any, contains_none
 
+### 5. Prepare Benchmarks (`BenchmarkPrepare`)
+Runs the comprehensive cases, plus feature flag rules, rules holding objects and a large `in` list, through each way of applying the same rule:
+- **Apply**: rule and data decoded from JSON every time
+- **ApplyInterface**: rule and data already decoded
+- **PreparedApply**: rule prepared once
+- **ApplyInterfaceParallel** and **PreparedApplyParallel**: the same, from many goroutines
+- **Prepare**: the one-time cost of preparing the rule
+
+```bash
+go test -run '^$' -bench=BenchmarkPrepare -benchmem ./benchmark/
+```
+
+These are in `prepare_test.go`, which `./bench` does not copy because older versions have no `Prepare`.
+
 ## Advanced Profiling
 
 ### Memory profiling:

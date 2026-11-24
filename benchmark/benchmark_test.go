@@ -163,130 +163,130 @@ func runBenchmark(b *testing.B, logic, data string) {
 	}
 }
 
+var comprehensiveCases = []struct {
+	name  string
+	logic string
+	data  string
+}{
+	{
+		name: "user_validation",
+		logic: `{
+			"and": [
+				{">=": [{"var": "user.age"}, 18]},
+				{"in": [{"var": "user.country"}, ["US", "CA", "UK", "AU"]]},
+				{"or": [
+					{"==": [{"var": "user.subscription"}, "premium"]},
+					{"<": [{"+": [{"var": "user.loginCount"}, 1]}, 100]}
+				]}
+			]
+		}`,
+		data: `{"user": {"age": 25, "country": "US", "subscription": "premium", "loginCount": 50}}`,
+	},
+	{
+		name: "data_pipeline",
+		logic: `{
+			"reduce": [
+				{"filter": [
+					{"var": "orders"},
+					{">=": [{"var": ".amount"}, 100]}
+				]},
+				{"+": [{"var": "accumulator"}, {"var": "current.amount"}]},
+				0
+			]
+		}`,
+		data: `{"orders": [{"amount": 50}, {"amount": 150}, {"amount": 200}, {"amount": 75}, {"amount": 120}]}`,
+	},
+	{
+		name: "business_rules",
+		logic: `{
+			"if": [
+				{"and": [
+					{">": [{"var": "order.total"}, 1000]},
+					{"==": [{"var": "customer.tier"}, "gold"]}
+				]},
+				{"*": [{"var": "order.total"}, 0.8]},
+				{">": [{"var": "order.total"}, 500]},
+				{"*": [{"var": "order.total"}, 0.9]},
+				{"var": "order.total"}
+			]
+		}`,
+		data: `{"order": {"total": 1200}, "customer": {"tier": "gold"}}`,
+	},
+	{
+		name: "array_validation",
+		logic: `{
+			"and": [
+				{"all": [{"var": "items"}, {">": [{"var": ".quantity"}, 0]}]},
+				{"some": [{"var": "items"}, {"<": [{"var": ".price"}, 50]}]},
+				{"none": [{"var": "items"}, {"==": [{"var": ".status"}, "cancelled"]}]}
+			]
+		}`,
+		data: `{"items": [{"quantity": 2, "price": 30, "status": "active"}, {"quantity": 1, "price": 75, "status": "active"}]}`,
+	},
+	{
+		name: "string_processing",
+		logic: `{
+			"and": [
+				{"in": ["error", {"var": "message"}]},
+				{">": [{"var": "severity"}, 5]},
+				{"==": [{"substr": [{"var": "code"}, 0, 3]}, "ERR"]}
+			]
+		}`,
+		data: `{"message": "System error detected", "severity": 8, "code": "ERR-500"}`,
+	},
+	{
+		name: "custom_operators",
+		logic: `{
+			"and": [
+				{"contains_all": [{"var": "required_permissions"}, ["read", "write"]]},
+				{"contains_any": [{"var": "user_roles"}, ["admin", "moderator"]]},
+				{"contains_none": [{"var": "flags"}, ["banned", "suspended"]]}
+			]
+		}`,
+		data: `{"required_permissions": ["read", "write", "execute"], "user_roles": ["admin", "user"], "flags": ["active", "verified"]}`,
+	},
+	{
+		name: "complex_data_transform",
+		logic: `{
+			"map": [
+				{"filter": [
+					{"var": "products"},
+					{"and": [
+						{"in": [{"var": ".category"}, ["electronics", "accessories"]]},
+						{">": [{"var": ".stock"}, 0]}
+					]}
+				]},
+				{"*": [{"var": ".price"}, 1.1]}
+			]
+		}`,
+		data: `{"products": [{"category": "electronics", "price": 100, "stock": 5}, {"category": "clothing", "price": 50, "stock": 10}, {"category": "accessories", "price": 25, "stock": 0}]}`,
+	},
+	{
+		name: "nested_conditions",
+		logic: `{
+			"if": [
+				{"and": [
+					{"missing": ["name", "email"]},
+					{">": [{"var": "age"}, 0]}
+				]},
+				{"cat": ["Missing required fields for user ", {"var": "id"}]},
+				{"or": [
+					{"<": [{"var": "age"}, 13]},
+					{"missing_some": [1, ["parent_email", "guardian_name"]]}
+				]},
+				"Parental consent required",
+				"Valid user"
+			]
+		}`,
+		data: `{"name": "John", "email": "john@example.com", "age": 25, "id": "12345"}`,
+	},
+}
+
 // BenchmarkComprehensive runs a focused suite of complex, realistic benchmarks
 // that exercise multiple operators and represent real-world usage patterns.
 // This is the default benchmark suite for version comparisons.
 func BenchmarkComprehensive(b *testing.B) {
-	cases := []struct {
-		name  string
-		logic string
-		data  string
-	}{
-		{
-			name: "user_validation",
-			logic: `{
-				"and": [
-					{">=": [{"var": "user.age"}, 18]},
-					{"in": [{"var": "user.country"}, ["US", "CA", "UK", "AU"]]},
-					{"or": [
-						{"==": [{"var": "user.subscription"}, "premium"]},
-						{"<": [{"+": [{"var": "user.loginCount"}, 1]}, 100]}
-					]}
-				]
-			}`,
-			data: `{"user": {"age": 25, "country": "US", "subscription": "premium", "loginCount": 50}}`,
-		},
-		{
-			name: "data_pipeline",
-			logic: `{
-				"reduce": [
-					{"filter": [
-						{"var": "orders"},
-						{">=": [{"var": ".amount"}, 100]}
-					]},
-					{"+": [{"var": "accumulator"}, {"var": "current.amount"}]},
-					0
-				]
-			}`,
-			data: `{"orders": [{"amount": 50}, {"amount": 150}, {"amount": 200}, {"amount": 75}, {"amount": 120}]}`,
-		},
-		{
-			name: "business_rules",
-			logic: `{
-				"if": [
-					{"and": [
-						{">": [{"var": "order.total"}, 1000]},
-						{"==": [{"var": "customer.tier"}, "gold"]}
-					]},
-					{"*": [{"var": "order.total"}, 0.8]},
-					{">": [{"var": "order.total"}, 500]},
-					{"*": [{"var": "order.total"}, 0.9]},
-					{"var": "order.total"}
-				]
-			}`,
-			data: `{"order": {"total": 1200}, "customer": {"tier": "gold"}}`,
-		},
-		{
-			name: "array_validation",
-			logic: `{
-				"and": [
-					{"all": [{"var": "items"}, {">": [{"var": ".quantity"}, 0]}]},
-					{"some": [{"var": "items"}, {"<": [{"var": ".price"}, 50]}]},
-					{"none": [{"var": "items"}, {"==": [{"var": ".status"}, "cancelled"]}]}
-				]
-			}`,
-			data: `{"items": [{"quantity": 2, "price": 30, "status": "active"}, {"quantity": 1, "price": 75, "status": "active"}]}`,
-		},
-		{
-			name: "string_processing",
-			logic: `{
-				"and": [
-					{"in": ["error", {"var": "message"}]},
-					{">": [{"var": "severity"}, 5]},
-					{"==": [{"substr": [{"var": "code"}, 0, 3]}, "ERR"]}
-				]
-			}`,
-			data: `{"message": "System error detected", "severity": 8, "code": "ERR-500"}`,
-		},
-		{
-			name: "custom_operators",
-			logic: `{
-				"and": [
-					{"contains_all": [{"var": "required_permissions"}, ["read", "write"]]},
-					{"contains_any": [{"var": "user_roles"}, ["admin", "moderator"]]},
-					{"contains_none": [{"var": "flags"}, ["banned", "suspended"]]}
-				]
-			}`,
-			data: `{"required_permissions": ["read", "write", "execute"], "user_roles": ["admin", "user"], "flags": ["active", "verified"]}`,
-		},
-		{
-			name: "complex_data_transform",
-			logic: `{
-				"map": [
-					{"filter": [
-						{"var": "products"},
-						{"and": [
-							{"in": [{"var": ".category"}, ["electronics", "accessories"]]},
-							{">": [{"var": ".stock"}, 0]}
-						]}
-					]},
-					{"*": [{"var": ".price"}, 1.1]}
-				]
-			}`,
-			data: `{"products": [{"category": "electronics", "price": 100, "stock": 5}, {"category": "clothing", "price": 50, "stock": 10}, {"category": "accessories", "price": 25, "stock": 0}]}`,
-		},
-		{
-			name: "nested_conditions",
-			logic: `{
-				"if": [
-					{"and": [
-						{"missing": ["name", "email"]},
-						{">": [{"var": "age"}, 0]}
-					]},
-					{"cat": ["Missing required fields for user ", {"var": "id"}]},
-					{"or": [
-						{"<": [{"var": "age"}, 13]},
-						{"missing_some": [1, ["parent_email", "guardian_name"]]}
-					]},
-					"Parental consent required",
-					"Valid user"
-				]
-			}`,
-			data: `{"name": "John", "email": "john@example.com", "age": 25, "id": "12345"}`,
-		},
-	}
-
-	for _, tc := range cases {
+	for _, tc := range comprehensiveCases {
 		b.Run(tc.name, func(b *testing.B) {
 			runBenchmark(b, tc.logic, tc.data)
 		})
