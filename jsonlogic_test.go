@@ -778,6 +778,21 @@ func TestPrepareCopiesTheRule(t *testing.T) {
 	assert.Equal(t, true, got)
 }
 
+// Prepare leaves these values as they are, so only its copy protects them.
+func TestPrepareCopiesValuesThatAreNotOptimized(t *testing.T) {
+	args := []any{[]any{float64(1), float64(2)}, map[string]any{"==": []any{map[string]any{"var": ""}, float64(1)}}}
+	object := map[string]any{"a": float64(1), "b": float64(2)}
+	prepared, err := jsonlogic.Prepare([]any{map[string]any{"filter": args}, object})
+	require.NoError(t, err)
+
+	args[1] = false
+	object["a"] = "changed"
+
+	got, err := prepared.Apply(nil)
+	require.NoError(t, err)
+	assert.Equal(t, []any{[]any{float64(1)}, map[string]any{"a": float64(1), "b": float64(2)}}, got)
+}
+
 func TestRuleApplyConcurrent(t *testing.T) {
 	prepared, err := jsonlogic.Prepare(map[string]any{"and": []any{
 		map[string]any{"==": []any{map[string]any{"var": "a"}, "x"}},

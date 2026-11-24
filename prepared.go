@@ -59,6 +59,10 @@ func optimize(rule any) any {
 	return rule
 }
 
+// optimizeValues optimizes the arguments of an operator, if that is safe. Every operator
+// listed here must only use its arguments through parseValues, so that it never sees a
+// node or a stringSet. AddOperator does the same for the operators it replaces. The
+// arguments of custom operators are left alone out of caution.
 func optimizeValues(operator string, values any) any {
 	list, isList := values.([]any)
 
@@ -69,6 +73,7 @@ func optimizeValues(operator string, values any) any {
 			return values
 		}
 	case "in":
+		// _in is the only operator that receives a stringSet.
 		if isList && len(list) == 2 {
 			if set, ok := newStringSet(list[1]); ok {
 				return []any{optimize(list[0]), set}

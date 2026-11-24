@@ -10,32 +10,33 @@ import (
 	jsonlogic "github.com/diegoholiveira/jsonlogic/v3"
 )
 
-const hotPathRule = `{"and":[
-	{"==":[{"var":"user.env"},"prod"]},
-	{"!==":[{"var":"key"},"blocked"]},
-	{"in":[{"var":"id"},["290636","290316",null]]}
-]}`
-
-func prepareHotPathRule(tb testing.TB) (*jsonlogic.Rule, any) {
-	tb.Helper()
-	var rule any
-	require.NoError(tb, json.Unmarshal([]byte(hotPathRule), &rule))
-	prepared, err := jsonlogic.Prepare(rule)
-	require.NoError(tb, err)
-	return prepared, map[string]any{
+func TestCommonRulesDoNotAllocate(t *testing.T) {
+	data := map[string]any{
 		"user": map[string]any{"env": "prod"}, "key": "req-1", "id": "290316",
 	}
-}
+	lists := map[string]string{
+		"indexed list": `["290636","290316"]`,
+		"scanned list": `["290636","290316",null]`,
+	}
+	for name, list := range lists {
+		t.Run(name, func(t *testing.T) {
+			var rule any
+			require.NoError(t, json.Unmarshal([]byte(`{"and":[
+				{"==":[{"var":"user.env"},"prod"]},
+				{"!==":[{"var":"key"},"blocked"]},
+				{"in":[{"var":"id"},`+list+`]}
+			]}`), &rule))
+			prepared, err := jsonlogic.Prepare(rule)
+			require.NoError(t, err)
 
-func TestHotPathDoesNotAllocate(t *testing.T) {
-	rule, data := prepareHotPathRule(t)
+			got, err := prepared.Apply(data)
+			require.NoError(t, err)
+			require.Equal(t, true, got)
 
-	got, err := rule.Apply(data)
-	require.NoError(t, err)
-	require.Equal(t, true, got)
-
-	allocs := testing.AllocsPerRun(100, func() { _, _ = rule.Apply(data) })
-	assert.Zero(t, allocs)
+			allocs := testing.AllocsPerRun(100, func() { _, _ = prepared.Apply(data) })
+			assert.Zero(t, allocs)
+		})
+	}
 }
 
 func TestEqualityAndInOperandShapes(t *testing.T) {
@@ -80,20 +81,11 @@ func TestEqualityAndInOperandShapes(t *testing.T) {
 	}
 }
 
-func BenchmarkHotPath(b *testing.B) {
-	rule, data := prepareHotPathRule(b)
-	b.Run("single", func(b *testing.B) {
-		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
-			_, _ = rule.Apply(data)
-		}
-	})
-	b.Run("parallel", func(b *testing.B) {
-		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				_, _ = rule.Apply(data)
-			}
-		})
-	})
+// Operands that do not change the result are still evaluated.
+func TestExtraOperandsAreEvaluated(t *testing.T) {
+	for _, op := range []string{"==", "!=", "===", "!==", "in"} {
+		rule := map[string]any{op: []any{"1", "1", map[string]any{"unknown": []any{}}}}
+		_, err := jsonlogic.ApplyInterface(rule, nil)
+		assert.Error(t, err, op)
+	}
 }

@@ -115,6 +115,22 @@ func TestPreparedRuleMatchesApplyInterfaceForEveryType(t *testing.T) {
 	}
 }
 
+func hasStringSet(v any) bool {
+	switch v := v.(type) {
+	case *stringSet:
+		return true
+	case *node:
+		return hasStringSet(v.values)
+	case []any:
+		for _, item := range v {
+			if hasStringSet(item) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func TestPreparedRuleMatchesApplyInterfaceForRandomRules(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	names := []string{"a", "b", "a.in", "a.1", "", ".a"}
@@ -126,17 +142,26 @@ func TestPreparedRuleMatchesApplyInterfaceForRandomRules(t *testing.T) {
 		"filter", "map", "reduce", "all", "some", "none", "unknown",
 	}
 
+	stringList := func() []any {
+		list := make([]any, 1+r.Intn(4))
+		for i := range list {
+			list[i] = scalars[r.Intn(4)]
+		}
+		return list
+	}
+
 	var value, rule func(depth int) any
 	value = func(depth int) any {
 		switch k := r.Intn(9); {
 		case k < 5 || depth == 0:
 			return scalars[r.Intn(len(scalars))]
-		case k < 8:
-			list := make([]any, r.Intn(4))
-			for i := range list {
-				list[i] = scalars[r.Intn(4)]
-			}
-			return list
+		case k == 5:
+			return []any{}
+		case k == 6:
+			return stringList()
+		case k == 7:
+			// data shaped like a rule, which must not be evaluated
+			return map[string]any{ops[r.Intn(len(ops))]: []any{map[string]any{"var": "a"}, stringList()}}
 		default:
 			return map[string]any{"a": value(depth - 1), "in": value(depth - 1)}
 		}
@@ -164,50 +189,71 @@ func TestPreparedRuleMatchesApplyInterfaceForRandomRules(t *testing.T) {
 		for i := range args {
 			args[i] = rule(depth - 1)
 		}
+		if op == "in" && count == 2 && r.Intn(2) == 0 {
+			args[1] = stringList()
+		}
 		if r.Intn(12) == 0 {
 			return args
 		}
 		return map[string]any{op: args}
 	}
 
-	for i := 0; i < 20000; i++ {
-		if !assertSameAsApplyInterface(t, rule(4), map[string]any{"a": value(2), "b": value(2)}) {
+	const count = 20000
+	withSet := 0
+	for i := 0; i < count; i++ {
+		logic := rule(4)
+		if hasStringSet(optimize(logic)) {
+			withSet++
+		}
+		if !assertSameAsApplyInterface(t, logic, map[string]any{"a": value(2), "b": value(2)}) {
 			return
 		}
 	}
+	assert.Greater(t, withSet, count/40, "too few rules use a stringSet")
 }
 
 func TestAddOperatorAffectsPreparedRules(t *testing.T) {
-	rules := []string{
-		`{"and":[{"==":[{"var":"a"},"x"]},{"!=":[{"var":"a"},"z"]}]}`,
-		`{"or":[{"!":{"in":[{"var":"a"},["x","q"]]}},{"===":[{"var":"a"},"q"]},{"!==":[{"var":"a"},"x"]}]}`,
-		`{"if":[{"<":[{"var":"n"},1]},"low",{"cat":["n",{"+":[{"var":"n"},1]}]}]}`,
-	}
 	data := map[string]any{"a": "x", "n": float64(1)}
 
-	for _, op := range []string{"var", "and", "or", "!", "==", "!=", "===", "!==", "in", "if", "<", "+", "cat"} {
+	for op := range operators.Load().(map[string]OperatorFn) {
 		t.Run(op, func(t *testing.T) {
 			restoreOperators(t)
-			for _, r := range rules {
-				rule := decode(t, r)
-				prepared, err := Prepare(rule)
+			rules := []any{
+				map[string]any{op: []any{map[string]any{"var": "a"}, []any{"x"}}},
+				map[string]any{"and": []any{true, map[string]any{op: map[string]any{"var": "a"}}}},
+				decode(t, `{"and":[{"==":[{"var":"a"},"x"]},{"!=":[{"var":"a"},"z"]}]}`),
+				decode(t, `{"or":[{"!":{"in":[{"var":"a"},["x","q"]]}},{"===":[{"var":"a"},"q"]},{"!==":[{"var":"a"},"x"]}]}`),
+				decode(t, `{"if":[{"<":[{"var":"n"},1]},"low",{"cat":["n",{"+":[{"var":"n"},1]}]}]}`),
+			}
+
+			// Every rule must be prepared while the operator is still the built-in one.
+			prepared := make([]*Rule, len(rules))
+			for i, rule := range rules {
+				var err error
+				prepared[i], err = Prepare(rule)
 				require.NoError(t, err)
+			}
 
-				var calls []any
-				AddOperator(op, func(values, _ any) any {
-					calls = append(calls, values)
-					return "x"
-				})
+			var calls []any
+			AddOperator(op, func(values, _ any) any {
+				calls = append(calls, values)
+				return "x"
+			})
 
+			for i, rule := range rules {
+				calls = nil
 				want, err := ApplyInterface(rule, data)
 				require.NoError(t, err)
 				wantCalls := calls
-				calls = nil
+				if i < 2 {
+					require.NotEmpty(t, wantCalls)
+				}
 
-				got, err := prepared.Apply(data)
+				calls = nil
+				got, err := prepared[i].Apply(data)
 				require.NoError(t, err)
-				assert.Equal(t, want, got, r)
-				assert.Equal(t, wantCalls, calls, r)
+				assert.Equal(t, want, got)
+				assert.Equal(t, wantCalls, calls)
 			}
 		})
 	}

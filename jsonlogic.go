@@ -243,11 +243,7 @@ func parseValues(values, data any) any {
 	parsed := make([]any, 0, length)
 
 	for _, value := range inputSlice {
-		if m, ok := value.(map[string]any); ok {
-			parsed = append(parsed, apply(m, data))
-		} else {
-			parsed = append(parsed, parseValues(value, data))
-		}
+		parsed = append(parsed, parseValues(value, data))
 	}
 
 	return parsed
@@ -274,12 +270,17 @@ func apply(rules, data any) any {
 }
 
 // Rule is a JSONLogic rule that Prepare checked and optimized once, so applying it many times is faster.
+// It is safe for concurrent use.
 type Rule struct {
 	logic any
 }
 
 // Prepare checks the rule for unsupported types and copies it into a form that is faster to evaluate. Later changes to
 // the input do not affect the Rule.
+//
+// Preparing costs more than applying the rule once, so it pays off when the rule is applied more than a few times.
+// Lists of strings in "in" are indexed, which makes large ones much faster but uses extra memory. The arguments of
+// "filter", "map", "reduce", "all", "some", "none" and custom operators are not optimized.
 func Prepare(rule any) (*Rule, error) {
 	if err := scanForUnsupportedTypes(rule); err != nil {
 		return nil, err

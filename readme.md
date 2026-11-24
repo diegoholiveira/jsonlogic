@@ -166,7 +166,7 @@ func main() {
 }
 ```
 
-If you apply the same rule many times, prepare it once. `Prepare` checks the rule's types and optimizes it up front, so each `Apply` only checks the data and evaluates faster. A prepared rule is safe to share across goroutines:
+If you apply the same rule many times, prepare it once. `Prepare` checks the rule's types and optimizes it up front, so each `Apply` only checks the data and, for most operators, evaluates faster. A prepared rule is safe to share across goroutines:
 
 ```go
 rule, err := jsonlogic.Prepare(map[string]any{"==": []any{map[string]any{"var": "foo"}, "bar"}})
@@ -177,6 +177,8 @@ if err != nil {
 result, err := rule.Apply(map[string]any{"foo": "bar"})
 fmt.Println(result) // true
 ```
+
+Preparing costs more than applying the rule once, so it pays off when a rule is applied more than a few times. Large lists of strings in `in` gain the most, but use extra memory. The arguments of `filter`, `map`, `reduce`, `all`, `some`, `none` and custom operators are not optimized.
 
 ## Supported types
 
