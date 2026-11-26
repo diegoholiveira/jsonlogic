@@ -100,10 +100,6 @@ func lookupVar(values, data any) any {
 		return data
 	}
 
-	if _, ok := values.(float64); ok {
-		values = toString(values)
-	}
-
 	var _default any
 
 	if v, ok := values.([]any); ok { // syntax sugar
@@ -115,7 +111,11 @@ func lookupVar(values, data any) any {
 			_default = v[1]
 		}
 
-		values = v[0].(string)
+		values = v[0]
+	}
+
+	if _, ok := values.(float64); ok {
+		values = toString(values)
 	}
 
 	if data == nil {
