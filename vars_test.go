@@ -107,6 +107,27 @@ func TestGetVarWithOutOfBoundsArrayIndexReturnsDefault(t *testing.T) {
 	assert.JSONEq(t, `"fallback"`, string(output))
 }
 
+func TestGetVarWithNumericPathInArrayForm(t *testing.T) {
+	cases := []struct {
+		rule     string
+		data     string
+		expected string
+	}{
+		{rule: `{"var": [1]}`, data: `[10, 20, 30]`, expected: `20`},
+		{rule: `{"var": [5, "fallback"]}`, data: `[10, 20, 30]`, expected: `"fallback"`},
+		{rule: `{"var": [1]}`, data: `{"1": "one"}`, expected: `"one"`},
+		{rule: `{"map": [{"var": "rows"}, {"var": [0, "none"]}]}`, data: `{"rows": [[1, 2], [], [3]]}`, expected: `[1, "none", 3]`},
+	}
+
+	for _, c := range cases {
+		t.Run(c.rule, func(t *testing.T) {
+			output, err := jsonlogic.ApplyRaw(json.RawMessage(c.rule), json.RawMessage(c.data))
+			assert.NoError(t, err)
+			assert.JSONEq(t, c.expected, string(output))
+		})
+	}
+}
+
 func TestSetPropertyWithMissingValueArgument(t *testing.T) {
 	rule := json.RawMessage(`{"set": [{"a": 1, "b": 2}, "c"]}`)
 
